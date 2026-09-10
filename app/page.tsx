@@ -424,11 +424,43 @@ function SliderField({ label, value, onChange }: { label: string; value: number;
   </label>
 }
 
-function NumberField({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
+function NumberField({ label, value, min, max, step = 1, onChange }: { label: string; value: number; min: number; max: number; step?: number; onChange: (v: number) => void }) {
   return <label className="number-field">
     <span>{label}</span>
-    <input type="number" min={min} max={max} value={value} onChange={e => onChange(Number(e.target.value))} />
+    <input type="number" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} />
   </label>
+}
+
+const BAREME_LABELS: Record<keyof AffectationConfig['poidsBaremeIndividuel'], string> = {
+  ancienneteCarriere: 'Ancienneté carrière',
+  anciennetePoste: 'Ancienneté poste',
+  situationFamiliale: 'Situation familiale',
+  nbEnfants: "Nombre d'enfants",
+  formationContinue: 'Formation continue',
+  ageAjuste: 'Âge ajusté',
+}
+
+const SCORE_POSTE_LABELS: Record<keyof AffectationConfig['poidsScorePoste'], string> = {
+  baremeEnseignant: 'Barème enseignant',
+  proximite: 'Proximité',
+  anciennetePoste: 'Ancienneté poste',
+  situationFamiliale: 'Situation familiale',
+  ageRegle: "Règle d'âge",
+  zoneRegle: 'Règle de zone',
+}
+
+const SITUATION_LABELS: Record<string, string> = {
+  celibataire: 'Célibataire',
+  marie: 'Marié(e)',
+  divorce: 'Divorcé(e)',
+  veuf: 'Veuf / veuve',
+}
+
+const PROXIMITE_LABELS: Record<keyof AffectationConfig['pointsProximite'], string> = {
+  memeCommune: 'Même commune',
+  memeDepartement: 'Même département',
+  departementVoisin: 'Département voisin',
+  autre: 'Autre',
 }
 
 function SettingsPage({ cfg, setCfg, resultat, generatedAt, onRecompute, canRecompute, recomputing }: {
@@ -499,18 +531,45 @@ function SettingsPage({ cfg, setCfg, resultat, generatedAt, onRecompute, canReco
 
     <section className="panel">
       <div className="panel-heading"><div><p className="section-kicker">Barème individuel</p><h2>Poids du classement du vivier</h2></div></div>
+      <p className="muted" style={{ marginBottom: 14 }}>Chacun de ces six critères pèse dans le barème qui ordonne le vivier des enseignants.</p>
       <div className="slider-list">
-        <SliderField label="Ancienneté carrière" value={cfg.poidsBaremeIndividuel.ancienneteCarriere} onChange={v => setCfg(c => ({ ...c, poidsBaremeIndividuel: { ...c.poidsBaremeIndividuel, ancienneteCarriere: v } }))} />
-        <SliderField label="Ancienneté poste" value={cfg.poidsBaremeIndividuel.anciennetePoste} onChange={v => setCfg(c => ({ ...c, poidsBaremeIndividuel: { ...c.poidsBaremeIndividuel, anciennetePoste: v } }))} />
-        <SliderField label="Situation familiale" value={cfg.poidsBaremeIndividuel.situationFamiliale} onChange={v => setCfg(c => ({ ...c, poidsBaremeIndividuel: { ...c.poidsBaremeIndividuel, situationFamiliale: v } }))} />
+        {(Object.keys(BAREME_LABELS) as (keyof AffectationConfig['poidsBaremeIndividuel'])[]).map(key => (
+          <SliderField key={key} label={BAREME_LABELS[key]} value={cfg.poidsBaremeIndividuel[key]}
+            onChange={v => setCfg(c => ({ ...c, poidsBaremeIndividuel: { ...c.poidsBaremeIndividuel, [key]: v } }))} />
+        ))}
       </div>
     </section>
 
     <section className="panel">
       <div className="panel-heading"><div><p className="section-kicker">Score de poste</p><h2>Poids de l'affectation enseignant-poste</h2></div></div>
+      <p className="muted" style={{ marginBottom: 14 }}>Chacun de ces six critères pèse dans le choix du meilleur poste pour un enseignant donné.</p>
       <div className="slider-list">
-        <SliderField label="Barème enseignant" value={cfg.poidsScorePoste.baremeEnseignant} onChange={v => setCfg(c => ({ ...c, poidsScorePoste: { ...c.poidsScorePoste, baremeEnseignant: v } }))} />
-        <SliderField label="Proximité" value={cfg.poidsScorePoste.proximite} onChange={v => setCfg(c => ({ ...c, poidsScorePoste: { ...c.poidsScorePoste, proximite: v } }))} />
+        {(Object.keys(SCORE_POSTE_LABELS) as (keyof AffectationConfig['poidsScorePoste'])[]).map(key => (
+          <SliderField key={key} label={SCORE_POSTE_LABELS[key]} value={cfg.poidsScorePoste[key]}
+            onChange={v => setCfg(c => ({ ...c, poidsScorePoste: { ...c.poidsScorePoste, [key]: v } }))} />
+        ))}
+      </div>
+    </section>
+
+    <section className="panel">
+      <div className="panel-heading"><div><p className="section-kicker">Situation familiale</p><h2>Points par situation</h2></div></div>
+      <p className="muted" style={{ marginBottom: 14 }}>Points attribués selon la situation familiale déclarée, utilisés à la fois dans le barème individuel et dans le score de poste.</p>
+      <div className="config-grid">
+        {Object.entries(cfg.pointsSituationFamiliale).map(([key, value]) => (
+          <NumberField key={key} label={SITUATION_LABELS[key] ?? key} min={0} max={50} value={value}
+            onChange={v => setCfg(c => ({ ...c, pointsSituationFamiliale: { ...c.pointsSituationFamiliale, [key]: v } }))} />
+        ))}
+      </div>
+    </section>
+
+    <section className="panel">
+      <div className="panel-heading"><div><p className="section-kicker">Proximité</p><h2>Points par niveau de proximité</h2></div></div>
+      <p className="muted" style={{ marginBottom: 14 }}>Points attribués selon la correspondance entre la commune ou le département de rattachement de l'enseignant et ceux du poste.</p>
+      <div className="config-grid">
+        {(Object.keys(PROXIMITE_LABELS) as (keyof AffectationConfig['pointsProximite'])[]).map(key => (
+          <NumberField key={key} label={PROXIMITE_LABELS[key]} min={0} max={200} step={5} value={cfg.pointsProximite[key]}
+            onChange={v => setCfg(c => ({ ...c, pointsProximite: { ...c.pointsProximite, [key]: v } }))} />
+        ))}
       </div>
     </section>
 
