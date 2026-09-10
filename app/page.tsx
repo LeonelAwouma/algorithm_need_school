@@ -116,11 +116,11 @@ function Dashboard({ setPage, result }: { setPage: (page: PageKey) => void; resu
   const topRegions = useMemo(() => result ? result.regions.slice(0, 6) : [], [result])
   const maxNeed = Math.max(1, ...topRegions.map(r => r.initialNeed))
   return <div className="page-stack">
-    <div className="notice notice-info"><AlertTriangle size={17} /><p><strong>Besoin de couverture :</strong> cette estimation est basée sur les salles utilisées pour l'enseignement. Elle ne constitue pas un quota de recrutement approuvé.</p></div>
+    <div className="notice notice-info"><AlertTriangle size={17} /><p><strong>Besoin de couverture :</strong> cette estimation est basée sur le taux d'encadrement (norme de 1 enseignant pour 60 élèves, besoin déclenché à 120). Elle ne constitue pas un quota de recrutement approuvé.</p></div>
     <div className="metric-grid">
       <MetricCard label="Écoles publiques" value={result ? fmt(result.totals.publicSchools) : '—'} detail="Après importation" onClick={() => setPage('schools')} />
       <MetricCard label="Écoles calculables" value={result ? fmt(result.totals.calculableSchools) : '—'} detail="Après importation" accent="blue" onClick={() => setPage('schools')} />
-      <MetricCard label="Besoin initial" value={result ? fmt(result.totals.initialNeed) : '—'} detail="Couverture des salles" accent="amber" onClick={() => setPage('schools')} />
+      <MetricCard label="Besoin initial" value={result ? fmt(result.totals.initialNeed) : '—'} detail="Taux d'encadrement" accent="amber" onClick={() => setPage('schools')} />
       <MetricCard label="Vivier potentiel" value={result ? fmt(result.totals.pool) : '—'} detail="Enseignants éligibles" accent="blue" onClick={() => setPage('pool')} />
     </div>
     <div className="content-grid">
@@ -136,7 +136,7 @@ function Dashboard({ setPage, result }: { setPage: (page: PageKey) => void; resu
           {result ? <>
             <div><ClipboardCheck size={16} /><span>{fmt(result.controls.length)} anomalies remontées par le moteur.</span><StatusPill tone={result.controls.length ? 'warning' : 'success'}>{result.controls.length ? 'À vérifier' : 'Aucune'}</StatusPill></div>
             <div><Users size={16} /><span>{fmt(result.totals.remainingPool)} enseignants du vivier non affectés.</span><StatusPill>Info</StatusPill></div>
-            <div><AlertTriangle size={16} /><span>{fmt(result.totals.remainingNeed)} salles restent sans besoin couvert après simulation.</span><StatusPill tone="warning">À suivre</StatusPill></div>
+            <div><AlertTriangle size={16} /><span>{fmt(result.totals.remainingNeed)} postes d'enseignants restent à pourvoir après simulation.</span><StatusPill tone="warning">À suivre</StatusPill></div>
           </> : <>
             <div><AlertTriangle size={16} /><span>Les fichiers sources n'ont pas encore été chargés.</span><StatusPill tone="warning">Bloquant</StatusPill></div>
             <div><ClipboardCheck size={16} /><span>Les contrôles seront produits par le moteur.</span><StatusPill>En attente</StatusPill></div>
@@ -270,20 +270,20 @@ function SchoolsPage({ result, setPage }: { result: SimulationResult | null; set
   if (!result) return <div className="page-stack"><EmptyState onImport={() => setPage('imports')} /></div>
   return <div className="page-stack">
     <SearchToolbar query={query} setQuery={setQuery} placeholder="Rechercher par code, nom ou région" onExport={() => exportCSV('ecoles.csv',
-      ['Code', 'École', 'Région', 'Département', 'Arrondissement', 'Zone', 'Salles utilisées', 'Enseignants État', 'Directeurs', 'Besoin initial', 'Arrivées', 'Départs', 'Besoin restant', 'Statut'],
-      filtered.map(s => [s.code, s.name, s.region, s.department, s.district, s.area, s.usedRooms, s.stateTeachers, s.stateDirectors, s.initialNeed, s.arrivals, s.departures, s.remainingNeed, s.status]))}
+      ['Code', 'École', 'Région', 'Département', 'Arrondissement', 'Zone', 'Élèves', 'Enseignants État', 'Élèves/Enseignant', 'Directeurs', 'Besoin initial', 'Arrivées', 'Départs', 'Besoin restant', 'Statut'],
+      filtered.map(s => [s.code, s.name, s.region, s.department, s.district, s.area, s.pupils, s.stateTeachers, s.encadrement.status === 'ok' ? Math.round(s.encadrement.value) : null, s.stateDirectors, s.initialNeed, s.arrivals, s.departures, s.remainingNeed, s.status]))}
       extra={<button className={`button ${onlyMoves ? 'button-primary' : 'button-secondary'}`} onClick={() => setOnlyMoves(v => !v)}><ArrowLeftRight size={15} /> Avec rotation uniquement</button>}
       filters={<FilterMenu groups={filterGroups} selected={selected} onToggle={toggle} onClear={clear} />}
     />
     <section className="panel table-panel">
-      <div className="panel-heading"><div><p className="section-kicker">Couverture des salles</p><h2>Écoles et besoins</h2></div><StatusPill>{fmt(filtered.length)} résultats</StatusPill></div>
-      <div className="table-wrap"><table><thead><tr><th>École</th><th>Territoire</th><th>Zone</th><th className="number">Salles</th><th className="number">Ens. État</th><th className="number">Besoin initial</th><th className="number">Départs</th><th className="number">Arrivées</th><th className="number">Besoin restant</th><th>Statut</th></tr></thead>
+      <div className="panel-heading"><div><p className="section-kicker">Taux d'encadrement (norme : 1 enseignant / 60 élèves)</p><h2>Écoles et besoins</h2></div><StatusPill>{fmt(filtered.length)} résultats</StatusPill></div>
+      <div className="table-wrap"><table><thead><tr><th>École</th><th>Territoire</th><th>Zone</th><th className="number">Ens. État</th><th className="number">Élèves/Ens.</th><th className="number">Besoin initial</th><th className="number">Départs</th><th className="number">Arrivées</th><th className="number">Besoin restant</th><th>Statut</th></tr></thead>
         <tbody>{filtered.length === 0 ? <tr><td colSpan={10} className="table-empty">Aucune école ne correspond à cette recherche.</td></tr> : filtered.slice(0, ROW_LIMIT).map(s => <tr key={s.code}>
           <td><strong>{s.name}</strong><small>{s.code}</small></td>
           <td>{s.region}<small>{s.department} · {s.district}</small></td>
           <td>{s.area}</td>
-          <td className="number">{s.usedRooms ?? '—'}</td>
           <td className="number">{s.stateTeachers + s.stateDirectors}</td>
+          <td className={`number ${s.understaffed ? 'warning-number' : ''}`}>{s.encadrement.status === 'ok' ? Math.round(s.encadrement.value) : '—'}</td>
           <td className="number warning-number">{s.initialNeed ?? '—'}</td>
           <td className="number">{s.departures}</td>
           <td className="number">{s.arrivals}</td>
@@ -318,17 +318,18 @@ function PoolPage({ result, setPage }: { result: SimulationResult | null; setPag
   if (!result) return <div className="page-stack"><EmptyState onImport={() => setPage('imports')} text="Le vivier potentiel apparaîtra ici après la simulation : enseignants excédentaires, ancienneté et destination proposée." /></div>
   return <div className="page-stack">
     <SearchToolbar query={query} setQuery={setQuery} placeholder="Rechercher par identifiant ou école" onExport={() => exportCSV('vivier.csv',
-      ['Identifiant', 'École origine', 'Territoire', 'Ancienneté', 'Catégorie', 'Destination', 'Phase'],
-      filtered.map(p => [p.id, byCode.get(p.source)?.name ?? p.source, byCode.get(p.source)?.region ?? '', p.tenure, p.category, p.destination ? (byCode.get(p.destination)?.name ?? p.destination) : 'Non affecté', p.phase ?? '']))}
+      ['Identifiant', 'École origine', 'Territoire', 'Ancienneté', 'Âge', 'Catégorie', 'Destination', 'Phase'],
+      filtered.map(p => [p.id, byCode.get(p.source)?.name ?? p.source, byCode.get(p.source)?.region ?? '', p.tenure, p.age, p.category, p.destination ? (byCode.get(p.destination)?.name ?? p.destination) : 'Non affecté', p.phase ?? '']))}
       filters={<FilterMenu groups={filterGroups} selected={selected} onToggle={toggle} onClear={clear} />}
     />
     <section className="panel table-panel">
       <div className="panel-heading"><div><p className="section-kicker">Ressources provisoires</p><h2>Vivier potentiel</h2></div><StatusPill>{fmt(filtered.length)} résultats</StatusPill></div>
-      <div className="table-wrap"><table><thead><tr><th>Identifiant</th><th>École origine</th><th className="number">Ancienneté</th><th>Catégorie</th><th>Destination</th><th>Phase</th></tr></thead>
-        <tbody>{filtered.length === 0 ? <tr><td colSpan={6} className="table-empty">Aucun résultat.</td></tr> : filtered.slice(0, ROW_LIMIT).map(p => { const src = byCode.get(p.source); const dst = p.destination ? byCode.get(p.destination) : null; return <tr key={p.id}>
+      <div className="table-wrap"><table><thead><tr><th>Identifiant</th><th>École origine</th><th className="number">Ancienneté</th><th className="number">Âge</th><th>Catégorie</th><th>Destination</th><th>Phase</th></tr></thead>
+        <tbody>{filtered.length === 0 ? <tr><td colSpan={7} className="table-empty">Aucun résultat.</td></tr> : filtered.slice(0, ROW_LIMIT).map(p => { const src = byCode.get(p.source); const dst = p.destination ? byCode.get(p.destination) : null; return <tr key={p.id}>
           <td><strong>{p.id}</strong></td>
           <td>{src?.name ?? p.source}<small>{src ? `${src.region} · ${src.district}` : ''}</small></td>
           <td className="number">{p.tenure}</td>
+          <td className="number">{p.age ?? '—'}</td>
           <td>{p.category}</td>
           <td>{dst ? <>{dst.name}<small>{dst.region} · {dst.district}</small></> : <StatusPill>Non affecté</StatusPill>}</td>
           <td>{p.phase ?? '—'}</td>

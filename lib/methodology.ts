@@ -25,15 +25,15 @@ export const KEY_INDICATORS: GlossaryTerm[] = [
   },
   {
     term: 'Besoin initial',
-    summary: "Le nombre de salles de classe utilisées qui n'ont pas d'enseignant de l'État affecté.",
+    summary: "Le nombre d'enseignants qui manquent dans les écoles où le taux d'encadrement est trop élevé.",
     explanation:
-      "Pour chaque école calculable, on compare le nombre de salles utilisées pour les cours au nombre d'enseignants de l'État réellement en poste (hors directeurs). S'il y a plus de salles que d'enseignants, le besoin est égal à la différence ; s'il y a autant ou plus d'enseignants que de salles, le besoin est nul — il n'est jamais négatif. C'est une estimation fondée sur l'hypothèse « un enseignant par salle utilisée », pas un quota de recrutement officiellement validé.",
+      "La norme camerounaise est de 1 enseignant de l'État pour 60 élèves. Une école n'est pas considérée en besoin tant que ce taux reste raisonnable — y compris entre 60 et 80 élèves par enseignant. Elle devient « nécessiteuse » à partir de 120 élèves par enseignant (le double de la norme) : le besoin est alors le nombre d'enseignants à ajouter pour redescendre à 60 élèves par enseignant. En dessous de ce seuil, le besoin est nul — il n'est jamais négatif. C'est une estimation, pas un quota de recrutement officiellement validé.",
   },
   {
     term: 'Vivier potentiel',
     summary: "Les enseignants de l'État qui peuvent être redéployés vers une école en besoin.",
     explanation:
-      "Dans une école qui compte plus d'enseignants que de salles utilisées (donc en excédent), les enseignants ayant entre 6 et 60 ans d'ancienneté dans cette école deviennent candidats à une rotation. Les plus anciens sont retenus en priorité, dans la limite du nombre d'enseignants en trop. Ce sont eux que le moteur propose ensuite pour couvrir les écoles en besoin (voir Rotations proposées).",
+      "Dans une école où le nombre d'enseignants de l'État dépasse ce que demande la norme de 60 élèves par enseignant (donc en excédent), les enseignants ayant entre 6 et 60 ans d'ancienneté dans cette école deviennent candidats à une rotation. Les plus anciens sont retenus en priorité, dans la limite de l'excédent ; à ancienneté égale, le plus jeune passe devant. Ce sont eux que le moteur propose ensuite pour couvrir les écoles en besoin (voir Rotations proposées).",
   },
 ]
 
@@ -90,12 +90,24 @@ export interface MethodRule {
 /** Règles techniques précises du moteur, pour un public qui veut le détail exact. */
 export const METHOD_RULES: MethodRule[] = [
   {
+    title: 'Taux d\'encadrement',
+    text: "Élèves ÷ enseignants d'État de fonction 2 (hors directeurs, hors maîtres des parents). Norme : 60. École nécessiteuse à partir de 120 (le double de la norme) ; entre 60 et 80, pas de besoin.",
+  },
+  {
     title: 'Besoin de couverture',
-    text: "max(0, salles utilisées − enseignants État de fonction 2), plancher zéro. Les directeurs (fonction 1) et les agents d'appui sont exclus du calcul et du vivier.",
+    text: "Si nécessiteuse : max(0, arrondi(élèves ÷ 60) − enseignants État en poste) ; sinon zéro. Les salles utilisées n'entrent plus dans ce calcul. École sans effectif récent : besoin inconnu, laissé vide.",
   },
   {
     title: 'Vivier potentiel',
-    text: "Dans chaque école excédentaire, enseignants État avec ancienneté école > 5 ans et ≤ 60 ans, les plus anciens retenus dans la limite de l'excédent.",
+    text: "Excédent = max(0, enseignants État − arrondi(élèves ÷ 60)), même norme, symétrique du besoin. Dans chaque école excédentaire, enseignants État avec ancienneté école > 5 ans et ≤ 60 ans, les plus anciens retenus dans la limite de l'excédent ; à ancienneté égale, le plus jeune est priorisé.",
+  },
+  {
+    title: 'Distance / proximité',
+    text: "Aucune des sources ne contient de commune, de coordonnées GPS ni de distance réelle. L'arrondissement (puis le département) sert de substitut de proximité pour apparier écoles et enseignants — deux écoles d'un même arrondissement ne sont pas forcément voisines.",
+  },
+  {
+    title: 'Critères non employés',
+    text: "Sexe et situation matrimoniale n'entrent dans aucun classement : absents des trois fichiers (classes, personnel, effectifs), aucune colonne correspondante. Formation continue et souhaits de mobilité non disponibles non plus.",
   },
   {
     title: 'Phase 1 — Arrondissement',

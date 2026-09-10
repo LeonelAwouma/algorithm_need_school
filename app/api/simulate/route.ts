@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SOURCE_SLOTS, type SlotId } from '@/lib/sources'
 import { readWorksheetRowsFromDisk, sourceFileInfo } from '@/lib/read-workbook-node'
-import { parseWorkbookRows, simulateRotation, buildSchoolRosters } from '@/lib/rotation-engine'
+import { buildSchoolRosters, ENGINE_VERSION, parseWorkbookRows, simulateRotation } from '@/lib/rotation-engine'
 
 // La lecture des classeurs (surtout le personnel, ~23 Mo) domine le temps de
 // réponse. On met en cache le JSON déjà sérialisé, invalidé dès qu'un fichier
-// de data/sources/ change de taille ou de date de modification (ou par
-// ?force=1, pour forcer un nouveau calcul sans changer les fichiers).
+// de data/sources/ change de taille ou de date de modification, dès qu'une
+// modification du moteur change ENGINE_VERSION, ou par ?force=1.
 let cache: { fingerprint: string; body: string } | null = null
 
 export async function POST(request: NextRequest) {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const fingerprint = infos.map(({ info }) => `${info.sizeBytes}:${info.modifiedAt}`).join('|')
+  const fingerprint = `${ENGINE_VERSION}|` + infos.map(({ info }) => `${info.sizeBytes}:${info.modifiedAt}`).join('|')
   if (!force && cache && cache.fingerprint === fingerprint) {
     return new NextResponse(cache.body, { headers: { 'content-type': 'application/json' } })
   }

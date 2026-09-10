@@ -1,6 +1,8 @@
 /**
- * Moteur de reproduction du classeur Analyse_plans_rotation_2024_2025.xlsx.
- * Version : reproduction-2024-2025-v1.
+ * Moteur de simulation des plans de rotation, dérivé du classeur
+ * Analyse_plans_rotation_2024_2025.xlsx (version initiale, besoin par salles).
+ * Version : encadrement-2024-2025-v1 — le besoin est désormais piloté par le
+ * taux d'encadrement (élèves/enseignant), plus par les salles utilisées.
  * Aucune dépendance à React, à un serveur ou à une bibliothèque de lecture XLSX.
  *
  * UTILISATION
@@ -18,19 +20,30 @@
  * year5      : Base Année 5, TEPP (2), 1 ligne d'en-tête.
  * Ne pas cumuler les vues FRANCO/ANGLO ni TEPP (3), identique à TEPP (2).
  *
- * CONVENTIONS À CONSERVER POUR REPRODUIRE LE CLASSEUR
+ * CONVENTIONS À CONSERVER
  * - Code école exact ; pas de rapprochement flou ni de suppression des accents.
  * - Ordre Public / Government seulement, selon la base salles.
- * - Besoin = salles utilisées - enseignants État de fonction 2, plancher zéro.
+ * - Norme : 1 enseignant d'État pour 60 élèves. École nécessiteuse à partir de
+ *   120 élèves/enseignant (le double de la norme) ; en dessous, y compris entre
+ *   60 et 80, elle n'est pas en besoin. Besoin = arrondi(élèves/60) − enseignants
+ *   d'État en poste, seulement si nécessiteuse ; sinon zéro. Salles non utilisées.
+ * - Excédent (source du vivier) = enseignants d'État − arrondi(élèves/60), même
+ *   norme, symétrique du besoin. École sans effectif récent : besoin et excédent
+ *   inconnus (laissés à zéro/vide), pas supposés nuls par défaut.
  * - Catégories État : 1, 2, 4. Directeurs et agents d'appui exclus du vivier.
  * - Ancienneté école > 5 et <= 60 ans ; plafond par école = excédent calculé.
- * - Région, ancienneté décroissante, ID source croissant pour le tri du vivier.
+ * - Région, ancienneté décroissante, âge croissant (plus jeune d'abord) à
+ *   ancienneté égale, ID source croissant en dernier recours pour le tri du
+ *   vivier. Âge inconnu : départagé en dernier, sans avantage ni pénalité.
  * - Phase arrondissement complète, puis phase département pour les restants.
  * - Même sous-système scolaire ; inconnu = pas de mouvement.
  * - Demande territoriale recalculée après CHAQUE mouvement.
- * - Aucun âge, sexe, état matrimonial ou diagnostic médical n'entre dans le tri.
+ * - Ni sexe, ni situation matrimoniale, ni diagnostic médical n'entrent dans
+ *   le tri : absents du fichier personnel (aucune colonne correspondante).
  * - La disponibilité DRH n'était pas renseignée : ceci reste une simulation.
- * - Le TEA est descriptif et ne commande pas l'affectation dans cette version.
+ * - Le champ tea (élèves/enseignants déclarés au recensement) reste descriptif,
+ *   à des fins de contrôle ; c'est encadrement (base personnel) qui pilote le
+ *   besoin, pour rester cohérent avec le vivier tiré de state.
  * - Année 5 sert uniquement au rapprochement, pas au calcul des besoins.
  * - ID_UNIQUE encode l'année et l'école d'origine : aucune trajectoire
  *   interannuelle réelle n'est disponible. La vue « Année N / Année N+1 »
@@ -43,7 +56,7 @@
  * Les filtres et tris de l'interface doivent porter sur une copie des résultats.
  */
 
-export const ENGINE_VERSION = 'reproduction-2024-2025-v1';
+export const ENGINE_VERSION = 'encadrement-2024-2025-v2';
 export type Code = string;
 export type Phase = 'Arrondissement' | 'Département';
 export type Status = 'Calculable' | 'Personnel absent' | 'Salles invalides' | 'Géographie discordante';
@@ -55,7 +68,7 @@ export interface Classroom extends Geography {
 }
 export interface Personnel extends Geography {
   id: string; schoolCode: Code; schoolName: string; functionCode: string; functionLabel: string;
-  categoryCode: string; categoryLabel: string; schoolTenure: number | null;
+  categoryCode: string; categoryLabel: string; schoolTenure: number | null; age: number | null;
 }
 export interface SchoolCensus {
   code: Code; sector: string; subsystem: string | null;
@@ -75,11 +88,13 @@ export interface SchoolResult extends Geography {
   departures: number; arrivals: number; teachersAfter: number;
   remainingNeed: number | null; remainingPool: number; coverageBefore: number | null;
   pupils: number | null; declaredStateTeachers: number | null; tea: Tea;
+  /** Élèves par enseignant d'État (base personnel) — pilote le besoin et l'excédent. */
+  encadrement: Tea; understaffed: boolean;
   stateIncludingDirectors: number; stateCountDifference: number | null;
   year5Pupils: number | null; year5Teachers: number | null; pupilDifference: number | null;
 }
 export interface Candidate {
-  id: string; source: Code; tenure: number; category: string;
+  id: string; source: Code; tenure: number; age: number | null; category: string;
   destination: Code | null; phase: Phase | null;
 }
 export interface Move {
@@ -107,10 +122,17 @@ export interface SimulationResult {
 
 const PUBLIC = 'Public / Government';
 const STATE = new Set(['1', '2', '4']);
+// Norme camerounaise : 1 enseignant d'État pour 60 élèves. Une école est
+// nécessiteuse à partir de 120 élèves par enseignant (le double de la norme) ;
+// en dessous, y compris entre 60 et 80, elle n'est pas considérée en besoin.
+const ENCADREMENT_NORM = 60;
+const ENCADREMENT_ALERT = 120;
 // Comparaison déterministe des chaînes, indépendante de la langue du navigateur.
 // Ne pas remplacer par localeCompare pour les départages de l'algorithme.
 const cmp = (a: string, b: string): number => a < b ? -1 : a > b ? 1 : 0;
 const num = (v: unknown): number | null => typeof v === 'number' && Number.isFinite(v) ? v : null;
+// Âge manquant : départagé en dernier, sans avantage ni pénalité indue.
+const ageRank = (age: number | null): number => age ?? Infinity;
 const text = (v: unknown): string => v == null ? '' : String(v);
 const category = (v: unknown): string => text(v).split(' ')[0];
 function code(v: unknown): Code {
@@ -157,7 +179,7 @@ export function parseWorkbookRows(raw: {
       region:text(r.REGION), department:text(r.DEPARTEMENT), district:text(r.ARRONDISSEMENT),
       functionCode:category(r.FONCTION), functionLabel:text(r.FONCTION),
       categoryCode:category(r.CATEGORIE_PROFESSIONNELLE), categoryLabel:text(r.CATEGORIE_PROFESSIONNELLE),
-      schoolTenure:num(r.ANCIENNETE_ECOLE)};
+      schoolTenure:num(r.ANCIENNETE_ECOLE), age:num(r.AGE)};
   });
   // Feuille 2024_2025 : en-têtes fusionnés et TOTAL répété. Utiliser les positions.
   if (raw.schools[0]?.[4] !== 'CODE_ETABLISSEMENT' || raw.schools[0]?.[6] !== 'ORDRE_ENSEIGNEMENT') {
@@ -193,14 +215,23 @@ export function simulateRotation(input: Inputs): SimulationResult {
     const conflict = staff.some(p=>normal(p.region)!==normal(s.region)||normal(p.department)!==normal(s.department)||normal(p.district)!==normal(s.district));
     const roomOK = s.usedRooms!==null && s.usedRooms>=0 && Number.isInteger(s.usedRooms);
     const status:Status = !staff.length ? 'Personnel absent' : conflict ? 'Géographie discordante' : !roomOK ? 'Salles invalides' : 'Calculable';
-    const need = status==='Calculable' ? Math.max(s.usedRooms!-state.length,0) : null;
-    const excess = status==='Calculable' && s.usedRooms!>0 ? Math.max(state.length-s.usedRooms!,0) : 0;
-    const candidates = state.filter(p=>p.schoolTenure!==null && p.schoolTenure>5 && p.schoolTenure<=60)
-      .sort((a,b)=>b.schoolTenure!-a.schoolTenure!||cmp(a.id,b.id));
-    const capacity = Math.min(excess,candidates.length);
-    for (const p of candidates.slice(0,capacity)) pool.push({id:p.id,source:s.code,tenure:p.schoolTenure!,category:p.categoryLabel,destination:null,phase:null});
     const recent = latest.get(s.code); const historic = old.get(s.code);
     const pupils=recent?.pupils??null, declared=recent?.stateTeachers??null, previous=historic?.pupils??null;
+    // Besoin et excédent pilotés par le taux d'encadrement (élèves / enseignants
+    // d'État, base personnel — cohérente avec le vivier tiré de state), pas par
+    // les salles. École nécessiteuse à partir de 120 élèves/enseignant ; en
+    // dessous (y compris entre 60 et 80, la norme) elle n'est pas en besoin.
+    const encadrement = calculateTea(pupils, state.length);
+    const understaffed = status==='Calculable' && pupils!==null && pupils>0 &&
+      (encadrement.status==='no-state-teacher' || (encadrement.status==='ok' && encadrement.value>=ENCADREMENT_ALERT));
+    const need = status!=='Calculable' || pupils===null ? null
+      : understaffed ? Math.max(Math.ceil(pupils/ENCADREMENT_NORM)-state.length,0) : 0;
+    const excess = status==='Calculable' && pupils!==null
+      ? Math.max(state.length-Math.ceil(pupils/ENCADREMENT_NORM),0) : 0;
+    const candidates = state.filter(p=>p.schoolTenure!==null && p.schoolTenure>5 && p.schoolTenure<=60)
+      .sort((a,b)=>b.schoolTenure!-a.schoolTenure!||ageRank(a.age)-ageRank(b.age)||cmp(a.id,b.id));
+    const capacity = Math.min(excess,candidates.length);
+    for (const p of candidates.slice(0,capacity)) pool.push({id:p.id,source:s.code,tenure:p.schoolTenure!,age:p.age,category:p.categoryLabel,destination:null,phase:null});
     if(status!=='Calculable') controls.push({code:s.code,name:s.name,reason:status,value1:staff.length,value2:s.usedRooms});
     if(recent && (recent.pupils!==(recent.pupilBoys??0)+(recent.pupilGirls??0) || declared!==(recent.stateMen??0)+(recent.stateWomen??0))) {
       controls.push({code:s.code,name:s.name,reason:'Totaux fichier école à contrôler',value1:declared,value2:pupils});
@@ -210,13 +241,14 @@ export function simulateRotation(input: Inputs): SimulationResult {
       stateTeachers:state.length,stateDirectors:directors.length,parentTeachers:staff.filter(p=>p.categoryCode==='3'&&p.functionCode==='2').length,
       status,initialNeed:need,excess,poolCapacity:capacity,departures:0,arrivals:0,teachersAfter:state.length,
       remainingNeed:need,remainingPool:capacity,coverageBefore:status==='Calculable'&&s.usedRooms!>0?state.length/s.usedRooms!:null,
-      pupils,declaredStateTeachers:declared,tea:calculateTea(pupils,declared),stateIncludingDirectors:state.length+directors.length,
+      pupils,declaredStateTeachers:declared,tea:calculateTea(pupils,declared),encadrement,understaffed,
+      stateIncludingDirectors:state.length+directors.length,
       stateCountDifference:declared===null?null:declared-state.length-directors.length,
       year5Pupils:previous,year5Teachers:historic?.teachers??null,pupilDifference:pupils===null||previous===null?null:pupils-previous};
   });
   const byCode = new Map(schools.map(s=>[s.code,s]));
   for (const [key,staff] of bySchool) if (!byCode.has(key)) controls.push({code:key,name:staff[0].schoolName,reason:'École personnel hors base publique salles',value1:staff.length,value2:null});
-  pool.sort((a,b)=>cmp(byCode.get(a.source)!.region,byCode.get(b.source)!.region)||b.tenure-a.tenure||cmp(a.id,b.id));
+  pool.sort((a,b)=>cmp(byCode.get(a.source)!.region,byCode.get(b.source)!.region)||b.tenure-a.tenure||ageRank(a.age)-ageRank(b.age)||cmp(a.id,b.id));
   const moves: Move[] = [];
   for (const phase of ['Arrondissement','Département'] as const) {
     const groupKey=(s:SchoolResult)=>JSON.stringify(phase==='Arrondissement'
@@ -244,7 +276,7 @@ export function simulateRotation(input: Inputs): SimulationResult {
     s.teachersAfter=s.stateTeachers-s.departures+s.arrivals;
     if(s.stateCountDifference!==null&&s.stateCountDifference!==0) controls.push({code:s.code,name:s.name,reason:'État école différent du personnel avec directeurs',value1:s.declaredStateTeachers,value2:s.stateIncludingDirectors});
     if(s.pupils===null) controls.push({code:s.code,name:s.name,reason:'École absente du fichier effectifs 2024–2025',value1:null,value2:null});
-    if(s.departures>s.poolCapacity||s.remainingPool<0||(s.departures>0&&s.stateTeachers-s.departures<s.usedRooms!)) throw new Error(`Départ invalide : ${s.code}`);
+    if(s.departures>s.poolCapacity||s.remainingPool<0||(s.departures>0&&s.pupils!==null&&s.stateTeachers-s.departures<Math.ceil(s.pupils/ENCADREMENT_NORM))) throw new Error(`Départ invalide : ${s.code}`);
     if(s.initialNeed!==null&&(s.arrivals>s.initialNeed||s.remainingNeed!==s.initialNeed-s.arrivals)) throw new Error(`Arrivée invalide : ${s.code}`);
   }
   if(new Set(moves.map(m=>m.teacherId)).size!==moves.length) throw new Error('Double affectation');
@@ -276,7 +308,10 @@ function summarize(schools:SchoolResult[],level:'region'|'district'):Summary[] {
   return result.sort((a,b)=>cmp(a.region,b.region)||(level==='district'?b.initialNeed-a.initialNeed||cmp(a.district,b.district)||cmp(a.department,b.department):0));
 }
 
-// Valeurs de recette pour les quatre fichiers fournis, sans modification :
+// Valeurs de recette de la version précédente (besoin par salles, sans
+// taux d'encadrement) sur les quatre fichiers fournis. Conservées à titre
+// historique — ne correspondent plus à ENGINE_VERSION depuis le passage au
+// besoin par taux d'encadrement ; ne pas s'en servir pour valider cette version.
 export const EXPECTED_TOTALS = {
   publicSchools:13494,personnel:69036,calculableSchools:13119,initialNeed:26635,
   pool:3090,moves:1880,districtMoves:1331,departmentMoves:549,remainingNeed:24755,
