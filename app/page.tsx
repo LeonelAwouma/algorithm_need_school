@@ -196,11 +196,49 @@ function ImportPage({ slots, onFile, onSimulate, canSimulate, simulationError, a
   </div>
 }
 
-function SearchToolbar({ query, setQuery, placeholder, onExport, extra }: { query: string; setQuery: (v: string) => void; placeholder: string; onExport?: () => void; extra?: React.ReactNode }) {
+type FilterSelection = Record<string, Set<string>>
+interface FilterGroupDef { key: string; label: string; options: string[] }
+
+/** Sélection multi-critères partagée par les pages avec un bouton Filtres. */
+function useFilterState() {
+  const [selected, setSelected] = useState<FilterSelection>({})
+  function toggle(key: string, value: string) {
+    setSelected(current => {
+      const next = new Set(current[key] ?? [])
+      if (next.has(value)) next.delete(value); else next.add(value)
+      return { ...current, [key]: next }
+    })
+  }
+  function clear() { setSelected({}) }
+  function matches(key: string, value: string) {
+    const set = selected[key]
+    return !set || set.size === 0 || set.has(value)
+  }
+  const activeCount = Object.values(selected).reduce((n, s) => n + s.size, 0)
+  return { selected, toggle, clear, matches, activeCount }
+}
+
+function FilterMenu({ groups, selected, onToggle, onClear }: { groups: FilterGroupDef[]; selected: FilterSelection; onToggle: (key: string, value: string) => void; onClear: () => void }) {
+  const activeCount = Object.values(selected).reduce((n, s) => n + s.size, 0)
+  const visibleGroups = groups.filter(g => g.options.length > 0)
+  if (visibleGroups.length === 0) return null
+  return <details className="filter-popover">
+    <summary className="button button-secondary"><Filter size={15} /> Filtres <span className="filter-count">{activeCount}</span></summary>
+    <div className="filter-panel">
+      {visibleGroups.map(g => <div className="filter-group" key={g.key}>
+        <h4>{g.label}</h4>
+        {g.options.map(opt => <label key={opt}><input type="checkbox" checked={selected[g.key]?.has(opt) ?? false} onChange={() => onToggle(g.key, opt)} />{opt}</label>)}
+      </div>)}
+      {activeCount > 0 && <div className="filter-actions"><button className="text-button" onClick={onClear}>Réinitialiser les filtres</button></div>}
+    </div>
+  </details>
+}
+
+function SearchToolbar({ query, setQuery, placeholder, onExport, extra, filters }: { query: string; setQuery: (v: string) => void; placeholder: string; onExport?: () => void; extra?: React.ReactNode; filters?: React.ReactNode }) {
   return <div className="toolbar-row">
     <div className="search-field"><Search size={16} /><input aria-label={placeholder} placeholder={placeholder} value={query} onChange={e => setQuery(e.target.value)} /></div>
     {extra}
-    <button className="button button-secondary"><Filter size={15} /> Filtres <span className="filter-count">0</span></button>
+    {filters}
     {onExport && <button className="button button-secondary" onClick={onExport}><ArrowDownToLine size={15} /> Exporter CSV</button>}
   </div>
 }
@@ -210,19 +248,32 @@ const ROW_LIMIT = 300
 function SchoolsPage({ result, setPage }: { result: SimulationResult | null; setPage: (page: PageKey) => void }) {
   const [query, setQuery] = useState('')
   const [onlyMoves, setOnlyMoves] = useState(false)
+  const { selected, toggle, clear, matches } = useFilterState()
+  const filterGroups = useMemo<FilterGroupDef[]>(() => {
+    if (!result) return []
+    const uniq = (values: (string | null)[]) => Array.from(new Set(values.filter((v): v is string => !!v))).sort()
+    return [
+      { key: 'status', label: 'Statut', options: uniq(result.schools.map(s => s.status)) },
+      { key: 'subsystem', label: 'Sous-système', options: uniq(result.schools.map(s => s.subsystem)) },
+      { key: 'area', label: 'Zone', options: uniq(result.schools.map(s => s.area)) },
+      { key: 'region', label: 'Région', options: uniq(result.schools.map(s => s.region)) },
+    ]
+  }, [result])
   const filtered = useMemo(() => {
     if (!result) return []
     const q = query.toLowerCase()
     return result.schools.filter(s =>
       (!q || `${s.code} ${s.name} ${s.region} ${s.department} ${s.district}`.toLowerCase().includes(q))
-      && (!onlyMoves || s.departures > 0 || s.arrivals > 0))
-  }, [result, query, onlyMoves])
+      && (!onlyMoves || s.departures > 0 || s.arrivals > 0)
+      && matches('status', s.status) && matches('subsystem', s.subsystem ?? '') && matches('area', s.area) && matches('region', s.region))
+  }, [result, query, onlyMoves, selected])
   if (!result) return <div className="page-stack"><EmptyState onImport={() => setPage('imports')} /></div>
   return <div className="page-stack">
     <SearchToolbar query={query} setQuery={setQuery} placeholder="Rechercher par code, nom ou région" onExport={() => exportCSV('ecoles.csv',
       ['Code', 'École', 'Région', 'Département', 'Arrondissement', 'Zone', 'Salles utilisées', 'Enseignants État', 'Directeurs', 'Besoin initial', 'Arrivées', 'Départs', 'Besoin restant', 'Statut'],
       filtered.map(s => [s.code, s.name, s.region, s.department, s.district, s.area, s.usedRooms, s.stateTeachers, s.stateDirectors, s.initialNeed, s.arrivals, s.departures, s.remainingNeed, s.status]))}
       extra={<button className={`button ${onlyMoves ? 'button-primary' : 'button-secondary'}`} onClick={() => setOnlyMoves(v => !v)}><ArrowLeftRight size={15} /> Avec rotation uniquement</button>}
+      filters={<FilterMenu groups={filterGroups} selected={selected} onToggle={toggle} onClear={clear} />}
     />
     <section className="panel table-panel">
       <div className="panel-heading"><div><p className="section-kicker">Couverture des salles</p><h2>Écoles et besoins</h2></div><StatusPill>{fmt(filtered.length)} résultats</StatusPill></div>
@@ -248,21 +299,28 @@ function SchoolsPage({ result, setPage }: { result: SimulationResult | null; set
 function PoolPage({ result, setPage }: { result: SimulationResult | null; setPage: (page: PageKey) => void }) {
   const [query, setQuery] = useState('')
   const byCode = useMemo(() => new Map((result?.schools ?? []).map(s => [s.code, s])), [result])
+  const { selected, toggle, clear, matches } = useFilterState()
+  const filterGroups = useMemo<FilterGroupDef[]>(() => {
+    if (!result) return []
+    return [{ key: 'phase', label: 'Phase', options: Array.from(new Set(result.pool.map(p => p.phase ?? 'Non affecté'))).sort() }]
+  }, [result])
   const filtered = useMemo(() => {
     if (!result) return []
     const q = query.toLowerCase()
     return result.pool.filter(p => {
+      if (!matches('phase', p.phase ?? 'Non affecté')) return false
       if (!q) return true
       const src = byCode.get(p.source)
       const dst = p.destination ? byCode.get(p.destination) : null
       return `${p.id} ${src?.name ?? ''} ${dst?.name ?? ''}`.toLowerCase().includes(q)
     })
-  }, [result, query, byCode])
+  }, [result, query, byCode, selected])
   if (!result) return <div className="page-stack"><EmptyState onImport={() => setPage('imports')} text="Le vivier potentiel apparaîtra ici après la simulation : enseignants excédentaires, ancienneté et destination proposée." /></div>
   return <div className="page-stack">
     <SearchToolbar query={query} setQuery={setQuery} placeholder="Rechercher par identifiant ou école" onExport={() => exportCSV('vivier.csv',
       ['Identifiant', 'École origine', 'Territoire', 'Ancienneté', 'Catégorie', 'Destination', 'Phase'],
       filtered.map(p => [p.id, byCode.get(p.source)?.name ?? p.source, byCode.get(p.source)?.region ?? '', p.tenure, p.category, p.destination ? (byCode.get(p.destination)?.name ?? p.destination) : 'Non affecté', p.phase ?? '']))}
+      filters={<FilterMenu groups={filterGroups} selected={selected} onToggle={toggle} onClear={clear} />}
     />
     <section className="panel table-panel">
       <div className="panel-heading"><div><p className="section-kicker">Ressources provisoires</p><h2>Vivier potentiel</h2></div><StatusPill>{fmt(filtered.length)} résultats</StatusPill></div>
@@ -283,16 +341,22 @@ function PoolPage({ result, setPage }: { result: SimulationResult | null; setPag
 
 function MovesPage({ result, setPage }: { result: SimulationResult | null; setPage: (page: PageKey) => void }) {
   const [query, setQuery] = useState('')
+  const { selected, toggle, clear, matches } = useFilterState()
+  const filterGroups = useMemo<FilterGroupDef[]>(() => {
+    if (!result) return []
+    return [{ key: 'phase', label: 'Phase', options: Array.from(new Set(result.moves.map(m => m.phase))).sort() }]
+  }, [result])
   const filtered = useMemo(() => {
     if (!result) return []
     const q = query.toLowerCase()
-    return result.moves.filter(m => !q || `${m.teacherId} ${m.sourceName} ${m.destinationName}`.toLowerCase().includes(q))
-  }, [result, query])
+    return result.moves.filter(m => matches('phase', m.phase) && (!q || `${m.teacherId} ${m.sourceName} ${m.destinationName}`.toLowerCase().includes(q)))
+  }, [result, query, selected])
   if (!result) return <div className="page-stack"><EmptyState onImport={() => setPage('imports')} text="Ces propositions sont issues de la simulation et ne constituent pas des mutations administrativement approuvées." /></div>
   return <div className="page-stack">
     <SearchToolbar query={query} setQuery={setQuery} placeholder="Rechercher par identifiant ou école" onExport={() => exportCSV('rotations.csv',
       ['Ordre', 'Enseignant', 'École origine', 'Arrondissement origine', 'École destination', 'Arrondissement destination', 'Ancienneté', 'Phase', 'Sous-système'],
       filtered.map(m => [m.order, m.teacherId, m.sourceName, m.sourceDistrict, m.destinationName, m.destinationDistrict, m.tenure, m.phase, m.subsystem]))}
+      filters={<FilterMenu groups={filterGroups} selected={selected} onToggle={toggle} onClear={clear} />}
     />
     <section className="panel table-panel">
       <div className="panel-heading"><div><p className="section-kicker">Résultats du moteur</p><h2>Rotations proposées</h2></div><StatusPill>{fmt(filtered.length)} résultats</StatusPill></div>
@@ -386,14 +450,20 @@ function TerritoryPage({ result, setPage }: { result: SimulationResult | null; s
 
 function ControlsPage({ result, setPage }: { result: SimulationResult | null; setPage: (page: PageKey) => void }) {
   const [query, setQuery] = useState('')
+  const { selected, toggle, clear, matches } = useFilterState()
+  const filterGroups = useMemo<FilterGroupDef[]>(() => {
+    if (!result) return []
+    return [{ key: 'reason', label: 'Motif', options: Array.from(new Set(result.controls.map(c => c.reason))).sort() }]
+  }, [result])
   const filtered = useMemo(() => {
     if (!result) return []
     const q = query.toLowerCase()
-    return result.controls.filter(c => !q || `${c.code} ${c.name} ${c.reason}`.toLowerCase().includes(q))
-  }, [result, query])
+    return result.controls.filter(c => matches('reason', c.reason) && (!q || `${c.code} ${c.name} ${c.reason}`.toLowerCase().includes(q)))
+  }, [result, query, selected])
   if (!result) return <div className="page-stack"><EmptyState onImport={() => setPage('imports')} text="Les anomalies remontées par le moteur, les écarts de personnel et les données manquantes seront listés ici." /></div>
   return <div className="page-stack">
-    <SearchToolbar query={query} setQuery={setQuery} placeholder="Rechercher par code, école ou motif" onExport={() => exportCSV('controles.csv', ['Code', 'École', 'Motif', 'Valeur 1', 'Valeur 2'], filtered.map(c => [c.code, c.name, c.reason, c.value1, c.value2]))} />
+    <SearchToolbar query={query} setQuery={setQuery} placeholder="Rechercher par code, école ou motif" onExport={() => exportCSV('controles.csv', ['Code', 'École', 'Motif', 'Valeur 1', 'Valeur 2'], filtered.map(c => [c.code, c.name, c.reason, c.value1, c.value2]))}
+      filters={<FilterMenu groups={filterGroups} selected={selected} onToggle={toggle} onClear={clear} />} />
     <section className="panel table-panel">
       <div className="panel-heading"><div><p className="section-kicker">Fiabilité des sources</p><h2>Contrôles des données</h2></div><StatusPill tone={filtered.length ? 'warning' : 'success'}>{fmt(filtered.length)} anomalies</StatusPill></div>
       <div className="table-wrap"><table><thead><tr><th>École</th><th>Motif</th><th className="number">Valeur 1</th><th className="number">Valeur 2</th></tr></thead>

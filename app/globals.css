@@ -49,6 +49,16 @@ button:focus-visible, input:focus-visible { outline: 3px solid #9bc5e5; outline-
 .settings-info { display:flex; flex-direction:column; gap:1px; }.settings-info > div { display:grid; grid-template-columns:20px 1fr auto; gap:10px; align-items:center; padding:13px 0; border-top:1px solid #edf0f3; font-size:12px; color:#53677b; }.settings-info > div:first-child { border-top:0; }.settings-info svg { color:#7691ab; }.settings-info strong { color:#25384c; font-size:12px; font-weight:650; }
 .settings-actions { display:flex; flex-direction:column; gap:1px; }.settings-action { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:16px 0; border-top:1px solid #edf0f3; }.settings-action:first-child { border-top:0; }.settings-action strong { display:block; color:#1c2c3d; font-size:13px; margin-bottom:3px; }.settings-action p { max-width:480px; }.settings-action .button { flex:none; }
 @media (max-width: 640px) { .settings-action { flex-direction:column; align-items:flex-start; } }
+.filter-popover { position:relative; }.filter-popover summary { list-style:none; }.filter-popover summary::-webkit-details-marker, .filter-popover summary::marker { display:none; content:''; }.filter-popover[open] summary { border-color:#5f94bb; color:var(--blue); }
+.filter-panel { position:absolute; top:calc(100% + 8px); left:0; z-index:30; width:240px; max-height:360px; overflow-y:auto; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 12px 30px #18244022; padding:14px; display:flex; flex-direction:column; gap:16px; }
+.filter-group h4 { margin:0 0 8px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#8190a0; }
+.filter-group label { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:12px; color:#3c4f63; cursor:pointer; }
+.filter-group input { accent-color:var(--primary); width:14px; height:14px; }
+.filter-actions { display:flex; justify-content:flex-end; padding-top:2px; border-top:1px solid #edf0f3; }
+/* En-têtes de tableau fixes au défilement. */
+.table-wrap { max-height:min(620px, calc(100vh - 340px)); overflow-y:auto; }
+table { border-collapse:separate; border-spacing:0; }
+th { position:sticky; top:0; z-index:2; }
 .glossary-list { display:flex; flex-direction:column; gap:18px; margin-top:14px; }.glossary-item { padding-top:16px; border-top:1px solid #edf0f3; }.glossary-item:first-child { padding-top:0; border-top:0; }.glossary-item h3 { font-size:14px; color:#1c2c3d; margin-bottom:5px; }.glossary-summary { font-weight:650; color:#2a638d; font-size:13px; margin-bottom:6px; }.glossary-item p:last-child { color:#40546a; font-size:13px; line-height:1.6; margin-bottom:0; }
 @media (max-width: 900px) { .roster-layout { grid-template-columns:1fr; }.roster-columns { grid-template-columns:1fr; } }
 .sidebar-dimmer { display:none; }
