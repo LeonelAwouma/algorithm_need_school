@@ -12,28 +12,28 @@ export interface GlossaryTerm {
 /** Les quatre indicateurs clés du tableau de bord, en langage simple. */
 export const KEY_INDICATORS: GlossaryTerm[] = [
   {
-    term: 'Écoles publiques',
-    summary: "Le nombre total d'écoles primaires publiques prises en compte par le moteur.",
+    term: 'Besoin total',
+    summary: "Le nombre de postes ouverts, tous établissements confondus.",
     explanation:
-      "Seules les écoles publiques (« Public / Government »), telles que recensées dans le fichier des salles de classe 2024–2025, sont retenues : les écoles privées ne sont pas comptées. C'est le point de départ de tout le calcul — toutes les autres statistiques (besoins, vivier, rotations) ne portent que sur cet ensemble d'écoles.",
+      "Chaque établissement déclare un nombre de postes ouverts (nb_postes_ouverts). Le moteur crée un poste individuel par unité ouverte — c'est ce total qui constitue le besoin de départ, avant toute affectation.",
   },
   {
-    term: 'Écoles calculables',
-    summary: "Parmi les écoles publiques, celles pour lesquelles un besoin a pu être réellement calculé.",
+    term: 'Disponibles',
+    summary: "Les enseignants du vivier, éligibles à une affectation.",
     explanation:
-      "Une école est « calculable » si elle a du personnel recensé, un nombre de salles cohérent (un nombre entier positif ou nul), et si la région, le département et l'arrondissement de son personnel correspondent bien à ceux de l'école. Si l'une de ces conditions manque, l'école est mise de côté et apparaît dans la rubrique Contrôles, avec le motif exact : aucun personnel connu, salles manquantes ou incohérentes, ou géographie discordante entre l'école et son personnel.",
+      "Un enseignant entre dans le vivier s'il est actif ou disponible, payé par l'État, et n'a pas le statut malade ou abandon. Chaque enseignant du vivier reçoit un barème individuel qui détermine sa priorité de passage.",
   },
   {
-    term: 'Besoin initial',
-    summary: "Le nombre d'enseignants qui manquent dans les écoles où le taux d'encadrement est trop élevé.",
+    term: 'Affectés',
+    summary: "Les enseignants du vivier pour lesquels un poste a été trouvé.",
     explanation:
-      "La norme camerounaise est de 1 enseignant de l'État pour 60 élèves. Une école n'est pas considérée en besoin tant que ce taux reste raisonnable — y compris entre 60 et 80 élèves par enseignant. Elle devient « nécessiteuse » à partir de 120 élèves par enseignant (le double de la norme) : le besoin est alors le nombre d'enseignants à ajouter pour redescendre à 60 élèves par enseignant. En dessous de ce seuil, le besoin est nul — il n'est jamais négatif. C'est une estimation, pas un quota de recrutement officiellement validé.",
+      "Le moteur parcourt les phases dans l'ordre (commune, département, règles ciblées, puis reste) et affecte chaque enseignant disponible au meilleur poste encore ouvert selon le score enseignant-poste. Un enseignant affecté ne repasse pas dans les phases suivantes.",
   },
   {
-    term: 'Vivier potentiel',
-    summary: "Les enseignants de l'État qui peuvent être redéployés vers une école en besoin.",
+    term: 'À recruter',
+    summary: "Les postes qui restent ouverts après toutes les phases.",
     explanation:
-      "Dans une école où le nombre d'enseignants de l'État dépasse ce que demande la norme de 60 élèves par enseignant (donc en excédent), les enseignants ayant entre 6 et 60 ans d'ancienneté dans cette école deviennent candidats à une rotation. Les plus anciens sont retenus en priorité, dans la limite de l'excédent ; à ancienneté égale, le plus jeune passe devant. Ce sont eux que le moteur propose ensuite pour couvrir les écoles en besoin (voir Rotations proposées).",
+      "C'est le déficit final : des postes pour lesquels aucun enseignant du vivier n'a pu être proposé, à l'issue de toutes les phases activées. Ce chiffre appelle un recrutement externe, pas une simulation de plus.",
   },
 ]
 
@@ -46,35 +46,39 @@ export interface MenuSection {
 export const MENU_SECTIONS: MenuSection[] = [
   {
     label: 'Tableau de bord',
-    description: "Vue d'ensemble dès l'ouverture de l'application : le nombre d'écoles, le besoin initial, le vivier disponible, et les régions où les besoins sont les plus importants.",
+    description: "Vue d'ensemble dès l'ouverture de l'application : la synthèse chiffrée de la dernière affectation calculée.",
   },
   {
     label: 'Importation des données',
-    description: "L'endroit où charger les quatre fichiers sources (salles, personnel, écoles, année 5) pour que le moteur calcule les besoins et les rotations — automatiquement depuis le dossier data/sources, ou en sélectionnant les fichiers à la main.",
+    description: "L'endroit où charger les deux fichiers sources (établissements, enseignants) pour que le moteur calcule les affectations.",
   },
   {
-    label: 'Écoles et besoins',
-    description: "La liste complète des écoles publiques avec, pour chacune, son besoin de couverture, les départs et arrivées d'enseignants proposés, et le besoin qu'il reste à couvrir.",
+    label: 'Paramètres de l\'algorithme',
+    description: "Les seuils, les poids du barème individuel et du score de poste, et les phases DREB activables — modifiables avant de relancer le calcul. Un fichier de configuration JSON peut aussi être chargé ou téléchargé ici.",
+  },
+  {
+    label: 'Écoles en besoin',
+    description: "La liste des établissements ayant au moins un poste ouvert, avec leur taux d'encadrement.",
+  },
+  {
+    label: 'Écoles fournisseurs',
+    description: "Les établissements d'origine des enseignants du vivier, avec le nombre d'enseignants mobilisables par commune.",
+  },
+  {
+    label: 'Affectations proposées',
+    description: "Le résultat concret du moteur : la liste des enseignants affectés, de quel établissement d'origine vers quel poste, avec le score retenu.",
+  },
+  {
+    label: 'Enseignants non affectés',
+    description: "Les enseignants du vivier pour lesquels aucun poste compatible n'a été trouvé à l'issue de toutes les phases.",
+  },
+  {
+    label: 'Postes non pourvus',
+    description: "Les postes ouverts qui restent sans enseignant proposé — le déficit à recruter.",
   },
   {
     label: 'Vivier potentiel',
-    description: "La liste des enseignants identifiés comme mobilisables pour une rotation, avec leur école d'origine, leur ancienneté et, s'il y en a une, la destination que le moteur leur propose.",
-  },
-  {
-    label: 'Rotations proposées',
-    description: "Le résultat concret du moteur : la liste des enseignants qu'il propose de déplacer, de quelle école vers quelle école.",
-  },
-  {
-    label: 'Effectifs N / N+1',
-    description: "Pour une école donnée, la comparaison entre son effectif actuel (Année N) et son effectif après application des rotations proposées (Année N+1).",
-  },
-  {
-    label: 'Analyse territoriale',
-    description: 'Les mêmes indicateurs que pour les écoles, mais regroupés par région ou par arrondissement, pour comparer les territoires entre eux.',
-  },
-  {
-    label: 'Contrôles des données',
-    description: "La liste des anomalies détectées dans les fichiers sources (école sans personnel, salles incohérentes, écarts entre fichiers…), pour vérifier la fiabilité des chiffres avant de les utiliser.",
+    description: "La liste complète des enseignants éligibles, avec leur barème individuel et leur statut d'affectation.",
   },
   {
     label: 'Méthodologie',
@@ -90,39 +94,39 @@ export interface MethodRule {
 /** Règles techniques précises du moteur, pour un public qui veut le détail exact. */
 export const METHOD_RULES: MethodRule[] = [
   {
-    title: 'Taux d\'encadrement',
-    text: "Élèves ÷ enseignants d'État de fonction 2 (hors directeurs, hors maîtres des parents). Norme : 60. École nécessiteuse à partir de 120 (le double de la norme) ; entre 60 et 80, pas de besoin.",
+    title: 'Barème individuel',
+    text: "Combinaison pondérée de l'ancienneté de carrière, d'un bonus d'ancienneté au poste (plafonné à 10 points à partir du seuil configuré), de la situation familiale, du nombre d'enfants, de la formation continue et d'un score d'âge ajusté (âge plafonné à 60 ans, divisé par 6). Détermine l'ordre de passage dans le vivier.",
   },
   {
-    title: 'Besoin de couverture',
-    text: "Si nécessiteuse : max(0, arrondi(élèves ÷ 60) − enseignants État en poste) ; sinon zéro. Les salles utilisées n'entrent plus dans ce calcul. École sans effectif récent : besoin inconnu, laissé vide.",
+    title: 'Score enseignant-poste',
+    text: "Combinaison pondérée du barème individuel, d'un score de proximité (même commune > même département > autre), de l'ancienneté au poste, de la situation familiale, d'une règle d'âge (jeunes vers établissements multigrades, plus âgés vers IAEB ou établissements non multigrades) et d'une règle de zone (ancienneté rurale vers zone urbaine ou semi-urbaine). Un bonus de priorité locale s'ajoute selon le rang déclaré par l'établissement.",
   },
   {
-    title: 'Vivier potentiel',
-    text: "Excédent = max(0, enseignants État − arrondi(élèves ÷ 60)), même norme, symétrique du besoin. Dans chaque école excédentaire, enseignants État avec ancienneté école > 5 ans et ≤ 60 ans, les plus anciens retenus dans la limite de l'excédent ; à ancienneté égale, le plus jeune est priorisé.",
+    title: 'Phase 1 — Même commune',
+    text: "Chaque enseignant du vivier, dans l'ordre du barème, est affecté au meilleur poste encore ouvert dans sa commune de rattachement.",
   },
   {
-    title: 'Distance / proximité',
-    text: "Aucune des sources ne contient de commune, de coordonnées GPS ni de distance réelle. L'arrondissement (puis le département) sert de substitut de proximité pour apparier écoles et enseignants — deux écoles d'un même arrondissement ne sont pas forcément voisines.",
+    title: 'Phase 2 — Même département',
+    text: "Pour les enseignants restants : meilleur poste encore ouvert dans leur département de rattachement.",
   },
   {
-    title: 'Critères non employés',
-    text: "Sexe et situation matrimoniale n'entrent dans aucun classement : absents des trois fichiers (classes, personnel, effectifs), aucune colonne correspondante. Formation continue et souhaits de mobilité non disponibles non plus.",
+    title: 'Phase 3 — Jeunes vers multigrades',
+    text: "Pour les enseignants restants d'âge inférieur ou égal au seuil « jeune » : meilleur poste ouvert, tous établissements confondus, sans contrainte géographique.",
   },
   {
-    title: 'Phase 1 — Arrondissement',
-    text: 'Même région, département, arrondissement et sous-système ; priorité au besoin restant le plus élevé puis au code école croissant.',
+    title: 'Phase 3 — Anciens du rural vers l\'urbain',
+    text: "Pour les enseignants restants rattachés à une zone rurale avec au moins 5 ans d'ancienneté au poste : meilleur poste ouvert, sans contrainte géographique.",
   },
   {
-    title: 'Phase 2 — Département',
-    text: "Pour les enseignants restants : même région, département et sous-système ; l'arrondissement le plus demandeur puis l'école la plus déficitaire.",
+    title: 'Phase 4 — Reste',
+    text: "Tous les enseignants encore disponibles sont affectés au meilleur poste encore ouvert, sans aucune contrainte.",
   },
   {
-    title: 'Vue Année N / N+1',
-    text: "Projection de la simulation : un enseignant affecté ailleurs quitte la colonne Année N+1 de son école d'origine et apparaît dans celle de sa destination. Aucune trajectoire interannuelle réelle n'est observée, faute d'identifiant personnel stable dans les sources.",
+    title: 'Garde-fous déclarés, non appliqués par le calcul',
+    text: "Le seuil « ne pas vider une école sous un taux donné » et la règle « permutations IAEB par âge » (phase3_ages_vers_iaeb) figurent dans la configuration mais ne pilotent aucune étape du moteur — comme dans la version d'origine. La règle d'âge vers IAEB reste néanmoins active dans le score enseignant-poste, indépendamment de cette case.",
   },
   {
-    title: 'Limites non implémentées',
-    text: 'Distances réelles, permutations IAEB, classes multigrades, demandes individuelles de mobilité et quota officiel de recrutement.',
+    title: 'Limites',
+    text: "Aucune distance réelle : la proximité repose sur l'égalité de commune ou de département déclarés, pas sur des coordonnées. Un enseignant n'est jamais affecté deux fois ; un poste n'accueille jamais deux enseignants — ces deux garanties sont structurelles, pas des options à activer.",
   },
 ]

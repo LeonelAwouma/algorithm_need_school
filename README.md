@@ -1,20 +1,21 @@
 # Planification des enseignants
 
-Application de simulation des plans de rotation des enseignants du primaire public, à partir des fichiers officiels (salles de classe, personnel, effectifs scolaires). Elle calcule le besoin de couverture par école, identifie un vivier d'enseignants mobilisables et propose des rotations, en suivant la démarche définie avec la DRH.
+Application d'affectation séquentielle des enseignants du primaire public, à partir de deux fichiers (établissements, enseignants). Elle calcule un barème individuel par enseignant, un score enseignant-poste, et propose des affectations en plusieurs phases (commune, département, règles ciblées, puis reste).
 
-⚠️ **Ceci est un outil de simulation.** Les résultats (besoins, vivier, rotations) sont des estimations basées sur des hypothèses explicites — pas des mutations administrativement approuvées ni un quota de recrutement officiel. Voir la page *Méthodologie* de l'application pour le détail des règles et de leurs limites.
+⚠️ **Ceci est un outil de simulation.** Les propositions d'affectation sont des estimations basées sur un barème configurable — pas des mutations administrativement approuvées ni un quota de recrutement officiel. Voir la page *Méthodologie* de l'application pour le détail des règles et de leurs limites.
 
 ## Fonctionnalités
 
-- **Import automatique** des quatre fichiers sources depuis `data/sources/` (ou import manuel via le sélecteur de fichiers du navigateur)
-- **Tableau de bord** avec les indicateurs clés (écoles publiques, écoles calculables, besoin initial, vivier potentiel)
-- **Écoles et besoins** : liste des écoles publiques avec besoin de couverture, départs/arrivées proposés et filtres
-- **Vivier potentiel** : enseignants mobilisables, avec ancienneté et destination proposée
-- **Rotations proposées** : la liste concrète des mouvements simulés
-- **Effectifs Année N / N+1** : pour une école donnée, l'effectif avant et après application des rotations
-- **Analyse territoriale** : les mêmes indicateurs agrégés par région ou arrondissement
-- **Contrôles des données** : anomalies détectées dans les fichiers sources (personnel absent, salles incohérentes, écarts…)
+- **Import manuel** des deux fichiers sources (établissements, enseignants) via le sélecteur de fichiers du navigateur
+- **Paramètres de l'algorithme** : seuils, poids du barème individuel et du score de poste, phases DREB activables, import/export de configuration JSON
+- **Tableau de bord** avec la synthèse chiffrée (besoin total, disponibles, affectés, non affectés, postes non pourvus, à recruter)
+- **Écoles en besoin** : établissements avec des postes ouverts et leur taux d'encadrement
+- **Écoles fournisseurs** : origine des enseignants du vivier, par commune
+- **Affectations proposées** : la liste concrète des affectations calculées, avec le score retenu
+- **Enseignants non affectés** et **Postes non pourvus** : ce qui reste après toutes les phases
+- **Vivier potentiel** : tous les enseignants éligibles, avec leur barème et leur statut
 - **Méthodologie** : explication en langage simple des indicateurs et des règles précises du moteur, exportable en Word (.docx)
+- **Export Excel** : rapport complet multi-feuilles (synthèse, écoles, affectations, vivier…)
 
 ## Stack technique
 
