@@ -1,49 +1,45 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import localFont from 'next/font/local'
 import './globals.css'
 
+// Polices (SIL OFL 1.1) embarquées dans l'application : aucune requête vers un service de
+// polices, l'application fonctionnant sans connexion Internet.
+// Figtree est la police principale ; Source Sans 3 reste en repli dans la pile de app/globals.css.
+const figtree = localFont({
+  src: './fonts/figtree-latin-wght-normal.woff2',
+  weight: '300 900',
+  display: 'swap',
+  variable: '--font-figtree',
+})
+
+const sourceSans = localFont({
+  src: './fonts/source-sans-3-latin-wght-normal.woff2',
+  weight: '200 900',
+  display: 'swap',
+  variable: '--font-source-sans',
+})
+
 export const metadata: Metadata = {
-  title: 'Planification des enseignants',
-  description: 'Planification et analyse de la couverture des écoles primaires publiques.',
-  generator: 'v0.app',
+  title: 'ALGOBABA — Planification des enseignants',
+  description:
+    "Analyse des besoins, répartition territoriale et simulation de scénarios d'affectation. Traitement entièrement local, sans transmission de données.",
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: [{ url: '/icon-logo-64.png', type: 'image/png', sizes: '64x64' }],
+    apple: '/apple-icon-logo.png',
   },
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light dark',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
-  ],
+  width: 'device-width',
+  initialScale: 1,
+  colorScheme: 'light',
+  themeColor: '#027174',
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className="bg-background">
-      <body className="antialiased">
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
-      </body>
+    <html lang="fr" className={`${figtree.variable} ${sourceSans.variable}`}>
+      <body>{children}</body>
     </html>
   )
 }

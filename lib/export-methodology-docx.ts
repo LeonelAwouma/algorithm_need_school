@@ -1,46 +1,62 @@
 'use client'
 
-import { Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx'
-import { KEY_INDICATORS, MENU_SECTIONS, METHOD_RULES } from '@/lib/methodology'
+/**
+ * Export Word de la page Méthodologie. Le document est produit dans le
+ * navigateur à partir du même contenu que la page : une seule source de vérité.
+ */
 
-export async function downloadMethodologyDocx() {
+import { Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx'
+import { NOTIONS, REGLES_MOTEUR, VOCABULAIRE } from './methodology'
+import { MENTION_SIMULATION } from './analytics/narrative'
+
+export async function downloadMethodologyDocx(anneeScolaire?: string): Promise<void> {
   const doc = new Document({
     sections: [
       {
         children: [
           new Paragraph({ text: 'Méthodologie — Planification des enseignants', heading: HeadingLevel.TITLE }),
-          new Paragraph({ text: 'Année scolaire 2024–2025', spacing: { after: 300 } }),
+          anneeScolaire
+            ? new Paragraph({ text: `Année scolaire ${anneeScolaire}`, spacing: { after: 200 } })
+            : new Paragraph({ text: '', spacing: { after: 200 } }),
+          new Paragraph({ children: [new TextRun({ text: MENTION_SIMULATION, italics: true })], spacing: { after: 320 } }),
 
-          new Paragraph({ text: 'Comprendre les indicateurs clés', heading: HeadingLevel.HEADING_1, spacing: { before: 200, after: 100 } }),
-          new Paragraph({
-            spacing: { after: 300 },
-            children: [new TextRun("Les quatre indicateurs suivants apparaissent sur le tableau de bord. Chacun s'appuie sur le précédent : on part des écoles publiques, on ne garde que celles qu'on peut réellement calculer, on en déduit un besoin, puis un vivier d'enseignants pour le combler.")],
+          new Paragraph({ text: 'Les notions, une par une', heading: HeadingLevel.HEADING_1, spacing: { before: 200, after: 120 } }),
+          ...NOTIONS.flatMap(notion => {
+            const blocs = [
+              new Paragraph({ text: notion.titre, heading: HeadingLevel.HEADING_2, spacing: { before: 200 } }),
+              new Paragraph({ text: notion.explication, spacing: { after: 120 } }),
+            ]
+            if (notion.parametrable) {
+              blocs.push(
+                new Paragraph({
+                  children: [new TextRun({ text: 'Paramétrable : ', bold: true }), new TextRun(notion.parametrable)],
+                  spacing: { after: 120 },
+                }),
+              )
+            }
+            if (notion.formule) {
+              blocs.push(new Paragraph({ children: [new TextRun({ text: notion.formule, font: 'Consolas', size: 20 })], spacing: { after: 160 } }))
+            }
+            return blocs
           }),
-          ...KEY_INDICATORS.flatMap(item => [
-            new Paragraph({ text: item.term, heading: HeadingLevel.HEADING_2, spacing: { before: 200 } }),
-            new Paragraph({ children: [new TextRun({ text: item.summary, italics: true })], spacing: { after: 80 } }),
-            new Paragraph({ text: item.explanation, spacing: { after: 200 } }),
-          ]),
 
-          new Paragraph({ text: 'Que trouve-t-on dans chaque page ?', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 100 } }),
-          ...MENU_SECTIONS.flatMap(item => [
-            new Paragraph({
-              spacing: { before: 120 },
-              children: [new TextRun({ text: item.label + ' — ', bold: true }), new TextRun(item.description)],
-            }),
-          ]),
+          new Paragraph({ text: 'Règles exactes appliquées par le moteur', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 120 } }),
+          ...REGLES_MOTEUR.map(
+            regle =>
+              new Paragraph({
+                spacing: { before: 120 },
+                children: [new TextRun({ text: `${regle.titre} — `, bold: true }), new TextRun(regle.texte)],
+              }),
+          ),
 
-          new Paragraph({ text: 'Règles précises appliquées par le moteur', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 100 } }),
-          new Paragraph({
-            spacing: { after: 200 },
-            children: [new TextRun('Pour les lecteurs qui veulent le détail exact des calculs et des limites connues.')],
-          }),
-          ...METHOD_RULES.flatMap(rule => [
-            new Paragraph({
-              spacing: { before: 120 },
-              children: [new TextRun({ text: rule.title + ' — ', bold: true }), new TextRun(rule.text)],
-            }),
-          ]),
+          new Paragraph({ text: 'Vocabulaire', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 120 } }),
+          ...VOCABULAIRE.map(
+            v =>
+              new Paragraph({
+                spacing: { before: 80 },
+                children: [new TextRun({ text: `${v.technique} : `, bold: true }), new TextRun(v.simplifie)],
+              }),
+          ),
         ],
       },
     ],
@@ -48,9 +64,9 @@ export async function downloadMethodologyDocx() {
 
   const blob = await Packer.toBlob(doc)
   const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = 'methodologie-planification-enseignants.docx'
-  link.click()
+  const lien = document.createElement('a')
+  lien.href = url
+  lien.download = 'methodologie-planification-enseignants.docx'
+  lien.click()
   URL.revokeObjectURL(url)
 }
