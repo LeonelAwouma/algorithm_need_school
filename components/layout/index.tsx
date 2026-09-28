@@ -46,6 +46,7 @@ export function Sidebar({
   onFermer,
   donneesChargees,
   simulationPrete,
+  version,
 }: {
   page: PageKey
   onNavigate: (page: PageKey) => void
@@ -54,6 +55,8 @@ export function Sidebar({
   onFermer: () => void
   donneesChargees: boolean
   simulationPrete: boolean
+  /** Version installée, affichée dans l'application de bureau pour faciliter l'assistance. */
+  version?: string
 }) {
   const estDesactive = (item: NavItem) =>
     (item.exigeDonnees && !donneesChargees) || (item.exigeSimulation && !simulationPrete)
@@ -98,7 +101,10 @@ export function Sidebar({
 
       <p className="privacy-note">
         <ShieldCheck size={15} aria-hidden="true" />
-        <span>Traitement entièrement local : aucun fichier n’est envoyé sur un réseau.</span>
+        <span>
+          Traitement entièrement local : aucun fichier n’est envoyé sur un réseau.
+          {version && <span className="sidebar-version">AlgoBaba version {version}</span>}
+        </span>
       </p>
     </aside>
   )

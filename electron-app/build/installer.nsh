@@ -19,3 +19,48 @@
     !define APP_BUILD_DIR "$%ALGOBABA_APP_DIR%"
   !endif
 !endif
+
+; --- Mises à jour : aucune question, relance automatique ----------------------------------
+;
+; Quand l'application installe une mise à jour qu'elle vient de télécharger (bouton
+; « Redémarrer et installer »), l'installateur est lancé avec --updated. Il affiche alors
+; la barre de progression et le logo, mais deux pages n'ont plus de sens :
+;   — « Choisissez les options d'installation » (pour moi / pour tous) : le choix a été fait
+;     à la première installation ; on reprend le même mode, sans le redemander ;
+;   — la page de fin « Fermer » : l'application se relance d'elle-même.
+; La première installation n'est pas concernée : elle garde toutes ses pages.
+
+!macro customInstallMode
+  ${if} ${isUpdated}
+    ${if} $hasPerMachineInstallation == "1"
+      StrCpy $isForceMachineInstall "1"
+    ${else}
+      StrCpy $isForceCurrentInstall "1"
+    ${endif}
+  ${endif}
+!macroend
+
+!macro customFinishPage
+  ; Même lancement que la page de fin standard d'electron-builder.
+  Function algobabaLancer
+    ${if} ${isUpdated}
+      StrCpy $1 "--updated"
+    ${else}
+      StrCpy $1 ""
+    ${endif}
+    ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
+  FunctionEnd
+
+  ; En mise à jour, la page de fin est sautée et l'application relancée aussitôt.
+  Function algobabaAvantPageFin
+    ${if} ${isUpdated}
+      Call algobabaLancer
+      Abort
+    ${endif}
+  FunctionEnd
+
+  !define MUI_FINISHPAGE_RUN
+  !define MUI_FINISHPAGE_RUN_FUNCTION "algobabaLancer"
+  !define MUI_PAGE_CUSTOMFUNCTION_PRE algobabaAvantPageFin
+  !insertmacro MUI_PAGE_FINISH
+!macroend

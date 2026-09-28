@@ -1,13 +1,18 @@
 // Processus principal Electron : sert l'export statique Next.js (dossier
 // "out") via un petit serveur HTTP local, puis l'affiche dans une fenêtre.
 // Aucune donnée ne quitte la machine : le serveur n'écoute que sur
-// 127.0.0.1 et l'application ne fait aucun appel réseau externe.
+// 127.0.0.1. Le seul échange réseau est la recherche de mises à jour
+// (voir mises-a-jour.js), qui ne transmet aucune donnée d'utilisateur.
 // Serveur écrit sans dépendance externe pour garder l'exécutable léger.
 
 const path = require('node:path')
 const fs = require('node:fs')
 const http = require('node:http')
 const { app, BrowserWindow, Menu } = require('electron')
+const { demarrerMisesAJour } = require('./mises-a-jour')
+
+/** Fenêtre principale courante, pour lui transmettre l'état des mises à jour. */
+let fenetrePrincipale = null
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -90,14 +95,17 @@ async function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      preload: path.join(__dirname, 'preload.js'),
     },
   })
+  fenetrePrincipale = win
 
   await win.loadURL(`http://127.0.0.1:${port}/`)
 }
 
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null)
+  demarrerMisesAJour(() => fenetrePrincipale)
   createWindow()
 
   app.on('activate', () => {

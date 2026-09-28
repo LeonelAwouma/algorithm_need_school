@@ -595,6 +595,45 @@ Une Pull Request ne devrait pas introduire d’erreur de compilation.
 
 ---
 
+## Publier une nouvelle version de l’application de bureau
+
+L’application installée (AlgoBaba) se met à jour seule depuis les **GitHub Releases** de ce dépôt.
+
+### Côté utilisateur
+
+1. Au lancement, puis toutes les quatre heures, l’application vérifie s’il existe une version plus récente.
+2. Si oui, elle la télécharge en arrière-plan et vérifie son empreinte SHA-512. L’utilisateur peut continuer à travailler.
+3. Un bandeau annonce que la version est prête. Elle s’installe :
+   * **à la fermeture** de l’application, sans aucune fenêtre ;
+   * ou **tout de suite**, par le bouton « Redémarrer et installer » : l’installateur affiche le logo et la barre de progression, sans poser de question, puis l’application se rouvre d’elle-même.
+
+Le bandeau rappelle que les données importées et les faits de Prince, qui ne vivent qu’en mémoire, sont effacés au redémarrage.
+
+Sans connexion, la vérification échoue en silence et l’application fonctionne normalement. Elle ne transmet aucune donnée : seule la demande du fichier de version publié part vers GitHub. Sur un poste où tout accès extérieur est proscrit, la variable d’environnement `ALGOBABA_SANS_MISE_A_JOUR=1` désactive entièrement les mises à jour.
+
+Le journal des vérifications se trouve dans `%APPDATA%\planification-enseignants-desktop\mises-a-jour.log`.
+
+### Côté mainteneur
+
+1. Augmenter le numéro de version dans `electron-app/package.json` (par exemple `0.2.0` → `0.2.1`). **Sans changement de version, aucun poste ne se met à jour.**
+2. Créer un jeton GitHub (Settings → Developer settings → Fine-grained tokens) avec l’accès **Contents : Read and write** sur ce dépôt, puis le placer dans la variable d’environnement `GH_TOKEN`. Ne jamais l’écrire dans un fichier du dépôt.
+3. Lancer, depuis la racine du projet :
+
+   ```bash
+   npm run release
+   ```
+
+   Cette commande construit l’installateur et le dépose, avec `latest.yml` et sa carte des blocs, dans un **brouillon** de release sur GitHub.
+4. Relire le brouillon sur GitHub, puis cliquer sur **Publish release**. Les postes le reçoivent à leur prochaine vérification.
+
+Le brouillon est une étape de contrôle volontaire : tant qu’il n’est pas publié, aucun utilisateur ne le reçoit.
+
+Pour construire un installateur sans rien publier : `npm run dist`.
+
+> La version 0.1.0, installée avant l’ajout des mises à jour automatiques, ne sait pas se mettre à jour. Il faut installer une fois la 0.2.0 à la main ; les versions suivantes arriveront seules.
+
+---
+
 # Format des données
 
 L’application utilise actuellement deux principales sources.

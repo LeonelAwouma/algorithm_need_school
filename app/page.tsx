@@ -14,6 +14,7 @@ import { FILTRES_VIDES } from '@/lib/analytics/territory'
 import { LIBELLE_SCOPE } from '@/lib/simulation/scenarios'
 import { Notice, Pill } from '@/components/common'
 import { FilterBar, PageHeader, Sidebar, TerritoryBreadcrumb, Topbar } from '@/components/layout'
+import { BandeauMiseAJour, useMiseAJour } from '@/components/layout/MiseAJour'
 import { ImportWizard } from '@/components/import/ImportWizard'
 import { OverviewPage } from '@/components/dashboard/OverviewPage'
 import { NationalDiagnosticPage, PrioritySchoolsPage, TerritoriesPage } from '@/components/diagnostic'
@@ -57,6 +58,7 @@ export default function Page() {
     resultatAffiche,
   } = store
 
+  const miseAJour = useMiseAJour()
   const nomScenario = scenarios.find(s => s.id === scenarioActif)?.nom ?? 'Situation actuelle'
 
   const etat = calculEnCours ? (
@@ -115,6 +117,7 @@ export default function Page() {
           onFermer={() => setMenuOuvert(false)}
           donneesChargees={donneesChargees}
           simulationPrete={simulationPrete}
+          version={miseAJour?.versionActuelle}
         />
 
         <div className="main-col">
@@ -122,6 +125,8 @@ export default function Page() {
             <PageHeader page={page} onAccueil={() => setPage(donneesChargees ? 'overview' : 'import')} />
 
             <div className="stack">
+              <BandeauMiseAJour etat={miseAJour} donneesChargees={donneesChargees} />
+
               {erreur && (
                 <Notice tone="alert" title="Le calcul a échoué.">
                   {erreur}

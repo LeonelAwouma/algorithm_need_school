@@ -1,13 +1,14 @@
 {
   "name": "planification-enseignants-desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Application de planification et d'affectation des enseignants, empaquetée en application de bureau Windows.",
   "author": "Leonel Awouma",
   "private": true,
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win"
+    "dist": "electron-builder --win --publish never",
+    "release": "electron-builder --win --publish always"
   },
   "devDependencies": {
     "electron": "^44.3.0",
@@ -15,7 +16,10 @@
   },
   "build": {
     "appId": "com.planification.enseignants",
-    "electronLanguages": ["fr", "en-US"],
+    "electronLanguages": [
+      "fr",
+      "en-US"
+    ],
     "afterPack": "build/afterPack.js",
     "productName": "AlgoBaba",
     "directories": {
@@ -23,6 +27,8 @@
     },
     "files": [
       "main.js",
+      "mises-a-jour.js",
+      "preload.js",
       "package.json"
     ],
     "extraResources": [
@@ -44,7 +50,19 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
+      "createStartMenuShortcut": true,
+      "artifactName": "AlgoBaba-Setup-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "LeonelAwouma",
+        "repo": "algorithm_need_school",
+        "releaseType": "draft"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
   }
 }
