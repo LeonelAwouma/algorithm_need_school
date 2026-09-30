@@ -27,6 +27,11 @@ export interface EtatMiseAJour {
 }
 
 export interface ApiBureau {
+  /** Stockage durable sur fichier, limité aux clés prévues (registre des accès). */
+  stockage: {
+    lire: (cle: string) => Promise<unknown>
+    ecrire: (cle: string, valeur: unknown) => Promise<boolean>
+  }
   misesAJour: {
     etat: () => Promise<EtatMiseAJour>
     surChangement: (rappel: (etat: EtatMiseAJour) => void) => () => void

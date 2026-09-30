@@ -20,6 +20,7 @@ import {
   FileText,
   FlaskConical,
   GraduationCap,
+  KeyRound,
   LayoutDashboard,
   ListChecks,
   Map,
@@ -52,9 +53,13 @@ export type PageKey =
   | 'assignments'
   | 'unassigned'
   | 'logs'
+  | 'acces'
 
 /** Vue simplifiée (décideurs) ou Vue analyste (détail technique complet). */
 export type ViewMode = 'simple' | 'analyste'
+
+/** Rôle de la personne connectée : le DRH voit tout, un délégué régional ne voit que sa région. */
+export type RoleAcces = 'drh' | 'delegue'
 
 export interface NavItem {
   id: PageKey
@@ -64,6 +69,8 @@ export interface NavItem {
   icon: typeof LayoutDashboard
   /** `true` si l'entrée n'apparaît qu'en Vue analyste. */
   analysteSeulement?: boolean
+  /** `true` si l'entrée est réservée au DRH : décisions et règles qui engagent tout le pays. */
+  drhSeulement?: boolean
   /** L'entrée exige qu'un diagnostic ait été calculé. */
   exigeDonnees?: boolean
   /** L'entrée exige qu'une simulation ait été exécutée. */
@@ -94,7 +101,7 @@ export const NAVIGATION: NavGroup[] = [
   {
     titre: 'Simuler',
     items: [
-      { id: 'prince', label: 'Fait de Prince', sousTitre: 'Redéploiements décidés par la DRH', icon: Crown, exigeDonnees: true },
+      { id: 'prince', label: 'Fait de Prince', sousTitre: 'Redéploiements décidés par la DRH', icon: Crown, exigeDonnees: true, drhSeulement: true },
       { id: 'simulations', label: 'Scénarios', sousTitre: 'Créer et exécuter', icon: FlaskConical, exigeDonnees: true },
       { id: 'comparison', label: 'Comparaison', sousTitre: 'Avant / après et scénarios', icon: ArrowRightLeft, exigeDonnees: true },
     ],
@@ -109,7 +116,7 @@ export const NAVIGATION: NavGroup[] = [
   {
     titre: 'Vue analyste',
     items: [
-      { id: 'engine', label: 'Configuration du moteur', sousTitre: 'Barème, poids et phases', icon: SlidersHorizontal, analysteSeulement: true },
+      { id: 'engine', label: 'Configuration du moteur', sousTitre: 'Barème, poids et phases', icon: SlidersHorizontal, analysteSeulement: true, drhSeulement: true },
       { id: 'data', label: 'Qualité des données', sousTitre: 'Colonnes reconnues et contrôles', icon: Database, analysteSeulement: true, exigeDonnees: true },
       { id: 'pool', label: 'Vivier', icon: GraduationCap, analysteSeulement: true, exigeSimulation: true },
       { id: 'posts', label: 'Postes', icon: ClipboardList, analysteSeulement: true, exigeSimulation: true },
@@ -130,9 +137,19 @@ export const PAGE_SETTINGS: NavItem = {
   label: 'Référentiel',
   sousTitre: "Règles utilisées pour l'analyse",
   icon: BookMarked,
+  drhSeulement: true,
 }
 
-const TOUTES = [...NAVIGATION.flatMap(g => g.items), PAGE_SETTINGS]
+/** Gestion des accès : codes des délégués régionaux et validation de leurs entrées. */
+export const PAGE_ACCES: NavItem = {
+  id: 'acces',
+  label: 'Accès des délégués',
+  sousTitre: "Codes d'accès par région et validation des entrées",
+  icon: KeyRound,
+  drhSeulement: true,
+}
+
+const TOUTES = [...NAVIGATION.flatMap(g => g.items), PAGE_SETTINGS, PAGE_ACCES]
 
 /** Titre de page affiché dans l'en-tête. */
 export function titreDePage(page: PageKey): string {
@@ -146,14 +163,21 @@ export function sousTitreDePage(page: PageKey): string | undefined {
 
 /** Nom du groupe de navigation d'une page, pour le fil d'Ariane. */
 export function groupeDePage(page: PageKey): string | undefined {
-  if (page === PAGE_SETTINGS.id) return 'Configuration'
+  if (page === PAGE_SETTINGS.id || page === PAGE_ACCES.id) return 'Configuration'
   return NAVIGATION.find(g => g.items.some(i => i.id === page))?.titre ?? undefined
 }
 
-/** Groupes visibles dans le mode d'affichage courant. */
-export function navigationVisible(mode: ViewMode): NavGroup[] {
+/** Vrai si la page est réservée au DRH : un délégué ne doit ni la voir dans le menu ni l'ouvrir. */
+export function pageReserveeAuDrh(page: PageKey): boolean {
+  return TOUTES.some(i => i.id === page && i.drhSeulement)
+}
+
+/** Groupes visibles dans le mode d'affichage courant, pour le rôle connecté. */
+export function navigationVisible(mode: ViewMode, role: RoleAcces): NavGroup[] {
   return NAVIGATION.map(groupe => ({
     ...groupe,
-    items: groupe.items.filter(item => mode === 'analyste' || !item.analysteSeulement),
+    items: groupe.items.filter(
+      item => (mode === 'analyste' || !item.analysteSeulement) && (role === 'drh' || !item.drhSeulement),
+    ),
   })).filter(groupe => groupe.items.length > 0)
 }

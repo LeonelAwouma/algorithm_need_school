@@ -6,12 +6,13 @@
  */
 
 import { useState, type ReactNode } from 'react'
-import { ChevronDown, ChevronRight, Home, Menu, RotateCcw, ShieldCheck, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Home, LogOut, Menu, RotateCcw, ShieldCheck, Trash2, UserRound, X } from 'lucide-react'
 import type { SchoolSeverity, Zone } from '@/types/education'
 import type { GlobalFilters, TerritorySelection } from '@/lib/analytics/territory'
 import { breadcrumb } from '@/lib/analytics/territory'
 import { Pill } from '../common'
 import {
+  PAGE_ACCES,
   PAGE_SETTINGS,
   groupeDePage,
   navigationVisible,
@@ -19,6 +20,7 @@ import {
   titreDePage,
   type NavItem,
   type PageKey,
+  type RoleAcces,
   type ViewMode,
 } from './navigation'
 
@@ -42,6 +44,8 @@ export function Sidebar({
   page,
   onNavigate,
   mode,
+  role,
+  entreesEnAttente,
   ouverte,
   onFermer,
   donneesChargees,
@@ -51,6 +55,9 @@ export function Sidebar({
   page: PageKey
   onNavigate: (page: PageKey) => void
   mode: ViewMode
+  role: RoleAcces
+  /** Entrées de délégués que le DRH doit encore valider, rappelées dans le menu. */
+  entreesEnAttente: number
   ouverte: boolean
   onFermer: () => void
   donneesChargees: boolean
@@ -79,6 +86,11 @@ export function Sidebar({
         >
           <Icone size={17} aria-hidden="true" />
           <span>{item.label}</span>
+          {item.id === PAGE_ACCES.id && entreesEnAttente > 0 && (
+            <span className="nav-badge" aria-label={`${entreesEnAttente} entrée(s) en attente de validation`}>
+              {entreesEnAttente}
+            </span>
+          )}
         </button>
       </li>
     )
@@ -87,16 +99,21 @@ export function Sidebar({
   return (
     <aside className={ouverte ? 'sidebar open' : 'sidebar'} aria-label="Navigation principale">
       <nav>
-        {navigationVisible(mode).map(groupe => (
+        {navigationVisible(mode, role).map(groupe => (
           <div className="nav-group" key={groupe.titre}>
             {groupe.titre && <p className="nav-group-title">{groupe.titre}</p>}
             <ul className="nav-list">{groupe.items.map(bouton)}</ul>
           </div>
         ))}
-        <div className="nav-group">
-          <p className="nav-group-title">Configuration</p>
-          <ul className="nav-list">{bouton(PAGE_SETTINGS)}</ul>
-        </div>
+        {role === 'drh' && (
+          <div className="nav-group">
+            <p className="nav-group-title">Configuration</p>
+            <ul className="nav-list">
+              {bouton(PAGE_SETTINGS)}
+              {bouton(PAGE_ACCES)}
+            </ul>
+          </div>
+        )}
       </nav>
 
       <p className="privacy-note">
@@ -124,6 +141,8 @@ export function Topbar({
   anneeScolaire,
   scenario,
   onEffacer,
+  utilisateur,
+  onDeconnexion,
 }: {
   mode: ViewMode
   onModeChange: (m: ViewMode) => void
@@ -133,6 +152,9 @@ export function Topbar({
   anneeScolaire: string
   scenario: string
   onEffacer: () => void
+  /** Personne connectée : « DRH » ou « Délégué · Centre ». */
+  utilisateur: string
+  onDeconnexion: () => void
 }) {
   return (
     <header className="topbar">
@@ -177,6 +199,14 @@ export function Topbar({
         <button type="button" className="icon-button" onClick={onEffacer} title="Effacer les données de cette session">
           <Trash2 size={16} aria-hidden="true" />
           <span className="sr-only">Effacer les données de cette session</span>
+        </button>
+        <span className="user-chip" title="Personne connectée">
+          <UserRound size={14} aria-hidden="true" />
+          {utilisateur}
+        </span>
+        <button type="button" className="icon-button" onClick={onDeconnexion} title="Se déconnecter">
+          <LogOut size={16} aria-hidden="true" />
+          <span className="sr-only">Se déconnecter</span>
         </button>
       </div>
     </header>

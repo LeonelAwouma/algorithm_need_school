@@ -167,6 +167,18 @@ Les tests et démonstrations doivent utiliser des données :
 
 # Fonctionnalités
 
+## Contrôle d’accès : DRH et délégués régionaux
+
+Rien de l’application n’est affiché tant que personne n’est identifié.
+
+* **DRH** — crée son mot de passe à la première utilisation, accède à tout, et administre les accès depuis la page « Accès des délégués ».
+* **Délégué régional** — choisit sa région parmi les dix et saisit le code remis par le DRH. Un code exact ne suffit pas : son entrée reste **« En attente de validation »** jusqu’à la décision du DRH. Une fois validé, il entre avec son code à chaque lancement, tant que le DRH n’a ni suspendu ni retiré son accès.
+* **Périmètre du délégué** — uniquement les établissements et les enseignants de sa région, écartés dès l’import (`lib/acces/perimetre.ts`). Le Fait de Prince, le référentiel, la configuration du moteur et la gestion des accès sont réservés au DRH.
+
+Les règles sont dans `lib/acces/registre.ts` (testées par `tests/acces.test.ts`) : un seul code actif par région, secrets conservés sous forme d’empreinte PBKDF2, blocage de cinq minutes après cinq essais infructueux. Le registre est un fichier local (`acces.json` dans le dossier de données de l’application) : il ne contient aucune donnée d’établissement ni d’enseignant.
+
+**Limite actuelle** — le registre est propre à chaque poste : la validation par le DRH se fait sur le poste où le délégué se connecte. C’est un contrôle d’usage, pas une protection contre une personne ayant la main sur le poste.
+
 ## Import des données
 
 Import manuel de deux fichiers principaux :

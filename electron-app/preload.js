@@ -1,13 +1,19 @@
 // Pont entre la fenêtre et le processus principal.
 //
 // La page n'a aucun accès à Node ni au système de fichiers (contextIsolation,
-// nodeIntegration désactivé). Seules ces trois fonctions, liées aux mises à jour,
-// lui sont exposées. Dans un navigateur ordinaire, `window.algobaba` n'existe pas
-// et l'interface n'affiche simplement rien de ce qui concerne les mises à jour.
+// nodeIntegration désactivé). Seules lui sont exposées les fonctions ci-dessous :
+// le registre des accès (stockage.js) et les mises à jour. Dans un navigateur
+// ordinaire, `window.algobaba` n'existe pas : le registre retombe sur le stockage
+// de la page et rien de ce qui concerne les mises à jour n'est affiché.
 
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('algobaba', {
+  /** Stockage durable, limité aux clés prévues par le processus principal (registre des accès). */
+  stockage: {
+    lire: cle => ipcRenderer.invoke('stockage:lire', cle),
+    ecrire: (cle, valeur) => ipcRenderer.invoke('stockage:ecrire', cle, valeur),
+  },
   misesAJour: {
     /** État courant : phase, version installée, version disponible, progression. */
     etat: () => ipcRenderer.invoke('maj:etat'),

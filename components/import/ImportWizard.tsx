@@ -164,8 +164,8 @@ export function ImportWizard({ store }: { store: PlanningStore }) {
       // Charger le jeu de données déclenche le diagnostic puis, par l'état, le
       // calcul des scénarios : on attend leur fin avant d'ouvrir la vue d'ensemble.
       attenteScenarios.current = true
-      chargerDataset(dataset, qualite)
-      marquer('diagnostic', 'faite', `${fmt(dataset.schools.length)} établissements analysés.`)
+      const charge = chargerDataset(dataset, qualite)
+      marquer('diagnostic', 'faite', `${fmt(charge.schools.length)} établissements analysés.`)
       marquer('scenarios', 'encours')
     } catch (err) {
       setEchec(err instanceof Error ? err.message : String(err))

@@ -28,12 +28,31 @@ import { ReferentialPage } from '@/components/settings/ReferentialPage'
 import { EnginePage } from '@/components/settings/EnginePage'
 import { AssignmentsPage, DataPage, LogsPage, PoolPage, PostsPage, UnassignedPage } from '@/components/analyst'
 import { usePlanningState } from '@/components/usePlanningState'
+import { AccesPage } from '@/components/acces/AccesPage'
+import { EcranConnexion } from '@/components/acces/EcranConnexion'
+import { useAcces, type Acces } from '@/components/acces/useAcces'
+import { pageReserveeAuDrh } from '@/components/layout/navigation'
+import { demandesEnAttente } from '@/lib/acces/registre'
+import type { SessionAcces } from '@/types/acces'
 
 /** Pages sur lesquelles la barre de filtres territoriaux n'a pas de sens. */
-const SANS_FILTRES = new Set(['import', 'methodology', 'settings', 'engine', 'data', 'logs', 'prince'])
+const SANS_FILTRES = new Set(['import', 'methodology', 'settings', 'engine', 'data', 'logs', 'prince', 'acces'])
 
+/**
+ * Rien de l'application n'est monté tant que personne n'est identifié. À la
+ * déconnexion, `Application` est démontée : les données importées, qui ne vivent
+ * que dans son état, disparaissent avec elle et ne passent pas d'une personne à
+ * la suivante.
+ */
 export default function Page() {
-  const store = usePlanningState()
+  const acces = useAcces()
+  if (!acces.session) return <EcranConnexion acces={acces} />
+  return <Application acces={acces} session={acces.session} />
+}
+
+function Application({ acces, session }: { acces: Acces; session: SessionAcces }) {
+  const regionImposee = session.role === 'delegue' ? session.region : null
+  const store = usePlanningState(regionImposee)
   const {
     page,
     setPage,
@@ -59,6 +78,17 @@ export default function Page() {
   } = store
 
   const miseAJour = useMiseAJour()
+  const estDrh = session.role === 'drh'
+  const entreesEnAttente = estDrh && acces.registre ? demandesEnAttente(acces.registre).length : 0
+  /** Une page réservée au DRH n'est jamais rendue pour un délégué, quel que soit le lien suivi. */
+  const pageInterdite = !estDrh && pageReserveeAuDrh(page)
+
+  function deconnecter() {
+    const confirme =
+      !donneesChargees ||
+      window.confirm('Se déconnecter ?\n\nLes données importées et les résultats calculés seront effacés de cette session.')
+    if (confirme) acces.deconnecter()
+  }
   const nomScenario = scenarios.find(s => s.id === scenarioActif)?.nom ?? 'Situation actuelle'
 
   const etat = calculEnCours ? (
@@ -101,7 +131,9 @@ export default function Page() {
         onModeChange={changerMode}
         onOuvrirMenu={() => setMenuOuvert(true)}
         etat={etat}
-        territoire={perimetre}
+        territoire={regionImposee && !filtres.territoire.region ? `Région ${regionImposee}` : perimetre}
+        utilisateur={session.role === 'drh' ? 'DRH' : `Délégué · ${session.region}`}
+        onDeconnexion={deconnecter}
         anneeScolaire={settings.anneeScolaire}
         scenario={resultatAffiche ? `${nomScenario} (${LIBELLE_SCOPE[resultatAffiche.scope].toLowerCase()})` : nomScenario}
         onEffacer={confirmerEffacement}
@@ -113,6 +145,8 @@ export default function Page() {
           page={page}
           onNavigate={setPage}
           mode={mode}
+          role={session.role}
+          entreesEnAttente={entreesEnAttente}
           ouverte={menuOuvert}
           onFermer={() => setMenuOuvert(false)}
           donneesChargees={donneesChargees}
@@ -130,6 +164,27 @@ export default function Page() {
               {erreur && (
                 <Notice tone="alert" title="Le calcul a échoué.">
                   {erreur}
+                </Notice>
+              )}
+
+              {entreesEnAttente > 0 && page !== 'acces' && (
+                <Notice tone="warn" title={`${entreesEnAttente} entrée(s) de délégué en attente de validation.`}>
+                  <button type="button" className="btn-link" onClick={() => setPage('acces')}>
+                    Ouvrir « Accès des délégués »
+                  </button>
+                </Notice>
+              )}
+
+              {regionImposee && page === 'import' && (
+                <Notice tone="info" title={`Accès limité à la région ${regionImposee}.`}>
+                  Seuls les établissements et les enseignants de cette région sont retenus à l’import ; le reste du
+                  fichier est ignoré.
+                </Notice>
+              )}
+
+              {pageInterdite && (
+                <Notice tone="alert" title="Page réservée au DRH.">
+                  Cette fonction n’est pas ouverte aux délégués régionaux.
                 </Notice>
               )}
 
@@ -161,13 +216,14 @@ export default function Page() {
               {page === 'priorites' && <PrioritySchoolsPage store={store} />}
               {page === 'schools' && <SchoolsPage store={store} />}
               {page === 'teachers' && <TeachersPage store={store} />}
-              {page === 'prince' && <PrincePage store={store} />}
+              {page === 'prince' && estDrh && <PrincePage store={store} />}
+              {page === 'acces' && estDrh && <AccesPage acces={acces} />}
               {page === 'simulations' && <SimulationsPage store={store} />}
               {page === 'comparison' && <ComparisonPage store={store} />}
               {page === 'reports' && <ReportPage store={store} />}
               {page === 'methodology' && <MethodologyPage store={store} />}
-              {page === 'settings' && <ReferentialPage store={store} />}
-              {page === 'engine' && <EnginePage store={store} />}
+              {page === 'settings' && estDrh && <ReferentialPage store={store} />}
+              {page === 'engine' && estDrh && <EnginePage store={store} />}
               {page === 'data' && <DataPage store={store} />}
               {page === 'pool' && <PoolPage store={store} />}
               {page === 'posts' && <PostsPage store={store} />}

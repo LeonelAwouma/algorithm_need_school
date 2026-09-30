@@ -30,7 +30,9 @@ import {
   trouverNoeud,
   type GlobalFilters,
 } from '@/lib/analytics/territory'
+import { restreindreARegion } from '@/lib/acces/perimetre'
 import { DEFAULT_SETTINGS, mergeSettings } from '@/lib/config/settings'
+import type { RegionCameroun } from '@/lib/geography/cameroon'
 import { construireJeuDemonstration } from '@/lib/data/demo-dataset'
 import type { FichierLu } from '@/lib/data/import'
 import { runSimulation } from '@/lib/simulation/engine'
@@ -40,7 +42,11 @@ import { SCENARIOS_GEOGRAPHIQUES, scenarioGeographique } from '@/lib/simulation/
 import { ecrirePreference, effacerPreferences, lirePreference } from '@/lib/storage/session'
 import type { PageKey, ViewMode } from './layout/navigation'
 
-export function usePlanningState() {
+/**
+ * @param regionImposee Région du délégué connecté, `null` pour le DRH. Quand elle est
+ * renseignée, seules les données de cette région entrent dans l'état de l'application.
+ */
+export function usePlanningState(regionImposee: RegionCameroun | null = null) {
   const [page, setPage] = useState<PageKey>('import')
   const [mode, setMode] = useState<ViewMode>('simple')
   const [menuOuvert, setMenuOuvert] = useState(false)
@@ -313,7 +319,15 @@ export function usePlanningState() {
   // --- Chargement des données ------------------------------------------------
 
   const chargerDataset = useCallback(
-    (nouveau: Dataset, rapport: DataQualityReport | null) => {
+    (recu: Dataset, rapport: DataQualityReport | null): Dataset => {
+      // Délégué régional : les autres régions sont écartées ici, avant d'entrer dans
+      // l'état. Aucun calcul, aucune page, aucun export ne peut donc les atteindre.
+      const nouveau = regionImposee ? restreindreARegion(recu, regionImposee) : recu
+      if (regionImposee && nouveau.schools.length === 0) {
+        throw new Error(
+          `Aucun établissement de la région ${regionImposee} dans ces données. Votre accès est limité à cette région : vérifiez la colonne « Région » du fichier des établissements.`,
+        )
+      }
       // Les décisions de la DRH survivent à un nouvel import du même fichier (mêmes matricules),
       // mais pas au passage entre le jeu de démonstration et de vraies données.
       if (dernierJeuDemo.current !== null && dernierJeuDemo.current !== nouveau.demonstration) setFaitsPrince([])
@@ -327,12 +341,18 @@ export function usePlanningState() {
       setFiltres(FILTRES_VIDES)
       setErreur(null)
       setCalculAutoDemande(true)
+      return nouveau
     },
-    [],
+    [regionImposee],
   )
 
   const chargerDemonstration = useCallback(() => {
-    chargerDataset(construireJeuDemonstration(), null)
+    try {
+      chargerDataset(construireJeuDemonstration(), null)
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : String(err))
+      return
+    }
     setFichiers({ etablissements: null, enseignants: null })
     setPage('overview')
   }, [chargerDataset])
@@ -423,6 +443,7 @@ export function usePlanningState() {
     chargerDemonstration,
     effacerSession,
     donneesChargees,
+    regionImposee,
 
     // Paramètres et filtres
     settings,

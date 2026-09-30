@@ -10,6 +10,7 @@ const fs = require('node:fs')
 const http = require('node:http')
 const { app, BrowserWindow, Menu } = require('electron')
 const { demarrerMisesAJour } = require('./mises-a-jour')
+const { brancherStockage } = require('./stockage')
 
 /** Fenêtre principale courante, pour lui transmettre l'état des mises à jour. */
 let fenetrePrincipale = null
@@ -105,6 +106,7 @@ async function createWindow() {
 
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null)
+  brancherStockage()
   demarrerMisesAJour(() => fenetrePrincipale)
   createWindow()
 

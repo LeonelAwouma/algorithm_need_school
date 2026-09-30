@@ -1,6 +1,6 @@
 {
   "name": "planification-enseignants-desktop",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Application de planification et d'affectation des enseignants, empaquetée en application de bureau Windows.",
   "author": "Leonel Awouma",
   "private": true,
@@ -28,6 +28,7 @@
     "files": [
       "main.js",
       "mises-a-jour.js",
+      "stockage.js",
       "preload.js",
       "package.json"
     ],
