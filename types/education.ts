@@ -8,6 +8,29 @@
 /** Zone déclarée de l'établissement ou de rattachement de l'enseignant. */
 export type Zone = 'urbaine' | 'semi_urbaine' | 'rurale' | 'inconnue'
 
+/**
+ * Sous-système d'enseignement (référentiel §1.2.3). Les deux sous-systèmes sont
+ * traités séparément à toutes les étapes : aucun besoin n'est compensé de l'un à
+ * l'autre et l'algorithme n'affecte personne hors de son sous-système.
+ */
+export type SousSysteme = 'francophone' | 'anglophone'
+
+/** Zone de sécurité de l'école ou de la structure (référentiel §3.1). */
+export type ZoneSecurite = 'verte' | 'jaune' | 'rouge'
+
+/** Accessibilité retenue pour le poids de vulnérabilité (référentiel §3.1). */
+export type Accessibilite = 'urbain' | 'semi_urbain' | 'rural' | 'rural_enclave'
+
+/**
+ * Classement d'une école après diagnostic (référentiel §2.4) :
+ *   nécessiteuse si b > 0, excédentaire si x > 0, à examiner si a > 0,
+ *   équilibrée dans les autres cas.
+ */
+export type ClassementEcole = 'necessiteuse' | 'excedentaire' | 'a_examiner' | 'equilibree'
+
+/** Motif d'une demande de mutation (référentiel §3.2). */
+export type MotifDemande = 'convenance' | 'sante' | 'regroupement_familial' | 'rotation_zone_difficile' | 'autre'
+
 /** Niveaux de la hiérarchie géographique : Cameroun → Région → Département → Commune → École. */
 export type TerritoryLevel = 'national' | 'region' | 'departement' | 'commune' | 'ecole'
 
@@ -46,7 +69,19 @@ export interface EducationTerritory {
  * contiennent pas, doivent continuer à fonctionner (§26 du cahier des charges).
  */
 export interface School {
+  /**
+   * Identifiant de l'unité de calcul : le code de l'école pour une école
+   * monolingue, le code suivi de « -FR » ou « -EN » pour chaque section d'une
+   * école bilingue (référentiel §2.4, « Écoles bilingues et sous-systèmes »).
+   */
   id: string
+  /** Code de l'établissement tel qu'il figure dans le fichier. */
+  codeEcole: string
+  /** Circonscription de l'inspection d'arrondissement (IAEB), vide si non renseignée. */
+  iaeb: string
+  /** Coordonnées géographiques, quand le fichier les fournit (cartographie). */
+  latitude: number | null
+  longitude: number | null
   nom: string
   region: string
   departement: string
@@ -57,7 +92,23 @@ export interface School {
   typeEtab: string
 
   nbClasses: number
+  /** Salles de classe utilisables S (simple et double flux), `null` si non renseigné. */
   nbSallesClasse: number | null
+  /** Parmi elles, salles fonctionnant en double flux (S^DF), `null` si non renseigné. */
+  sallesDoubleFlux: number | null
+  /** Niveaux ouverts (1 à 6), `null` si non renseigné : sert au minimum pédagogique. */
+  niveauxOuverts: number | null
+  /** Départs déjà connus pour la rentrée (retraites notamment), déclarés dans le fichier. */
+  departsConnusDeclares: number | null
+
+  sousSysteme: SousSysteme | null
+  zoneSecurite: ZoneSecurite | null
+  accessibilite: Accessibilite | null
+  /**
+   * Structure administrative (délégation régionale ou départementale, IAEB) : sans
+   * élèves, ni REM ni BMAX, ses postes sont fixés par la hiérarchie.
+   */
+  estStructure: boolean
   nbEnseignantsEtat: number
   nbAutresEnseignants: number | null
 
@@ -69,6 +120,12 @@ export interface School {
   nbPostesOuvertsDeclares: number | null
 
   classesMultigrades: number
+  /**
+   * Vrai si le fichier renseigne les classes multigrades de l'école. Le minimum
+   * pédagogique en dépend alors école par école : sans classe multigrade, chaque
+   * niveau ouvert a son maître.
+   */
+  classesMultigradesRenseignees: boolean
   prioriteLocale: number
 
   effectifTotalEleves: number | null
@@ -93,6 +150,8 @@ export interface Teacher {
   departementAttache: string
   regionAttache: string
   zoneAttache: Zone
+  /** Circonscription IAEB de l'école d'attache. */
+  iaebAttache: string
 
   ancienneteCarriereAns: number
   anciennetePosteAns: number
@@ -102,6 +161,22 @@ export interface Teacher {
 
   statut: string
   payeParEtat: boolean
+
+  sexe: string
+  categorie: string
+  fonction: string
+  /** Sous-système de l'enseignant, d'après sa formation initiale. */
+  sousSysteme: SousSysteme | null
+  /** Écoles sollicitées, par ordre de préférence (codes d'établissement). Vide : pas de demande. */
+  voeux: string[]
+  motifDemande: MotifDemande | null
+  /** École visée par un motif justifié (santé, regroupement familial), qui reçoit la bonification. */
+  ecoleMotif: string | null
+  /** Années de service en école de niveau de difficulté 1, puis 2 (dossier de carrière). */
+  anneesZoneNiveau1: number
+  anneesZoneNiveau2: number
+  /** Rang tiré au sort avant la commission, pour le départage ultime. */
+  rangTirage: number | null
 
   /**
    * Renseigné quand l'enseignant a été redéployé par fait de Prince (décision
@@ -136,16 +211,24 @@ export interface SchoolDiagnostic {
   nbClasses: number
   enseignantsEtat: number
 
-  /** Seuil sous lequel l'école ne doit jamais descendre (règle configurable). */
+  /**
+   * Dotation théorique D = max(P ; m) : ce dont les élèves ont besoin. L'école ne
+   * descend jamais sous ce seuil par redéploiement.
+   */
   enseignantsMinimumAConserver: number
-  /** max(0, besoinNormatif − enseignantsEtat). */
+  /** Besoin en maîtres b = max(0 ; K − E) : postes à ouvrir. */
   besoinTheorique: number
   /** Postes déclarés dans le fichier, `null` si la colonne est absente. */
   postesDeclares: number | null
   /** postesDeclares − besoinTheorique, `null` si les postes déclarés manquent. */
   ecartBesoinDeclare: number | null
-  /** max(0, enseignantsEtat − enseignantsMinimumAConserver). */
+  /** Excédent mobilisable x = max(0 ; E − D). */
   excedentTheorique: number
+
+  /** Grandeurs du calcul du besoin, dans l'ordre du référentiel (§2.4). */
+  calcul: CalculBesoin
+  classement: ClassementEcole
+  priorite: PrioriteEcole
 
   elevesParEnseignant: number | null
   elevesParEnseignantEtat: number | null
@@ -164,6 +247,57 @@ export interface SchoolDiagnostic {
 
   severite: SchoolSeverity
   raisons: DiagnosticReason[]
+}
+
+/** Détail du calcul du besoin d'une école (référentiel §2.2 à §2.4). */
+export interface CalculBesoin {
+  /** N : élèves attendus, `null` sans effectif (le calcul se replie alors sur les classes). */
+  eleves: number | null
+  /** Enseignants de l'État en poste, avant déduction des départs connus. */
+  enseignantsEnPoste: number
+  /** Départs connus à la rentrée (retraites…). */
+  departsConnus: number
+  /** E : maîtres retenus à la rentrée. */
+  enseignantsRetenus: number
+  /** P : maîtres nécessaires selon la norme d'élèves par maître. */
+  norme: number
+  /** m : minimum pédagogique. */
+  minimumPedagogique: number
+  /** D = max(P ; m). */
+  dotation: number
+  /** BMAX : maîtres affectables selon les salles, `null` si les salles ne sont pas renseignées. */
+  bmax: number | null
+  /** K = min(D ; BMAX). */
+  cible: number
+  /** b = max(0 ; K − E). */
+  besoin: number
+  /** x = max(0 ; E − D). */
+  excedent: number
+  /** a = max(0 ; min(E ; D) − BMAX) : maîtres au-delà des salles mais utiles aux élèves. */
+  surnombre: number
+  /** s = max(0 ; D − BMAX) : salles manquantes, signalées comme besoin en infrastructures. */
+  sallesManquantes: number
+  /** REM actuel : élèves ÷ enseignants en poste, `null` sans élèves ou sans maître. */
+  remActuel: number | null
+  /** « norme_eleves » : règle du référentiel ; « repli_classes » : sans effectifs, une classe = un maître. */
+  methode: 'norme_eleves' | 'repli_classes'
+}
+
+/** Poids de vulnérabilité et indice de priorité d'une école ou d'une structure (référentiel §3.1). */
+export interface PrioriteEcole {
+  /** α : points d'accessibilité. */
+  pointsAccessibilite: number
+  /** σ : points de sécurité. */
+  pointsSecurite: number
+  /** w = α + σ. */
+  poids: number
+  /** Niveau de difficulté 1, 2 ou 3 fixé par le poids. */
+  niveauDifficulte: 1 | 2 | 3
+  /** β : points de besoin selon le REM actuel (nul pour une structure). */
+  pointsBesoin: number
+  /** u = w + β. */
+  indice: number
+  zoneRouge: boolean
 }
 
 /** Volume de besoin d'un établissement, utilisé pour construire les postes. */
@@ -192,6 +326,12 @@ export interface TerritorialTotals {
   postesNecessaires: number
   postesDeclares: number | null
   excedentMobilisable: number
+  /** SM_T : salles manquantes. */
+  sallesManquantes: number
+  /** Maîtres en surnombre par rapport aux salles, mais utiles aux élèves. */
+  surnombre: number
+  /** Écoles à examiner (surnombre lié aux salles). */
+  ecolesAExaminer: number
 
   effectifTotalEleves: number | null
   elevesParEnseignantEtat: number | null

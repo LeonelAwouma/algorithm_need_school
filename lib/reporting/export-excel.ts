@@ -14,6 +14,8 @@ import type { SchoolDiagnostic, TerritorialSummary } from '../../types/education
 import type { DataQualityReport } from '../../types/data-quality'
 import type { DecisionReport, DiagnosticResult, SimulationResult } from '../../types/simulation'
 import { LIBELLE_PROXIMITE } from '../simulation/scoring'
+import { LIBELLE_CLASSEMENT, LIBELLE_ISSUE, LIBELLE_NATURE, LIBELLE_STATUT_PROPOSITION, LIBELLE_STATUT_VOEU } from '../simulation/libelles'
+import { LIBELLE_SOUS_SYSTEME } from '../analytics/synthese'
 import type { CellValue } from './export-csv'
 
 const SEVERITE_LABEL: Record<SchoolDiagnostic['severite'], string> = {
@@ -99,17 +101,21 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
     'Diagnostic_Ecoles',
     [
       'Code', 'Établissement', 'Région', 'Département', 'Commune', 'Zone', 'Type',
-      'Classes', "Enseignants État", 'Autres enseignants', 'Minimum à conserver',
-      'Besoin calculé', 'Postes déclarés', 'Écart déclaré/calculé', 'Excédent mobilisable',
-      'Élèves', 'Élèves/enseignant', "Élèves/enseignant État", 'Élèves/classe',
-      'Classes multigrades', 'Priorité locale', 'Situation',
+      'Sous-système', 'Classes', 'Élèves N', 'Maîtres en poste', 'Départs connus', 'Maîtres retenus E',
+      'Norme P', 'Minimum pédagogique m', 'Dotation D', 'BMAX', 'Cible K',
+      'Besoin b', 'Excédent x', 'Surnombre a', 'Salles manquantes s', 'Classement',
+      'Postes déclarés', 'Écart déclaré/calculé', 'REM actuel',
+      'Accessibilité α', 'Sécurité σ', 'Poids w', 'Niveau de difficulté', 'Points de besoin β', 'Indice u',
+      'Méthode', 'Situation',
     ],
     diagnostic.schools.map(d => [
       d.school.id, d.school.nom, d.school.region, d.school.departement, d.school.commune, d.school.zoneBrute, d.school.typeEtab,
-      d.nbClasses, d.enseignantsEtat, d.school.nbAutresEnseignants ?? '', d.enseignantsMinimumAConserver,
-      d.besoinTheorique, d.postesDeclares ?? '', d.ecartBesoinDeclare ?? '', d.excedentTheorique,
-      d.school.effectifTotalEleves ?? '', d.elevesParEnseignant ?? '', d.elevesParEnseignantEtat ?? '', d.elevesParClasse ?? '',
-      d.school.classesMultigrades, d.school.prioriteLocale, SEVERITE_LABEL[d.severite],
+      d.school.sousSysteme ?? '', d.nbClasses, d.calcul.eleves ?? '', d.calcul.enseignantsEnPoste, d.calcul.departsConnus, d.calcul.enseignantsRetenus,
+      d.calcul.norme, d.calcul.minimumPedagogique, d.calcul.dotation, d.calcul.bmax ?? '', d.calcul.cible,
+      d.calcul.besoin, d.calcul.excedent, d.calcul.surnombre, d.calcul.sallesManquantes, LIBELLE_CLASSEMENT[d.classement],
+      d.postesDeclares ?? '', d.ecartBesoinDeclare ?? '', d.calcul.remActuel ?? '',
+      d.priorite.pointsAccessibilite, d.priorite.pointsSecurite, d.priorite.poids, d.priorite.niveauDifficulte, d.priorite.pointsBesoin, d.priorite.indice,
+      d.calcul.methode === 'norme_eleves' ? 'Norme élèves' : 'Repli : une classe = un maître', SEVERITE_LABEL[d.severite],
     ]),
   )
 
@@ -134,14 +140,140 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
 
   if (resultat) {
     ajouter(
-      'Affectations',
-      ['Phase', 'Poste', 'Matricule', 'Nom', 'Prénom', 'École origine', 'Commune origine', 'École destination', 'Commune destination', 'Département destination', 'Région destination', 'Périmètre du mouvement', 'Barème', 'Score'],
+      'Plan_Individualise',
+      ['Matricule', 'Nom', 'Prénom', 'Sous-système', "École d'origine", 'Commune origine', 'Affectation proposée', 'Commune', 'Département', 'Région', 'Nature du mouvement', 'Vœu satisfait', 'Statut', 'Année prévue', 'Étape', 'Périmètre', 'Score'],
       resultat.assignments.map(a => [
-        a.phase, a.postId, a.teacherId, a.nomEns, a.prenomEns,
+        a.teacherId, a.nomEns, a.prenomEns, a.sousSysteme ?? '',
         a.nomEtabOrigine, a.communeOrigine, a.nomEtabDestination, a.communeDestination, a.departementDestination, a.regionDestination,
-        LIBELLE_PROXIMITE[a.niveauProximite], a.bareme, a.score,
+        LIBELLE_NATURE[a.nature], a.rangVoeu ?? '', LIBELLE_STATUT_PROPOSITION[a.statut], a.annee, a.phase,
+        LIBELLE_PROXIMITE[a.niveauProximite], a.score,
       ]),
     )
+
+    ajouter(
+      'Synthese_Voeux',
+      ['Rang', 'Matricule', 'Nom', 'Prénom', "École d'attache", 'Excédent', 'Ancienneté poste', 'Recevable', 'Motifs', 'A', 'Z', 'Vœu 1', 'S vœu 1', 'Vœu 2', 'S vœu 2', 'Vœu 3', 'S vœu 3', 'Issue', 'Détail'],
+      [...resultat.candidatures]
+        .sort((a, b) => a.rangClassement - b.rangClassement)
+        .map(c => [
+          c.rangClassement, c.teacher.id, c.teacher.nom, c.teacher.prenom, c.ecoleOrigine.nom, c.ecoleOrigine.excedent,
+          c.teacher.anciennetePosteAns, c.recevable ? 'Oui' : 'Non', c.motifsIrrecevabilite.join(' ; '),
+          c.pointsAnciennete, c.pointsZoneDifficile,
+          ...[0, 1, 2].flatMap(i => {
+            const v = c.voeux[i]
+            return v ? [`${v.nomEtab} (${LIBELLE_STATUT_VOEU[v.statut]})`, v.statut === 'examine' ? v.score : ''] : ['', '']
+          }),
+          LIBELLE_ISSUE[c.issue], c.detailIssue,
+        ]),
+    )
+
+    ajouter(
+      'Postes_Classes',
+      ['Rang', 'Poste', 'Code', 'Établissement ou structure', 'Commune', 'Département', 'Région', 'Sous-système', 'Poids w', 'Niveau', 'β', 'Indice u', 'Zone rouge', 'Pourvu'],
+      resultat.postes.map(p => [
+        p.rang, p.id, p.schoolId, p.nomEtab, p.commune, p.departement, p.region, p.sousSysteme ?? '',
+        p.priorite.poids, p.priorite.niveauDifficulte, p.priorite.pointsBesoin, p.priorite.indice, p.priorite.zoneRouge ? 'Oui' : 'Non',
+        p.pourvu ? 'Oui' : 'Non',
+      ]),
+    )
+
+    ajouter(
+      'Synthese_Sous_Systemes',
+      ['Moment', 'Sous-système', 'Besoin B', 'Excédent X', 'Couvrable C', 'Restant R', 'Salles manquantes', 'Effectif E', 'Recrutement à prévoir', "Degré d'aléa"],
+      (['avant', 'apres'] as const).flatMap(moment => {
+        const s = moment === 'avant' ? resultat.syntheseAvant : resultat.syntheseApres
+        return [
+          ...s.parSousSysteme.map(g => [moment === 'avant' ? 'Avant le plan' : 'Après le plan', LIBELLE_SOUS_SYSTEME[g.sousSysteme], g.besoin, g.excedent, g.couvrable, g.restant, g.sallesManquantes, g.effectif, g.recrutementAPrevoir, ''] as CellValue[]),
+          [moment === 'avant' ? 'Avant le plan' : 'Après le plan', 'Total', s.besoin, s.excedent, s.couvrable, s.restant, s.sallesManquantes, '', s.recrutementAPrevoir, s.degreAlea ?? ''] as CellValue[],
+        ]
+      }),
+    )
+
+    ajouter(
+      'Projections_N1_a_N3',
+      [
+        'Code', 'École', 'Sous-système', 'Région', 'Département', 'Commune', 'Indice u', 'BMAX', 'Dotation D', 'Cible K',
+        'Besoin avant plan', 'Excédent avant plan', 'Arrivants', 'Sortants', 'Salles manquantes',
+        ...['N+1', 'N+2', 'N+3'].flatMap(a => [`Départs retraite ${a}`, `Effectif ${a}`, `Besoin ${a}`, `Excédent ${a}`]),
+      ],
+      resultat.projectionPluriannuelle.ecoles.map(e => [
+        e.schoolId, e.nomEtab, e.sousSysteme ?? '', e.region, e.departement, e.commune, e.indicePriorite, e.bmax ?? '', e.dotation, e.cible,
+        e.besoinAvantPlan, e.excedentAvantPlan, e.arrivants.join(', '), e.sortants.join(', '), e.sallesManquantes,
+        ...e.annees.flatMap(a => [a.departsRetraite, a.effectif, a.besoin, a.excedent]),
+      ]),
+    )
+
+    ajouter(
+      'Projection_Territoire',
+      ['Rentrée', 'Sous-système', 'Effectif', 'Départs retraite', 'Attrition attendue', 'Besoin B', 'Excédent X', 'Recrutement à prévoir'],
+      resultat.projectionPluriannuelle.territoire.map(t => [
+        t.annee, LIBELLE_SOUS_SYSTEME[t.sousSysteme], t.effectif, t.departsRetraite, t.attrition, t.besoin, t.excedent, t.recrutementAPrevoir,
+      ]),
+    )
+
+    const rouges = resultat.uncoveredPosts.filter(p => p.priorite.zoneRouge)
+    if (rouges.length > 0) {
+      ajouter(
+        'Postes_Zone_Rouge',
+        ['Poste', 'Code', 'Établissement', 'Commune', 'Département', 'Région', 'Sous-système', 'Indice u', 'Traitement'],
+        rouges.map(p => [p.id, p.schoolId, p.nomEtab, p.commune, p.departement, p.region, p.sousSysteme ?? '', p.priorite.indice, 'Volontariat, primes de zone difficile ou recrutement']),
+      )
+    }
+
+    // Journal d'audit : chaque décision et chaque proposition, horodatées, avec leur statut.
+    const journal: CellValue[][] = []
+    for (const { fait } of resultat.faitsPrince.filter(e => e.statut === 'applique')) {
+      journal.push([fait.decideLe, 'Fait de Prince', fait.teacherId, fait.enseignant, fait.origine.nom, fait.destination.nom, 'Décision de la DRH', fait.reference || '—'])
+    }
+    for (const { decision: d, appliquee, motif } of resultat.arbitrages) {
+      journal.push([d.decideLe, `Commission ${d.instance === 'centrale' ? 'centrale' : 'régionale'}`, d.teacherId, d.nomEnseignant, d.propositionInitiale?.nomEtab ?? '', d.nomEtabDestination ?? d.propositionInitiale?.nomEtab ?? '', `${d.decision}${appliquee ? '' : ` (non appliquée : ${motif})`}`, d.motif])
+    }
+    for (const a of resultat.assignments) {
+      journal.push([resultat.computedAt, a.phase, a.teacherId, `${a.nomEns} ${a.prenomEns}`.trim(), a.nomEtabOrigine, a.nomEtabDestination, LIBELLE_STATUT_PROPOSITION[a.statut], `${LIBELLE_NATURE[a.nature]}${a.rangVoeu ? ` (vœu ${a.rangVoeu})` : ''}`])
+    }
+    for (const c of resultat.candidatures.filter(x => x.issue === 'irrecevable' || x.issue === 'depart_non_valide')) {
+      journal.push([resultat.computedAt, 'Recevabilité', c.teacher.id, `${c.teacher.nom} ${c.teacher.prenom}`.trim(), c.ecoleOrigine.nom, '', 'Rejeté', c.detailIssue])
+    }
+    ajouter('Journal_Audit', ['Horodatage', 'Étape', 'Matricule', 'Enseignant', 'Origine', 'Destination', 'Statut', 'Motif'], journal)
+
+    if (resultat.combinaisons.length > 0) {
+      ajouter(
+        'Combinaisons_Commission',
+        ['École non couverte', 'Indice u', 'Type', 'Proposition'],
+        resultat.combinaisons.map(c => [c.nomEtab, c.indicePriorite, c.type, c.description]),
+      )
+    }
+
+    if (resultat.projectionsN2.length > 0) {
+      ajouter(
+        'Projection_N2',
+        ['Matricule', 'Enseignant', "École d'attache", 'Poste projeté en N+2', 'Vœu'],
+        resultat.projectionsN2.map(p => [p.teacherId, p.nom, p.nomEtabOrigine, p.nomEtab ?? 'Aucune solution prévisible', p.rangVoeu ?? '']),
+      )
+    }
+
+    if (resultat.recrutes) {
+      ajouter(
+        'Nouveaux_Recrutes',
+        ['Candidat', 'Nom', 'Note', 'Poste', 'Commune', 'Issue'],
+        [
+          ...resultat.recrutes.affectations.map(a => [a.recrueId, a.nom, a.note, a.nomEtab, a.commune, a.issue === 'choix' ? `Choix ${a.rangChoix}` : a.issue === 'departement' ? 'Extension au département' : 'Extension à la région'] as CellValue[]),
+          ...resultat.recrutes.vivierNational.map(v => [v.recrueId, v.nom, v.note, '', '', `Vivier national — ${v.motif}`] as CellValue[]),
+        ],
+      )
+    }
+
+    if (resultat.arbitrages.length > 0) {
+      ajouter(
+        'Arbitrages',
+        ['Enseignant', 'Matricule', 'Proposition initiale', 'Décision', 'École retenue', 'Changement de sous-système', 'Instance', 'Motif', 'Date', 'Appliquée'],
+        resultat.arbitrages.map(({ decision: d, appliquee, motif }) => [
+          d.nomEnseignant, d.teacherId, d.propositionInitiale?.nomEtab ?? '', d.decision, d.nomEtabDestination ?? '',
+          d.changementSousSysteme ? 'Oui' : 'Non', d.instance === 'centrale' ? 'Centrale' : 'Régionale', d.motif,
+          new Date(d.decideLe).toLocaleDateString('fr-FR'), appliquee ? 'Oui' : `Non — ${motif}`,
+        ]),
+      )
+    }
 
     ajouter(
       'Justification_Affectations',

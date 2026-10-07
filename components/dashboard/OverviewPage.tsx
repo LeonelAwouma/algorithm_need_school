@@ -86,7 +86,7 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
       points.push({
         cle: d.school.id,
         label: d.school.nom || d.school.id,
-        x: d.nbClasses,
+        x: d.calcul.cible,
         y: d.enseignantsEtat,
         categorie: d.besoinTheorique > 0 ? 'deficit' : d.excedentTheorique > 0 ? 'excedent' : 'equilibre',
         onSelect: () => ouvrirEcole(d.school.id),
@@ -142,7 +142,7 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
         valeur: compte('excedent'),
         couleur: 'var(--serie-2)',
         motif: 'points' as const,
-        definition: 'plus d’enseignants que le minimum à conserver',
+        definition: 'plus de maîtres que la dotation théorique D (ce dont les élèves ont besoin)',
         onSelect: () => setFiltres({ ...filtres, severites: ['excedent'] }),
       },
       {
@@ -434,8 +434,8 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
 
       <Panel
         kicker="Établissements"
-        title="Chaque école face à la norme"
-        hint={`Un point par établissement : son nombre de classes en abscisse, ses enseignants payés par l’État en ordonnée. La droite représente la norme configurée (${settings.normeEncadrement.enseignantsParClasse} enseignant par classe). Cliquez un point pour ouvrir la fiche.${nuage.echantillonne ? ` Échantillon régulier de ${fmt(nuage.points.length)} établissements sur ${fmt(nuage.total)}, pour préserver la lisibilité.` : ''}`}
+        title="Chaque école face à sa cible"
+        hint={`Un point par établissement : sa cible K en abscisse (maîtres dont les élèves ont besoin, dans la limite de ce que les salles permettent : un maître pour ${settings.besoin.elevesParMaitre} élèves), ses maîtres retenus à la rentrée en ordonnée. Sous la diagonale, l’école manque de maîtres. Cliquez un point pour ouvrir la fiche.${nuage.echantillonne ? ` Échantillon régulier de ${fmt(nuage.points.length)} établissements sur ${fmt(nuage.total)}, pour préserver la lisibilité.` : ''}`}
       >
         <Nuage
           titre="Classes et enseignants par établissement"
@@ -445,9 +445,9 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
             { cle: 'equilibre', label: 'À l’équilibre', couleur: 'var(--serie-3)', forme: 'cercle' },
             { cle: 'excedent', label: 'Avec excédent mobilisable', couleur: 'var(--serie-1)', forme: 'carre' },
           ]}
-          axeX={{ label: 'Nombre de classes' }}
-          axeY={{ label: 'Enseignants payés par l’État' }}
-          reference={{ pente: settings.normeEncadrement.enseignantsParClasse, label: 'Norme d’encadrement' }}
+          axeX={{ label: 'Cible K (maîtres)' }}
+          axeY={{ label: 'Maîtres retenus E' }}
+          reference={{ pente: 1, label: 'E = K' }}
         />
       </Panel>
 

@@ -48,7 +48,7 @@ export function BandeauMiseAJour({ etat, donneesChargees }: { etat: EtatMiseAJou
       <div className="maj-bandeau maj-bandeau-discret no-print" role="status">
         <RefreshCw size={15} className="spin" aria-hidden="true" />
         <span>
-          Téléchargement de la version {etat.nouvelleVersion} d’AlgoBaba en arrière-plan
+          Téléchargement de la version {etat.nouvelleVersion} d’AlgoPlanR en arrière-plan
           {etat.pourcentage != null ? ` — ${etat.pourcentage} %` : ''}. Vous pouvez continuer à travailler.
         </span>
       </div>
@@ -61,7 +61,7 @@ export function BandeauMiseAJour({ etat, donneesChargees }: { etat: EtatMiseAJou
     <div className="maj-bandeau no-print" role="status">
       <Download size={17} aria-hidden="true" />
       <div className="maj-texte">
-        <strong>La version {etat.nouvelleVersion} d’AlgoBaba est prête.</strong>
+        <strong>La version {etat.nouvelleVersion} d’AlgoPlanR est prête.</strong>
         <span>
           Elle s’installera automatiquement à la fermeture de l’application.
           {donneesChargees

@@ -44,7 +44,11 @@ export function NationalDiagnosticPage({ store }: { store: PlanningStore }) {
    * qui atteignent ou dépassent la norme.
    */
   const distribution = useMemo(
-    () => construireClasses(diagnosticsFiltres.filter(d => d.nbClasses > 0).map(d => d.enseignantsEtat / d.nbClasses), 9),
+    () =>
+      construireClasses(
+        diagnosticsFiltres.map(d => d.calcul.remActuel).filter((v): v is number => v != null),
+        9,
+      ),
     [diagnosticsFiltres],
   )
 
@@ -163,13 +167,13 @@ export function NationalDiagnosticPage({ store }: { store: PlanningStore }) {
 
       <Panel
         kicker="Encadrement"
-        title="Comment se répartit le taux d’encadrement"
-        hint="Nombre d’établissements par tranche d’enseignants payés par l’État rapportés au nombre de classes. Les établissements situés à gauche du repère n’atteignent pas la norme configurée."
+        title="Comment se répartit le rapport élèves / maître (REM)"
+        hint="Nombre d’établissements par tranche de REM actuel. Les établissements situés à droite du repère dépassent la norme de la note de cadrage : un REM supérieur signale une pression d’encadrement, un REM inférieur ne suffit pas à conclure à un excédent."
       >
         <Histogramme
-          titre="Répartition des établissements par nombre d’enseignants par classe"
+          titre="Répartition des établissements par REM actuel"
           classes={distribution}
-          repere={{ valeur: settings.normeEncadrement.enseignantsParClasse, label: 'Norme' }}
+          repere={{ valeur: settings.besoin.elevesParMaitre, label: 'Norme' }}
           vide="Aucun établissement exploitable pour construire cette distribution."
         />
       </Panel>

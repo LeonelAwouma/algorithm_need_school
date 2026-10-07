@@ -16,7 +16,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { SchoolDiagnostic, School, Teacher } from '@/types/education'
 import type { FaitPrince } from '@/types/prince'
 import type { DataQualityReport } from '@/types/data-quality'
-import type { Dataset, EngineSettings, GeographicScope, SimulationResult, SimulationScenario } from '@/types/simulation'
+import type {
+  Dataset,
+  DecisionArbitrage,
+  EngineSettings,
+  GeographicScope,
+  Recrue,
+  SimulationResult,
+  SimulationScenario,
+} from '@/types/simulation'
 import { runDiagnostic } from '@/lib/analytics/diagnostic'
 import {
   FILTRES_VIDES,
@@ -62,6 +70,10 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
    * (comme toute donnée d'enseignant, elles ne sont jamais écrites sur le disque).
    */
   const [faitsPrince, setFaitsPrince] = useState<FaitPrince[]>([])
+  /** Décisions des commissions d'arbitrage (§3.10), tracées et appliquées avant l'algorithme. */
+  const [arbitrages, setArbitrages] = useState<DecisionArbitrage[]>([])
+  /** Candidats au concours à déployer sur les postes restés vacants (§3.8). */
+  const [recrues, setRecrues] = useState<Recrue[]>([])
   /** Nature du dernier jeu chargé (démonstration ou non), pour savoir si les décisions de la DRH restent valables. */
   const dernierJeuDemo = useRef<boolean | null>(null)
 
@@ -110,7 +122,7 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
 
   // --- Diagnostic (Moteur A) : recalculé dès que données ou normes changent --
   const diagnostic = useMemo(
-    () => (dataset ? runDiagnostic(dataset.schools, settings) : null),
+    () => (dataset ? runDiagnostic(dataset.schools, settings, dataset.teachers) : null),
     [dataset, settings],
   )
 
@@ -118,7 +130,7 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
   const diagnosticSansPrince = useMemo(() => {
     if (!datasetImporte) return null
     if (nbFaitsPrinceActifs === 0) return diagnostic
-    return runDiagnostic(datasetImporte.schools, settings)
+    return runDiagnostic(datasetImporte.schools, settings, datasetImporte.teachers)
   }, [datasetImporte, nbFaitsPrinceActifs, diagnostic, settings])
 
   const arbreComplet = useMemo(
@@ -188,15 +200,18 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
       if (!diagnostic || !dataset) return null
       const resultat = runSimulation({
         diagnostics: diagnostic.schools,
+        schools: dataset.schools,
         teachers: dataset.teachers,
         scenario,
         faitsPrince: faitsPrinceAppliques,
+        arbitrages,
+        recrues,
       })
       setScenarios(courants => (courants.some(s => s.id === scenario.id) ? courants : [...courants, scenario]))
       setResultats(courants => ({ ...courants, [scenario.id]: resultat }))
       return resultat
     },
-    [diagnostic, dataset, faitsPrinceAppliques],
+    [diagnostic, dataset, faitsPrinceAppliques, arbitrages, recrues],
   )
 
   /** Calcule les trois scénarios géographiques de base, utilisés partout comme repère. */
@@ -212,9 +227,12 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
         for (const scenario of nouveaux) {
           calcules[scenario.id] = runSimulation({
             diagnostics: diagnostic.schools,
+            schools: dataset.schools,
             teachers: dataset.teachers,
             scenario,
             faitsPrince: faitsPrinceAppliques,
+            arbitrages,
+            recrues,
           })
         }
         setScenarios(courants => [...courants.filter(s => !s.id.startsWith('geo-')), ...nouveaux])
@@ -226,7 +244,7 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
         setCalculEnCours(false)
       }
     }, 30)
-  }, [diagnostic, dataset, settings, faitsPrinceAppliques])
+  }, [diagnostic, dataset, settings, faitsPrinceAppliques, arbitrages, recrues])
 
   /**
    * Lance les scénarios de base dès qu'un jeu de données devient exploitable.
@@ -245,7 +263,11 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
    * les scénarios déjà calculés (prédéfinis comme personnalisés) sont recalculés, avec
    * leurs paramètres figés, pour que l'algorithme en tienne compte immédiatement.
    */
-  const signaturePrince = faitsPrinceAppliques.map(e => `${e.fait.id}:${e.statut}`).join('|')
+  const signaturePrince = [
+    faitsPrinceAppliques.map(e => `${e.fait.id}:${e.statut}`).join('|'),
+    arbitrages.map(a => a.id).join('|'),
+    recrues.length,
+  ].join('#')
   const signatureVue = useRef(signaturePrince)
   useEffect(() => {
     if (signatureVue.current === signaturePrince) return
@@ -256,16 +278,19 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
       for (const scenario of scenarios) {
         recalcules[scenario.id] = runSimulation({
           diagnostics: diagnostic.schools,
+          schools: dataset.schools,
           teachers: dataset.teachers,
           scenario,
           faitsPrince: faitsPrinceAppliques,
+          arbitrages,
+          recrues,
         })
       }
       setResultats(courants => ({ ...courants, ...recalcules }))
     } catch (err) {
       setErreur(err instanceof Error ? err.message : String(err))
     }
-  }, [signaturePrince, diagnostic, dataset, scenarios, faitsPrinceAppliques])
+  }, [signaturePrince, diagnostic, dataset, scenarios, faitsPrinceAppliques, arbitrages, recrues])
 
   /** Les résultats deviennent obsolètes si les paramètres changent après coup. */
   const resultatsObsoletes = useMemo(() => {
@@ -274,13 +299,12 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
     return calcules.some(r => {
       const scenario = scenarios.find(s => s.id === r.scenarioId)
       if (!scenario) return true
-      return (
-        scenario.settings.normeEncadrement.enseignantsParClasse !== settings.normeEncadrement.enseignantsParClasse ||
-        scenario.settings.minimumAConserver.mode !== settings.minimumAConserver.mode ||
-        scenario.settings.minimumAConserver.ratio !== settings.minimumAConserver.ratio ||
-        scenario.settings.minimumAConserver.valeurFixe !== settings.minimumAConserver.valeurFixe ||
-        scenario.settings.sourceDesPostes !== settings.sourceDesPostes
-      )
+      // Seuls les scénarios géographiques suivent les règles courantes : les autres
+      // figent volontairement un paramètre différent.
+      if (!scenario.id.startsWith('geo-')) return false
+      const regles = (s: EngineSettings) =>
+        JSON.stringify([s.besoin, s.sourceDesPostes, s.priorite, s.mobilite, s.recrutement, s.scoring, s.anneeScolaire])
+      return regles(scenario.settings) !== regles(settings)
     })
   }, [resultats, scenarios, settings])
 
@@ -361,6 +385,8 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
     setFichiers({ etablissements: null, enseignants: null })
     setDatasetImporte(null)
     setFaitsPrince([])
+    setArbitrages([])
+    setRecrues([])
     dernierJeuDemo.current = null
     setQualite(null)
     setScenarios([])
@@ -393,9 +419,44 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
     [faitsPrince, datasetImporte],
   )
 
+  /**
+   * Enregistre un lot de décisions (import d'un fichier). Chaque décision est
+   * contrôlée comme une saisie unique, en tenant compte de celles qui la précèdent
+   * dans le lot : un enseignant ne peut être redéployé qu'une fois.
+   */
+  const ajouterFaitsPrinceEnLot = useCallback(
+    (lignes: { enseignant: Teacher | null; destination: SchoolDiagnostic | null; reference: string }[]): { acceptees: number; refus: string[] } => {
+      const ajoutes: FaitPrince[] = []
+      const refus: string[] = []
+      for (const l of lignes) {
+        const verdict = verifierFaitPrince(l.enseignant, l.destination, [...faitsPrince, ...ajoutes])
+        if (!verdict.ok || !l.enseignant || !l.destination) {
+          refus.push(`${l.enseignant?.id ?? '?'} → ${l.destination?.school.id ?? '?'} : ${verdict.ok ? 'données incomplètes' : verdict.motif}`)
+          continue
+        }
+        const origine: School | null = datasetImporte?.schools.find(e => e.id === l.enseignant?.idEtabAttache) ?? null
+        ajoutes.push(nouveauFaitPrince(l.enseignant, origine, l.destination.school, l.reference || 'Import de fichier'))
+      }
+      if (ajoutes.length > 0) setFaitsPrince(courants => [...courants, ...ajoutes])
+      return { acceptees: ajoutes.length, refus }
+    },
+    [faitsPrince, datasetImporte],
+  )
+
   /** Annule une décision : elle est retirée de la liste, l'enseignant retrouve son école d'origine. */
   const annulerFaitPrince = useCallback((id: string) => {
     setFaitsPrince(courants => courants.filter(e => e.id !== id))
+  }, [])
+
+  // --- Arbitrage (§3.10) -------------------------------------------------------
+
+  /** Enregistre la décision d'une commission ; elle remplace une décision antérieure sur le même enseignant. */
+  const ajouterArbitrage = useCallback((decision: DecisionArbitrage) => {
+    setArbitrages(courants => [...courants.filter(a => a.teacherId !== decision.teacherId), decision])
+  }, [])
+
+  const annulerArbitrage = useCallback((id: string) => {
+    setArbitrages(courants => courants.filter(a => a.id !== id))
   }, [])
 
   // --- Aides de navigation ---------------------------------------------------
@@ -463,12 +524,20 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
     enfantsTerritoriaux,
     niveauTerritorial: selectionLevel(filtres.territoire),
 
+    // Arbitrage et nouveaux recrutés
+    arbitrages,
+    ajouterArbitrage,
+    annulerArbitrage,
+    recrues,
+    setRecrues,
+
     // Fait de Prince
     faitsPrince,
     faitsPrinceAppliques,
     nbFaitsPrinceActifs,
     diagnosticSansPrince,
     ajouterFaitPrince,
+    ajouterFaitsPrinceEnLot,
     annulerFaitPrince,
 
     // Simulation

@@ -1,17 +1,25 @@
 /**
- * Barème individuel et score enseignant ↔ poste.
+ * Barème individuel (étage 1), score d'appariement (étage 2) et proximité.
  *
- * Le calcul est repris tel quel de la version validée du moteur : mêmes
- * critères, mêmes poids par défaut, même arrondi. Deux choses changent :
- *   — le score est renvoyé décomposé, pour que chaque proposition puisse être
- *     expliquée avec ses composantes réelles (§15) ;
- *   — la proximité distingue désormais « même région », niveau intermédiaire
- *     utile au scénario étendu.
+ * Repris du moteur de référence MINEDUB, avec trois corrections :
+ *   — C1 additionne l'ancienneté générale et les points de zone difficile Z,
+ *     plafonnés à 10 comme au §3.3 du référentiel (le moteur de référence
+ *     multipliait l'ancienneté par max(10 ; 2 n1 + n2), ce qui inversait le plafond
+ *     et écrasait les quatre autres critères) ;
+ *   — C2 reprend les points d'ancienneté au poste A du référentiel, au lieu d'une
+ *     seconde formule voisine ;
+ *   — les années de zone difficile, quand le dossier de carrière ne les donne pas,
+ *     comptent au moins les années passées au poste actuel si l'école d'attache est
+ *     de niveau de difficulté 1 ou 2 (et non toute la carrière).
+ *
+ * Le barème ordonne les départs d'une école excédentaire ; le score d'appariement
+ * choisit, à proximité égale, l'enseignant proposé sur un poste, et peut en
+ * variante classer les candidats à une même école.
  */
 
-import type { Teacher, Zone } from '../../types/education'
+import type { Teacher } from '../../types/education'
 import type {
-  PhaseRules,
+  EngineSettings,
   ProximityLevel,
   ScoreBreakdown,
   ScoreComponent,
@@ -20,144 +28,148 @@ import type {
 } from '../../types/simulation'
 import { lower, round4 } from '../data/normalize'
 import { normaliserSituation } from '../data/situation-familiale'
+import { anneesZoneEffectives, pointsAnciennete, pointsZoneDifficile, procheDeLaRetraite } from './candidatures'
+
+export { anneesZoneEffectives }
 
 /**
- * Points attribués à une situation matrimoniale déclarée.
- *
- * Le libellé du fichier est d'abord rattaché à une situation connue : « Marié »,
- * « Mariée », « MARIE(E) » et « marie » donnent donc le même résultat. Une valeur
- * non reconnue vaut 0 point — l'application la signale dans la page des
- * paramètres plutôt que de la laisser passer en silence.
+ * Points attribués à une situation matrimoniale déclarée. « Marié », « Mariée »
+ * et « MARIE(E) » donnent le même résultat ; une valeur non reconnue vaut 0.
  */
 export function pointsSituation(situation: string, cfg: ScoringConfig): number {
   const cle = normaliserSituation(situation)
   if (cle) return cfg.pointsSituationFamiliale[cle] ?? 0
-  // Compatibilité : une clé ajoutée à la main dans la configuration reste utilisable.
   return cfg.pointsSituationFamiliale[lower(situation)] ?? 0
 }
 
-/**
- * Barème individuel : il ordonne les enseignants d'une même école source pour
- * déterminer lesquels sont prioritaires en cas de redéploiement.
- */
-export function calculerBaremeIndividuel(ens: Teacher, cfg: ScoringConfig): number {
-  const w = cfg.poidsBaremeIndividuel
-  const bonusPoste = ens.anciennetePosteAns >= cfg.seuils.anciennetePosteBonusAns ? 10 : ens.anciennetePosteAns
-  const ageScore = ens.age != null ? Math.min(ens.age, 60) / 6 : 5
-
-  return round4(
-    w.ancienneteCarriere * ens.ancienneteCarriereAns +
-      w.anciennetePoste * bonusPoste +
-      w.situationFamiliale * pointsSituation(ens.situationFamiliale, cfg) +
-      w.nbEnfants * ens.nbEnfants +
-      w.formationContinue * ens.formationContinue +
-      w.ageAjuste * ageScore,
-  )
+/** Cohorte d'âge (C5) : jeune, médiane ou senior. */
+export function cohorte(t: Teacher, cfg: ScoringConfig): 'jeune' | 'median' | 'senior' {
+  if (t.age == null) return 'median'
+  if (t.age < cfg.seuils.ageJeuneAns) return 'jeune'
+  if (t.age < cfg.seuils.ageSeniorAns) return 'median'
+  return 'senior'
 }
 
-/** Détail du barème individuel, pour la Vue analyste. */
-export function detaillerBareme(ens: Teacher, cfg: ScoringConfig): ScoreBreakdown {
+function composantesBareme(t: Teacher, settings: EngineSettings, niveauEcole: 1 | 2 | 3 | null): ScoreComponent[] {
+  const cfg = settings.scoring
   const w = cfg.poidsBaremeIndividuel
-  const bonusPoste = ens.anciennetePosteAns >= cfg.seuils.anciennetePosteBonusAns ? 10 : ens.anciennetePosteAns
-  const ageScore = ens.age != null ? Math.min(ens.age, 60) / 6 : 5
-  const components: ScoreComponent[] = [
-    { label: 'Ancienneté de carrière (ans)', valeur: ens.ancienneteCarriereAns, poids: w.ancienneteCarriere, contribution: 0 },
-    { label: 'Ancienneté au poste (points)', valeur: bonusPoste, poids: w.anciennetePoste, contribution: 0 },
-    { label: 'Situation familiale (points)', valeur: pointsSituation(ens.situationFamiliale, cfg), poids: w.situationFamiliale, contribution: 0 },
-    { label: "Nombre d'enfants", valeur: ens.nbEnfants, poids: w.nbEnfants, contribution: 0 },
-    { label: 'Formation continue', valeur: ens.formationContinue, poids: w.formationContinue, contribution: 0 },
-    { label: 'Âge ajusté', valeur: round4(ageScore), poids: w.ageAjuste, contribution: 0 },
-  ].map(c => ({ ...c, contribution: round4(c.valeur * c.poids) }))
+  const { n1, n2 } = anneesZoneEffectives(t, niveauEcole)
+  const Z = pointsZoneDifficile(n1, n2, settings)
+  const A = pointsAnciennete(t.anciennetePosteAns, procheDeLaRetraite(t, settings), settings)
+  const charges = pointsSituation(t.situationFamiliale, cfg) - cfg.pointsParEnfant * Math.max(0, t.nbEnfants)
+  const formation = Math.min(cfg.plafondFormation, cfg.pointsParFormation * Math.max(0, t.formationContinue))
+  const c = cohorte(t, cfg)
+  return [
+    { label: `C1 — carrière (${round4(t.ancienneteCarriereAns)} ans) et zone difficile (Z = ${Z})`, valeur: round4(t.ancienneteCarriereAns + Z), poids: w.carriereZone, contribution: 0 },
+    { label: 'C2 — ancienneté au poste (points A)', valeur: A, poids: w.anciennetePoste, contribution: 0 },
+    { label: `C3 — charges familiales (situation − ${cfg.pointsParEnfant} par enfant)`, valeur: charges, poids: w.chargesFamiliales, contribution: 0 },
+    { label: 'C4 — formation continue', valeur: formation, poids: w.formationContinue, contribution: 0 },
+    { label: `C5 — cohorte d'âge (${c === 'jeune' ? 'jeune' : c === 'senior' ? 'senior' : 'médiane'})`, valeur: cfg.pointsCohorte[c], poids: w.cohorteAge, contribution: 0 },
+  ].map(x => ({ ...x, contribution: round4(x.valeur * x.poids) }))
+}
 
+/** Barème individuel (étage 1). `niveauEcole` : niveau de difficulté de l'école d'attache. */
+export function calculerBaremeIndividuel(t: Teacher, settings: EngineSettings, niveauEcole: 1 | 2 | 3 | null = null): number {
+  return round4(composantesBareme(t, settings, niveauEcole).reduce((a, c) => a + c.contribution, 0))
+}
+
+/** Détail du barème individuel, pour l'explication et la Vue analyste. */
+export function detaillerBareme(t: Teacher, settings: EngineSettings, niveauEcole: 1 | 2 | 3 | null = null): ScoreBreakdown {
+  const components = composantesBareme(t, settings, niveauEcole)
   return { total: round4(components.reduce((a, c) => a + c.contribution, 0)), components }
 }
 
-/** Niveau de proximité entre le rattachement de l'enseignant et le poste. */
-export function niveauProximite(ens: Teacher, poste: TeachingPost): ProximityLevel {
+// --- Proximité ----------------------------------------------------------------------
+
+/** Niveau de proximité entre le rattachement de l'enseignant et le poste : commune, IAEB, département, région. */
+export function niveauProximite(
+  ens: Pick<Teacher, 'communeAttache' | 'departementAttache' | 'regionAttache'> & { iaebAttache?: string },
+  poste: Pick<TeachingPost, 'commune' | 'departement' | 'region'> & { iaeb?: string },
+): ProximityLevel {
   if (ens.communeAttache && lower(ens.communeAttache) === lower(poste.commune)) return 'meme_commune'
+  if (ens.iaebAttache && poste.iaeb && lower(ens.iaebAttache) === lower(poste.iaeb)) return 'meme_iaeb'
   if (ens.departementAttache && lower(ens.departementAttache) === lower(poste.departement)) return 'meme_departement'
   if (ens.regionAttache && lower(ens.regionAttache) === lower(poste.region)) return 'meme_region'
   return 'hors_region'
 }
 
+export const RANG_PROXIMITE: Record<ProximityLevel, number> = {
+  meme_commune: 0,
+  meme_iaeb: 1,
+  meme_departement: 2,
+  meme_region: 3,
+  hors_region: 4,
+}
+
 export const LIBELLE_PROXIMITE: Record<ProximityLevel, string> = {
   meme_commune: 'Même commune',
+  meme_iaeb: 'Même IAEB',
   meme_departement: 'Même département',
   meme_region: 'Même région',
   hors_region: 'Hors région',
 }
 
-function pointsProximite(niveau: ProximityLevel, cfg: ScoringConfig): number {
+export function pointsProximite(niveau: ProximityLevel, cfg: ScoringConfig): number {
+  const p = cfg.pointsProximite
   switch (niveau) {
     case 'meme_commune':
-      return cfg.pointsProximite.memeCommune
+      return p.memeCommune
+    case 'meme_iaeb':
+      return p.memeIaeb
     case 'meme_departement':
-      return cfg.pointsProximite.memeDepartement
+      return p.memeDepartement
     case 'meme_region':
-      return cfg.pointsProximite.memeRegion
+      return p.memeRegion
     default:
-      return cfg.pointsProximite.autre
+      return p.autre
   }
 }
 
-/** Règle d'âge : jeunes vers les classes multigrades, plus âgés vers IAEB ou postes non multigrades. */
-export function scoreAgeRegle(ens: Teacher, poste: TeachingPost, cfg: ScoringConfig): number {
-  if (ens.age == null) return 0
-  const { ageJeuneAns, ageAgeAns } = cfg.seuils
-  if (ens.age <= ageJeuneAns && poste.classesMultigrades > 0) return 15
-  if (ens.age >= ageAgeAns) {
-    if (poste.typeEtab.toUpperCase() === 'IAEB') return 15
-    if (poste.classesMultigrades === 0) return 8
-  }
-  return 0
-}
+// --- Score d'appariement (étage 2) -------------------------------------------------------
 
-/** Règle de zone : ancienneté en zone rurale ouvrant vers une zone urbaine. */
-export function scoreZoneRegle(ens: Teacher, poste: TeachingPost): number {
-  const versUrbain: Zone[] = ['urbaine', 'semi_urbaine']
-  if (ens.zoneAttache === 'rurale' && versUrbain.includes(poste.zone) && ens.anciennetePosteAns >= 5) return 12
-  return 0
+/**
+ * Ajustements contextuels, chacun justifié par une règle explicite. La bonification
+ * ciblée ne vaut que pour l'école visée par un motif justifié (et non pour tous les
+ * vœux, ce qui la rendait sans effet sur le choix entre eux).
+ */
+export function ajustementsContextuels(t: Teacher, poste: TeachingPost, cfg: ScoringConfig, ecoleVisee: string | null): ScoreComponent[] {
+  const a = cfg.ajustements
+  const age = t.age
+  const jeune = age != null && age <= cfg.seuils.ageJeuneAns
+  const senior = age != null && age >= cfg.seuils.ageSeniorAns
+  const lignes: { label: string; valeur: number }[] = []
+  if (jeune && poste.classesMultigrades > 0) lignes.push({ label: 'Jeune enseignant vers une école à classes multigrades', valeur: a.jeuneVersMultigrades })
+  if (senior && poste.estStructure) lignes.push({ label: "Senior vers une structure d'encadrement", valeur: a.seniorVersEncadrement })
+  if (senior && !poste.estStructure && poste.classesMultigrades === 0) lignes.push({ label: 'Senior vers une école sans classe multigrade', valeur: a.allegementSenior })
+  if (t.zoneAttache === 'rurale' && (poste.zone === 'urbaine' || poste.zone === 'semi_urbaine') && t.anciennetePosteAns >= 5) {
+    lignes.push({ label: 'Transition du rural vers l’urbain après 5 ans au poste', valeur: a.transitionRuralUrbain })
+  }
+  if (ecoleVisee && ecoleVisee === poste.schoolId) lignes.push({ label: 'Bonification ciblée : école visée par un motif justifié', valeur: a.bonificationCiblee })
+  return lignes.filter(l => l.valeur !== 0).map(l => ({ ...l, poids: 1, contribution: l.valeur }))
 }
 
 /**
- * Score complet enseignant ↔ poste, décomposé. Toutes les composantes
- * renvoyées participent réellement au total utilisé pour le choix du poste :
- * l'explication affichée correspond donc exactement au calcul.
+ * Score d'appariement enseignant ↔ poste :
+ *   Z1 × barème + Z2 × poids du poste u + Z3 × points de proximité + Z4 × ajustements.
+ * Toutes les composantes affichées sont celles réellement additionnées.
  */
-export function scoreEnseignantPoste(
-  ens: Teacher,
+export function scoreAppariement(
+  t: Teacher,
   bareme: number,
   poste: TeachingPost,
-  cfg: ScoringConfig,
-  phases: PhaseRules,
+  settings: EngineSettings,
+  ecoleVisee: string | null,
 ): ScoreBreakdown {
-  const w = cfg.poidsScorePoste
-  const proximite = niveauProximite(ens, poste)
-
+  const cfg = settings.scoring
+  const w = cfg.poidsScoreAppariement
+  const proximite = niveauProximite(t, poste)
+  const ajustements = ajustementsContextuels(t, poste, cfg, ecoleVisee)
+  const totalAjustements = ajustements.reduce((s, x) => s + x.valeur, 0)
   const components: ScoreComponent[] = [
-    { label: 'Barème individuel', valeur: bareme, poids: w.baremeEnseignant, contribution: 0 },
-    { label: `Proximité — ${LIBELLE_PROXIMITE[proximite].toLowerCase()}`, valeur: pointsProximite(proximite, cfg), poids: w.proximite, contribution: 0 },
-    { label: 'Ancienneté au poste (ans)', valeur: ens.anciennetePosteAns, poids: w.anciennetePoste, contribution: 0 },
-    { label: 'Situation familiale (points)', valeur: pointsSituation(ens.situationFamiliale, cfg), poids: w.situationFamiliale, contribution: 0 },
-    { label: "Règle d'âge", valeur: scoreAgeRegle(ens, poste, cfg), poids: w.ageRegle, contribution: 0 },
-    { label: 'Règle de zone', valeur: scoreZoneRegle(ens, poste), poids: w.zoneRegle, contribution: 0 },
-  ]
-
-  // Priorité déclarée par l'établissement : reprise de la règle historique
-  // (bonus décroissant du rang 1 au rang 20, nul au-delà ou si non déclarée).
-  const rang = poste.prioriteLocale > 0 ? poste.prioriteLocale : 99
-  const bonusPriorite = Math.max(0, 20 - rang)
-  if (bonusPriorite > 0) {
-    components.push({ label: `Priorité locale de l'établissement (rang ${rang})`, valeur: bonusPriorite, poids: 1, contribution: 0 })
-  }
-
-  if (phases.prioriteZonesRurales && poste.zone === 'rurale') {
-    components.push({ label: 'Priorité aux zones rurales (paramètre actif)', valeur: 10, poids: 1, contribution: 0 })
-  }
-  if (phases.prioriteClassesMultigrades && poste.classesMultigrades > 0) {
-    components.push({ label: 'Priorité aux classes multigrades (paramètre actif)', valeur: 10, poids: 1, contribution: 0 })
-  }
-
-  const detaillees = components.map(c => ({ ...c, contribution: round4(c.valeur * c.poids) }))
-  return { total: round4(detaillees.reduce((a, c) => a + c.contribution, 0)), components: detaillees }
+    { label: 'Z1 — barème individuel', valeur: bareme, poids: w.bareme, contribution: 0 },
+    { label: 'Z2 — poids du poste (indice u)', valeur: poste.priorite.indice, poids: w.poidsPoste, contribution: 0 },
+    { label: `Z3 — proximité (${LIBELLE_PROXIMITE[proximite].toLowerCase()})`, valeur: pointsProximite(proximite, cfg), poids: w.proximite, contribution: 0 },
+    { label: `Z4 — ajustements${ajustements.length ? ` : ${ajustements.map(x => x.label.toLowerCase()).join(' ; ')}` : ' (aucun)'}`, valeur: totalAjustements, poids: w.ajustements, contribution: 0 },
+  ].map(x => ({ ...x, contribution: round4(x.valeur * x.poids) }))
+  return { total: round4(components.reduce((s, x) => s + x.contribution, 0)), components }
 }

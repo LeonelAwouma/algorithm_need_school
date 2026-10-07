@@ -8,7 +8,6 @@
 
 import type { SchoolDiagnostic } from '../../types/education'
 import type { EngineSettings, InvariantCheck, SimulationResult } from '../../types/simulation'
-import { besoinNormatif, minimumAConserver } from '../analytics/diagnostic'
 
 function check(code: string, label: string, ok: boolean, detail: string): InvariantCheck {
   return { code, label, ok, detail }
@@ -85,10 +84,10 @@ export function verifierInvariants(
     const d = parEcole.get(schoolId)
     if (!d) continue
     const apres = effectifsApres.get(schoolId) ?? d.enseignantsEtat
-    const minimum = minimumAConserver(d.school, settings)
-    const besoinApres = Math.max(0, besoinNormatif(d.school, settings) - apres)
-    if (apres < minimum || besoinApres > d.besoinTheorique) {
-      misesEnDeficit.push(`${schoolId} (${apres} restants pour un minimum de ${minimum})`)
+    // Un départ n'est admis que dans la limite de l'excédent x = E − D : l'école garde sa dotation D.
+    const besoinApres = Math.max(0, d.calcul.cible - apres)
+    if (apres < Math.min(d.enseignantsEtat, d.calcul.dotation) || besoinApres > d.besoinTheorique) {
+      misesEnDeficit.push(`${schoolId} (${apres} restants pour une dotation de ${d.calcul.dotation})`)
     }
   }
   checks.push(
@@ -97,22 +96,30 @@ export function verifierInvariants(
       "Aucune école source n'est mise en déficit par la simulation",
       misesEnDeficit.length === 0,
       misesEnDeficit.length === 0
-        ? 'Chaque école source conserve au moins son minimum paramétré.'
+        ? 'Chaque école source conserve au moins sa dotation théorique D.'
         : misesEnDeficit.slice(0, 5).join(' ; '),
     ),
   )
 
-  // 5 — Aucune affectation provenant d'un enseignant hors vivier.
+  // 5 — Chaque proposition a une origine légitime : demande recevable (vœux, hors vœux),
+  // vivier des écoles excédentaires (obligatoire) ou décision de commission (arbitrage).
   const vivier = new Set(resultat.pool.teachers.map(p => p.teacher.id))
-  const horsVivier = assignments.filter(a => !vivier.has(a.teacherId)).map(a => a.teacherId)
+  const recevables = new Set(resultat.candidatures.filter(c => c.recevable).map(c => c.teacher.id))
+  const illegitimes = assignments
+    .filter(a => {
+      if (a.arbitrageId) return false
+      if (a.nature === 'obligatoire') return !vivier.has(a.teacherId)
+      return !recevables.has(a.teacherId)
+    })
+    .map(a => a.teacherId)
   checks.push(
     check(
       'affectations_issues_du_vivier',
-      'Toutes les propositions proviennent du vivier mobilisable',
-      horsVivier.length === 0,
-      horsVivier.length === 0
+      'Chaque proposition provient d’une demande recevable, du vivier ou d’une commission',
+      illegitimes.length === 0,
+      illegitimes.length === 0
         ? 'Aucun enseignant non éligible ne figure dans les propositions.'
-        : `Matricules concernés : ${horsVivier.slice(0, 5).join(', ')}.`,
+        : `Matricules concernés : ${illegitimes.slice(0, 5).join(', ')}.`,
     ),
   )
 
@@ -128,9 +135,11 @@ export function verifierInvariants(
   )
 
   // 7 — Respect du périmètre géographique du scénario.
+  const memeLibelle = (x: string, y: string) => x.trim().toLowerCase() === y.trim().toLowerCase()
   const horsPerimetre = assignments.filter(a => {
-    if (resultat.scope === 'commune') return a.niveauProximite !== 'meme_commune'
-    if (resultat.scope === 'departement') return a.niveauProximite !== 'meme_commune' && a.niveauProximite !== 'meme_departement'
+    if (a.arbitrageId) return false
+    if (resultat.scope === 'commune') return !memeLibelle(a.communeOrigine, a.communeDestination)
+    if (resultat.scope === 'departement') return !memeLibelle(a.departementOrigine, a.departementDestination)
     return false
   })
   checks.push(
@@ -168,6 +177,41 @@ export function verifierInvariants(
           ? "Aucun fait de Prince n'a été appliqué."
           : `${aPrince.size.toLocaleString('fr-FR')} décision(s) de la DRH respectée(s) : ces enseignants ne figurent dans aucune proposition.`
         : `Matricules concernés : ${remisEnMouvement.slice(0, 5).join(', ')}.`,
+    ),
+  )
+
+  // 10 — Sous-systèmes : aucun poste n'est proposé hors du sous-système de l'enseignant (§1.2.3).
+  const postesParEcole = new Map(resultat.postes.map(p => [p.schoolId, p]))
+  const horsSousSysteme = assignments.filter(a => {
+    if (a.arbitrageId) return false
+    const p = postesParEcole.get(a.schoolDestinationId)
+    return !!p && a.sousSysteme != null && p.sousSysteme != null && p.sousSysteme !== a.sousSysteme
+  })
+  checks.push(
+    check(
+      'sous_systeme_respecte',
+      "Aucun enseignant n'est affecté hors de son sous-système",
+      horsSousSysteme.length === 0,
+      horsSousSysteme.length === 0
+        ? 'Francophones et anglophones sont traités séparément ; seule une commission peut décider un changement.'
+        : `${horsSousSysteme.length} mouvement(s) hors sous-système.`,
+    ),
+  )
+
+  // 11 — Règle de la zone rouge : ni proposition hors vœux ni transfert imposé (§3.5).
+  const imposesZoneRouge = settings.mobilite.regleZoneRouge
+    ? assignments.filter(a => (a.nature === 'hors_voeux' || a.nature === 'obligatoire') && postesParEcole.get(a.schoolDestinationId)?.priorite.zoneRouge)
+    : []
+  checks.push(
+    check(
+      'zone_rouge',
+      "Aucun poste en zone rouge n'est imposé ni proposé hors vœux",
+      imposesZoneRouge.length === 0,
+      !settings.mobilite.regleZoneRouge
+        ? 'Règle de la zone rouge désactivée dans les paramètres.'
+        : imposesZoneRouge.length === 0
+          ? 'Les postes en zone rouge ne sont pourvus que par des volontaires ou par le recrutement.'
+          : `${imposesZoneRouge.length} mouvement(s) imposé(s) en zone rouge.`,
     ),
   )
 

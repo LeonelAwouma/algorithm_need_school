@@ -12,7 +12,7 @@ import type { Dataset } from '../../types/simulation'
 import { buildDataQualityReport } from '../validation/data-quality'
 import { detectColumns, type DatasetKind } from './column-mapping'
 import { recordsFromRows, type SheetRecord } from './normalize'
-import { parseSchools, parseTeachers } from './parse'
+import { parseSchools, parseTeachers, separerSectionsBilingues } from './parse'
 
 /** Un classeur lu, conservé tel quel pour pouvoir être ré-analysé sans relecture. */
 export interface FichierLu {
@@ -78,8 +78,11 @@ export function construireDataset(
   enseignants: FichierLu,
   reference: Date = new Date(),
 ): { dataset: Dataset; qualite: DataQualityReport } {
-  const schools = parseSchools(etablissements.records, etablissements.mapping)
-  const teachers = parseTeachers(enseignants.records, enseignants.mapping, schools, reference)
+  const lues = parseSchools(etablissements.records, etablissements.mapping)
+  const { schools, teachers } = separerSectionsBilingues(
+    lues,
+    parseTeachers(enseignants.records, enseignants.mapping, lues, reference),
+  )
 
   const qualite = buildDataQualityReport({
     schools,

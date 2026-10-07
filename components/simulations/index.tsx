@@ -10,10 +10,11 @@
 
 import { useMemo, useState } from 'react'
 import { AlertTriangle, Check, Play, RefreshCw, X } from 'lucide-react'
-import type { GeographicScope, ProposedAssignment, ProximityLevel, SimulationResult } from '@/types/simulation'
+import type { GeographicScope, OrdreExamenVoeux, ProposedAssignment, ProximityLevel, SimulationResult } from '@/types/simulation'
 import { cloneSettings } from '@/lib/config/settings'
 import { reductionDuDeficit } from '@/lib/analytics/narrative'
 import { LIBELLE_PROXIMITE } from '@/lib/simulation/scoring'
+import { LIBELLE_NATURE, LIBELLE_STATUT_PROPOSITION } from '@/lib/simulation/libelles'
 import {
   AVERTISSEMENT_SCENARIO_ETENDU,
   DESCRIPTION_SCOPE,
@@ -27,22 +28,30 @@ import { FluxPanel } from './FluxPanel'
 import { DataTable, Delta, EmptyState, Notice, Panel, Pill, fmt, fmtPct, type Colonne } from '../common'
 import type { PlanningStore } from '../usePlanningState'
 
-const NIVEAUX_PROXIMITE: ProximityLevel[] = ['meme_commune', 'meme_departement', 'meme_region', 'hors_region']
+const NIVEAUX_PROXIMITE: ProximityLevel[] = ['meme_commune', 'meme_iaeb', 'meme_departement', 'meme_region', 'hors_region']
 
 /** Nombre de propositions de chaque périmètre : « Même commune », « Même département », etc. */
 function repartitionProximite(assignments: ProposedAssignment[]): Record<ProximityLevel, number> {
-  const compte: Record<ProximityLevel, number> = { meme_commune: 0, meme_departement: 0, meme_region: 0, hors_region: 0 }
+  const compte: Record<ProximityLevel, number> = { meme_commune: 0, meme_iaeb: 0, meme_departement: 0, meme_region: 0, hors_region: 0 }
   for (const a of assignments) compte[a.niveauProximite]++
   return compte
 }
 
 /** Explication de l'ordre des mouvements, selon le périmètre du scénario. */
 const EXPLICATION_PERIMETRE: Record<GeographicScope, string> = {
-  commune: 'Chaque enseignant reste dans sa commune : toutes les propositions sont des mouvements internes à la commune.',
+  commune: 'Chaque enseignant reste dans sa commune : vœux, solutions proches et redéploiements obligatoires y sont limités.',
   departement:
-    'Les mouvements dans la même commune sont traités en premier, puis ceux qui traversent les communes du département. Utilisez le filtre pour isoler ces derniers.',
+    'Les vœux sont satisfaits par acceptation différée, puis les demandes non satisfaites reçoivent la solution la plus proche, puis les écoles restées non couvertes un redéploiement obligatoire, sans quitter le département.',
   etendu:
-    'Les mouvements dans la même commune sont traités en premier, puis dans le département, puis au-delà. Utilisez le filtre pour isoler chaque périmètre.',
+    'Niveau régional d’abord, puis niveau central pour les vœux interrégionaux et les besoins qu’aucune école de la région ne peut couvrir.',
+}
+
+/** Ce que signifie la proposition, selon sa nature (référentiel §3.4 à §3.10). */
+const EXPLICATION_NATURE: Record<ProposedAssignment['nature'], string> = {
+  voeu: "Vœu satisfait par l'acceptation différée : l'école a retenu les candidats de plus fort score S = A + Z + B, puis, à score égal, la plus grande ancienneté générale, l'âge et le rang de tirage.",
+  hors_voeux: "Aucun vœu n'a pu être satisfait : poste ouvert le plus proche des écoles demandées, hors zone rouge, soumis à l'accord de l'enseignant ou à la décision de la commission.",
+  obligatoire: "École restée non couverte après les vœux et les solutions proches : un maître de l'école excédentaire la plus proche du même sous-système est proposé, dans l'ordre du barème individuel de son école.",
+  arbitrage: 'Affectation décidée par une commission d’arbitrage, consignée avec son motif et son instance.',
 }
 
 export function SimulationsPage({ store }: { store: PlanningStore }) {
@@ -63,13 +72,15 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
 
   const [nom, setNom] = useState('')
   const [scope, setScope] = useState<GeographicScope>('departement')
-  const [ancienneteMin, setAncienneteMin] = useState(settings.phases.anciennetePosteMinimaleAns)
-  const [ageMax, setAgeMax] = useState(settings.phases.ageMaximalMobilisableAns)
-  const [poidsProximite, setPoidsProximite] = useState(settings.scoring.poidsScorePoste.proximite)
-  const [prioriteRurale, setPrioriteRurale] = useState(settings.phases.prioriteZonesRurales)
-  const [prioriteMultigrade, setPrioriteMultigrade] = useState(settings.phases.prioriteClassesMultigrades)
-  const [minimumMode, setMinimumMode] = useState(settings.minimumAConserver.mode)
-  const [minimumRatio, setMinimumRatio] = useState(settings.minimumAConserver.ratio)
+  const [stabilite, setStabilite] = useState(settings.mobilite.stabiliteMinimaleAns)
+  const [norme, setNorme] = useState(settings.besoin.elevesParMaitre)
+  const [tolerance, setTolerance] = useState(settings.besoin.toleranceArrondi)
+  const [niveauxParMaitre, setNiveauxParMaitre] = useState(settings.besoin.niveauxParMaitre)
+  const [ordre, setOrdre] = useState<OrdreExamenVoeux>(settings.mobilite.ordreExamen)
+  const [doubleFlux, setDoubleFlux] = useState(settings.besoin.doubleFluxAutorise)
+  const [solutionProche, setSolutionProche] = useState(settings.mobilite.solutionProche)
+  const [obligatoire, setObligatoire] = useState(settings.mobilite.redeploiementObligatoire)
+  const [zoneRouge, setZoneRouge] = useState(settings.mobilite.regleZoneRouge)
 
   if (!diagnostic) {
     return (
@@ -81,16 +92,19 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
 
   function lancerPersonnalise() {
     const parametres = cloneSettings(settings)
-    parametres.phases.anciennetePosteMinimaleAns = ancienneteMin
-    parametres.phases.ageMaximalMobilisableAns = ageMax
-    parametres.phases.prioriteZonesRurales = prioriteRurale
-    parametres.phases.prioriteClassesMultigrades = prioriteMultigrade
-    parametres.scoring.poidsScorePoste.proximite = poidsProximite
-    parametres.minimumAConserver = { ...parametres.minimumAConserver, mode: minimumMode, ratio: minimumRatio }
+    parametres.mobilite.stabiliteMinimaleAns = stabilite
+    parametres.mobilite.ordreExamen = ordre
+    parametres.mobilite.solutionProche = solutionProche
+    parametres.mobilite.redeploiementObligatoire = obligatoire
+    parametres.mobilite.regleZoneRouge = zoneRouge
+    parametres.besoin.elevesParMaitre = norme
+    parametres.besoin.toleranceArrondi = tolerance
+    parametres.besoin.niveauxParMaitre = niveauxParMaitre
+    parametres.besoin.doubleFluxAutorise = doubleFlux
 
     const scenario = creerScenarioPersonnalise(
       nom,
-      `Périmètre ${LIBELLE_SCOPE[scope].toLowerCase()}, ancienneté minimale ${ancienneteMin} an(s), poids de proximité ${poidsProximite}.`,
+      `Périmètre ${LIBELLE_SCOPE[scope].toLowerCase()}, un maître pour ${norme} élèves${tolerance > 0 ? ` (tolérance ${tolerance})` : ''}, ${niveauxParMaitre} niveau(x) par maître, stabilité ${stabilite} ans, vœux examinés ${ordre === 'voeux' ? "dans l'ordre de l'enseignant" : 'par poids des écoles'}${doubleFlux ? '' : ', sans double flux'}${obligatoire ? '' : ', sans redéploiement obligatoire'}.`,
       scope,
       parametres,
     )
@@ -168,56 +182,71 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
             <select id="sc-scope" value={scope} onChange={e => setScope(e.target.value as GeographicScope)}>
               <option value="commune">Commune — mouvements internes à la commune</option>
               <option value="departement">Département — mouvements internes au département</option>
-              <option value="etendu">Étendu — aucune contrainte géographique</option>
+              <option value="etendu">Étendu — niveau régional puis niveau central</option>
             </select>
           </div>
           <div className="field">
-            <label htmlFor="sc-anc">Ancienneté minimale au poste (ans)</label>
-            <input id="sc-anc" type="number" min={0} max={40} value={ancienneteMin} onChange={e => setAncienneteMin(Number(e.target.value))} />
+            <label htmlFor="sc-norme">Un maître pour (élèves)</label>
+            <input id="sc-norme" type="number" min={20} max={120} value={norme} onChange={e => setNorme(Number(e.target.value))} />
           </div>
           <div className="field">
-            <label htmlFor="sc-age">Âge maximal mobilisable (0 = sans limite)</label>
-            <input id="sc-age" type="number" min={0} max={70} value={ageMax} onChange={e => setAgeMax(Number(e.target.value))} />
+            <label htmlFor="sc-tol">Tolérance d’arrondi (élèves)</label>
+            <input id="sc-tol" type="number" min={0} max={59} value={tolerance} onChange={e => setTolerance(Number(e.target.value))} />
           </div>
           <div className="field">
-            <label htmlFor="sc-prox">Poids de la proximité dans le score</label>
-            <input id="sc-prox" type="number" min={0} max={1} step={0.05} value={poidsProximite} onChange={e => setPoidsProximite(Number(e.target.value))} />
-          </div>
-          <div className="field">
-            <label htmlFor="sc-min">Minimum d’enseignants à conserver</label>
-            <select id="sc-min" value={minimumMode} onChange={e => setMinimumMode(e.target.value as typeof minimumMode)}>
-              <option value="nbClasses">Un enseignant par classe</option>
-              <option value="ratioClasses">Proportion du nombre de classes</option>
-              <option value="valeurFixe">Valeur fixe par établissement</option>
+            <label htmlFor="sc-niv">Niveaux tenus par un maître</label>
+            <select id="sc-niv" value={niveauxParMaitre} onChange={e => setNiveauxParMaitre(Number(e.target.value))}>
+              <option value={1}>1 — chaque niveau a son maître</option>
+              <option value={2}>2 — niveaux regroupés deux à deux</option>
+              <option value={3}>3 — niveaux regroupés trois à trois</option>
             </select>
           </div>
-          {minimumMode === 'ratioClasses' && (
-            <div className="field">
-              <label htmlFor="sc-ratio">Proportion appliquée</label>
-              <input id="sc-ratio" type="number" min={0.1} max={2} step={0.05} value={minimumRatio} onChange={e => setMinimumRatio(Number(e.target.value))} />
-            </div>
-          )}
+          <div className="field">
+            <label htmlFor="sc-stab">Stabilité minimale au poste (ans)</label>
+            <input id="sc-stab" type="number" min={0} max={20} value={stabilite} onChange={e => setStabilite(Number(e.target.value))} />
+          </div>
+          <div className="field">
+            <label htmlFor="sc-ordre">Ordre d’examen des vœux</label>
+            <select id="sc-ordre" value={ordre} onChange={e => setOrdre(e.target.value as OrdreExamenVoeux)}>
+              <option value="voeux">Ordre choisi par l’enseignant (par défaut)</option>
+              <option value="poids">Poids des écoles (variante)</option>
+            </select>
+          </div>
         </div>
 
         <div className="switch-list" style={{ marginTop: 14 }}>
           <label className="switch-row">
-            <input type="checkbox" checked={prioriteRurale} onChange={e => setPrioriteRurale(e.target.checked)} />
+            <input type="checkbox" checked={doubleFlux} onChange={e => setDoubleFlux(e.target.checked)} />
             <span>
-              <b>Priorité aux zones rurales</b>
-              <span>Les postes situés en zone rurale reçoivent un bonus explicite dans le score de compatibilité.</span>
+              <b>Double flux autorisé</b>
+              <span>Une salle en double flux compte pour deux maîtres dans BMAX.</span>
             </span>
           </label>
           <label className="switch-row">
-            <input type="checkbox" checked={prioriteMultigrade} onChange={e => setPrioriteMultigrade(e.target.checked)} />
+            <input type="checkbox" checked={solutionProche} onChange={e => setSolutionProche(e.target.checked)} />
             <span>
-              <b>Priorité aux classes multigrades</b>
-              <span>Les établissements déclarant des classes multigrades reçoivent un bonus explicite.</span>
+              <b>Solution la plus proche pour les demandes non satisfaites</b>
+              <span>Proposition hors vœux, dans la commune, le département puis la région des écoles demandées.</span>
+            </span>
+          </label>
+          <label className="switch-row">
+            <input type="checkbox" checked={obligatoire} onChange={e => setObligatoire(e.target.checked)} />
+            <span>
+              <b>Redéploiement obligatoire</b>
+              <span>Les écoles restées non couvertes reçoivent un maître d’une école excédentaire du même sous-système.</span>
+            </span>
+          </label>
+          <label className="switch-row">
+            <input type="checkbox" checked={zoneRouge} onChange={e => setZoneRouge(e.target.checked)} />
+            <span>
+              <b>Règle de la zone rouge</b>
+              <span>Aucun poste en zone rouge n’est proposé hors vœux ni imposé.</span>
             </span>
           </label>
         </div>
 
         {scope === 'etendu' && (
-          <Notice tone="warn" title="Scénario sans contrainte géographique.">
+          <Notice tone="warn" title="Scénario étendu : mouvements entre régions possibles.">
             {AVERTISSEMENT_SCENARIO_ETENDU}
           </Notice>
         )}
@@ -328,8 +357,20 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
     },
     { cle: 'origine', entete: 'Origine', rendu: a => (<span>{a.nomEtabOrigine}<small>{a.communeOrigine}</small></span>), tri: a => a.nomEtabOrigine },
     { cle: 'destination', entete: 'Destination', rendu: a => (<span><strong>{a.nomEtabDestination}</strong><small>{a.communeDestination} · {a.departementDestination}</small></span>), tri: a => a.nomEtabDestination },
+    {
+      cle: 'nature',
+      entete: 'Nature',
+      rendu: a => (
+        <span>
+          <Pill tone={a.nature === 'voeu' ? 'ok' : a.nature === 'obligatoire' ? 'warn' : 'info'}>{LIBELLE_NATURE[a.nature]}</Pill>
+          {a.rangVoeu != null && <small>vœu {a.rangVoeu}</small>}
+        </span>
+      ),
+      tri: a => a.nature,
+    },
     { cle: 'perimetre', entete: 'Périmètre', rendu: a => <Pill tone={a.niveauProximite === 'meme_commune' ? 'ok' : a.niveauProximite === 'meme_departement' ? 'info' : 'warn'}>{LIBELLE_PROXIMITE[a.niveauProximite]}</Pill>, tri: a => a.niveauProximite },
-    { cle: 'score', entete: 'Compatibilité', numerique: true, rendu: a => fmt(a.score), tri: a => a.score },
+    { cle: 'statut', entete: 'Statut', rendu: a => LIBELLE_STATUT_PROPOSITION[a.statut], tri: a => a.statut },
+    { cle: 'score', entete: 'Score', numerique: true, rendu: a => fmt(a.score), tri: a => a.score },
     {
       cle: 'explication',
       entete: '',
@@ -342,8 +383,7 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
   ]
 
   if (analyste) {
-    colonnes.splice(4, 0, { cle: 'phase', entete: 'Phase', rendu: a => a.phase, tri: a => a.phase })
-    colonnes.splice(5, 0, { cle: 'bareme', entete: 'Barème', numerique: true, rendu: a => fmt(a.bareme), tri: a => a.bareme })
+    colonnes.splice(6, 0, { cle: 'phase', entete: 'Étape', rendu: a => a.phase, tri: a => a.phase })
   }
 
   return (
@@ -394,8 +434,10 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
           </p>
           <p className="hint" style={{ marginBottom: 14 }}>
             {selection.nomEtabOrigine} ({selection.communeOrigine}) → {selection.nomEtabDestination} ({selection.communeDestination})
-            · {LIBELLE_PROXIMITE[selection.niveauProximite]}
+            · {LIBELLE_PROXIMITE[selection.niveauProximite]} · {LIBELLE_NATURE[selection.nature]}
+            {selection.rangVoeu != null ? ` (vœu ${selection.rangVoeu})` : ''}
           </p>
+          <p style={{ marginBottom: 14 }}>{EXPLICATION_NATURE[selection.nature]}</p>
 
           <table className="compare-table">
             <thead>
@@ -418,7 +460,7 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
                 </tr>
               ))}
               <tr>
-                <th scope="row">Score de compatibilité</th>
+                <th scope="row">{selection.nature === 'obligatoire' ? 'Barème individuel' : selection.nature === 'arbitrage' ? 'Décision' : 'Score de priorité S'}</th>
                 <td className="num" colSpan={3}>
                   <strong>{selection.breakdown.total.toLocaleString('fr-FR')}</strong>
                 </td>
@@ -471,6 +513,14 @@ export function ComparisonPage({ store }: { store: PlanningStore }) {
     { label: 'Écoles sources', actuel: '0', valeur: r => fmt(r.ecolesSources) },
     { label: 'Besoin résiduel', actuel: fmt(besoinActuel), valeur: r => fmt(r.besoinResiduel) },
     { label: 'Taux de couverture', actuel: '0 %', valeur: r => fmtPct(r.tauxCouverture) },
+    { label: 'Vœux satisfaits', actuel: '—', valeur: r => fmt(r.mouvementsParNature.find(m => m.nature === 'voeu')?.nombre ?? 0) },
+    { label: 'Redéploiements obligatoires', actuel: '—', valeur: r => fmt(r.mouvementsParNature.find(m => m.nature === 'obligatoire')?.nombre ?? 0) },
+    {
+      label: "Degré d'aléa",
+      actuel: tousResultats[0]?.syntheseAvant.degreAlea == null ? '—' : fmtPct(tousResultats[0].syntheseAvant.degreAlea),
+      valeur: r => (r.syntheseApres.degreAlea == null ? '—' : fmtPct(r.syntheseApres.degreAlea)),
+    },
+    { label: 'Recrutement à prévoir', actuel: fmt(tousResultats[0]?.syntheseAvant.recrutementAPrevoir ?? 0), valeur: r => fmt(r.syntheseApres.recrutementAPrevoir) },
   ]
 
   return (

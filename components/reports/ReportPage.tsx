@@ -107,7 +107,7 @@ export function ReportPage({ store }: { store: PlanningStore }) {
       })
       telechargerFichier(
         octets,
-        `rapport-planification-${settings.anneeScolaire}.xlsx`,
+        `rapport-affectation-${settings.anneeScolaire}.xlsx`,
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       )
     } catch (err) {
@@ -129,7 +129,7 @@ export function ReportPage({ store }: { store: PlanningStore }) {
       })
       telechargerFichier(
         blob,
-        `rapport-planification-${settings.anneeScolaire}.docx`,
+        `rapport-affectation-${settings.anneeScolaire}.docx`,
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       )
     } catch (err) {
@@ -142,7 +142,7 @@ export function ReportPage({ store }: { store: PlanningStore }) {
   function exporterEcolesCSV() {
     exporterCSV(
       `diagnostic-ecoles-${settings.anneeScolaire}.csv`,
-      ['Code', 'Établissement', 'Région', 'Département', 'Commune', 'Classes', "Enseignants État", 'Minimum à conserver', 'Besoin calculé', 'Postes déclarés', 'Excédent mobilisable', 'Élèves', 'Élèves par enseignant État'],
+      ['Code', 'Établissement', 'Région', 'Département', 'Commune', 'Classes', "Enseignants État", 'Dotation D', 'Besoin calculé', 'Postes déclarés', 'Excédent mobilisable', 'Élèves', 'Élèves par enseignant État'],
       diagnosticsFiltres.map(d => [
         d.school.id, d.school.nom, d.school.region, d.school.departement, d.school.commune,
         d.nbClasses, d.enseignantsEtat, d.enseignantsMinimumAConserver, d.besoinTheorique,
@@ -220,8 +220,17 @@ export function ReportPage({ store }: { store: PlanningStore }) {
         {/* Page de garde : identifie sans ambiguïté ce qui a été calculé, sur quel
             périmètre et sous quelles hypothèses de scénario. */}
         <header className="report-cover">
-          <img className="report-logo" src="/logo-full.png" alt="Logo AlgoBaba" width={116} height={89} />
-          <p className="report-eyebrow">Rapport de planification des enseignants</p>
+          <div className="report-logos">
+            <img className="report-logo" src="/logo-full.png" alt="Logo AlgoPlanR" width={640} height={424} />
+            <img
+              className="report-logo-partner"
+              src="/logo-parec.png"
+              alt="Logo du PAREC — Programme d’appui à la réforme de l’éducation au Cameroun"
+              width={360}
+              height={360}
+            />
+          </div>
+          <p className="report-eyebrow">Rapport d’affectation des enseignants</p>
           <h1 className="report-title">{rapport.perimetre}</h1>
           <p className="report-subtitle">
             Analyse des besoins, répartition territoriale et simulation de scénarios d’affectation
@@ -353,7 +362,7 @@ export function ReportPage({ store }: { store: PlanningStore }) {
 
         <footer className="report-footer">
           <p>
-            <FileText size={14} aria-hidden="true" /> Document produit localement par ALGOBABA, à partir des fichiers
+            <FileText size={14} aria-hidden="true" /> Document produit localement par ALGOPLANR, à partir des fichiers
             importés sur ce poste. Aucune donnée n’a été transmise à un service externe pour l’établir.
           </p>
         </footer>

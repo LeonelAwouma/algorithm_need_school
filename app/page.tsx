@@ -21,6 +21,7 @@ import { NationalDiagnosticPage, PrioritySchoolsPage, TerritoriesPage } from '@/
 import { SchoolsPage } from '@/components/schools'
 import { TeachersPage } from '@/components/teachers'
 import { PrincePage } from '@/components/prince'
+import { ArbitragePage, ProjectionsPage, RecrutesPage, VoeuxPage } from '@/components/plan'
 import { ComparisonPage, SimulationsPage } from '@/components/simulations'
 import { ReportPage } from '@/components/reports/ReportPage'
 import { MethodologyPage } from '@/components/methodology/MethodologyPage'
@@ -28,29 +29,43 @@ import { ReferentialPage } from '@/components/settings/ReferentialPage'
 import { EnginePage } from '@/components/settings/EnginePage'
 import { AssignmentsPage, DataPage, LogsPage, PoolPage, PostsPage, UnassignedPage } from '@/components/analyst'
 import { usePlanningState } from '@/components/usePlanningState'
-import { AccesPage } from '@/components/acces/AccesPage'
-import { EcranConnexion } from '@/components/acces/EcranConnexion'
-import { useAcces, type Acces } from '@/components/acces/useAcces'
+// ACCÈS DÉSACTIVÉ — voir la note au-dessus de `Page`.
+// import { AccesPage } from '@/components/acces/AccesPage'
+// import { EcranConnexion } from '@/components/acces/EcranConnexion'
+// import { useAcces, type Acces } from '@/components/acces/useAcces'
+// import { demandesEnAttente } from '@/lib/acces/registre'
 import { pageReserveeAuDrh } from '@/components/layout/navigation'
-import { demandesEnAttente } from '@/lib/acces/registre'
 import type { SessionAcces } from '@/types/acces'
 
 /** Pages sur lesquelles la barre de filtres territoriaux n'a pas de sens. */
-const SANS_FILTRES = new Set(['import', 'methodology', 'settings', 'engine', 'data', 'logs', 'prince', 'acces'])
+const SANS_FILTRES = new Set(['import', 'methodology', 'settings', 'engine', 'data', 'logs', 'prince', 'acces', 'voeux', 'arbitrage', 'recrutes', 'projections'])
 
 /**
- * Rien de l'application n'est monté tant que personne n'est identifié. À la
- * déconnexion, `Application` est démontée : les données importées, qui ne vivent
- * que dans son état, disparaissent avec elle et ne passent pas d'une personne à
- * la suivante.
+ * ACCÈS DÉSACTIVÉ (AlgoPlanR 1.0.0) : la plateforme s'ouvre directement, sans
+ * écran de connexion, avec les droits complets (ceux du DRH). La gestion des
+ * accès des délégués régionaux est retirée du menu.
+ *
+ * Le code du contrôle d'accès est conservé (components/acces, lib/acces) : pour le
+ * rétablir, décommenter les blocs marqués « ACCÈS DÉSACTIVÉ » dans ce fichier et
+ * dans components/layout/index.tsx, puis supprimer `SESSION_DIRECTE`.
+ *
+ * Avec le contrôle d'accès, rien de l'application n'est monté tant que personne
+ * n'est identifié. À la déconnexion, `Application` est démontée : les données
+ * importées, qui ne vivent que dans son état, disparaissent avec elle et ne
+ * passent pas d'une personne à la suivante.
  */
+const SESSION_DIRECTE: SessionAcces = { role: 'drh' }
+
 export default function Page() {
-  const acces = useAcces()
-  if (!acces.session) return <EcranConnexion acces={acces} />
-  return <Application acces={acces} session={acces.session} />
+  // const acces = useAcces()
+  // if (!acces.session) return <EcranConnexion acces={acces} />
+  // return <Application acces={acces} session={acces.session} />
+  return <Application session={SESSION_DIRECTE} />
 }
 
-function Application({ acces, session }: { acces: Acces; session: SessionAcces }) {
+// ACCÈS DÉSACTIVÉ : signature d'origine
+// function Application({ acces, session }: { acces: Acces; session: SessionAcces }) {
+function Application({ session }: { session: SessionAcces }) {
   const regionImposee = session.role === 'delegue' ? session.region : null
   const store = usePlanningState(regionImposee)
   const {
@@ -79,16 +94,19 @@ function Application({ acces, session }: { acces: Acces; session: SessionAcces }
 
   const miseAJour = useMiseAJour()
   const estDrh = session.role === 'drh'
-  const entreesEnAttente = estDrh && acces.registre ? demandesEnAttente(acces.registre).length : 0
+  // ACCÈS DÉSACTIVÉ : plus d'entrées de délégués à valider.
+  // const entreesEnAttente = estDrh && acces.registre ? demandesEnAttente(acces.registre).length : 0
+  const entreesEnAttente = 0
   /** Une page réservée au DRH n'est jamais rendue pour un délégué, quel que soit le lien suivi. */
   const pageInterdite = !estDrh && pageReserveeAuDrh(page)
 
-  function deconnecter() {
-    const confirme =
-      !donneesChargees ||
-      window.confirm('Se déconnecter ?\n\nLes données importées et les résultats calculés seront effacés de cette session.')
-    if (confirme) acces.deconnecter()
-  }
+  // ACCÈS DÉSACTIVÉ : sans connexion, pas de déconnexion.
+  // function deconnecter() {
+  //   const confirme =
+  //     !donneesChargees ||
+  //     window.confirm('Se déconnecter ?\n\nLes données importées et les résultats calculés seront effacés de cette session.')
+  //   if (confirme) acces.deconnecter()
+  // }
   const nomScenario = scenarios.find(s => s.id === scenarioActif)?.nom ?? 'Situation actuelle'
 
   const etat = calculEnCours ? (
@@ -132,8 +150,9 @@ function Application({ acces, session }: { acces: Acces; session: SessionAcces }
         onOuvrirMenu={() => setMenuOuvert(true)}
         etat={etat}
         territoire={regionImposee && !filtres.territoire.region ? `Région ${regionImposee}` : perimetre}
-        utilisateur={session.role === 'drh' ? 'DRH' : `Délégué · ${session.region}`}
-        onDeconnexion={deconnecter}
+        // ACCÈS DÉSACTIVÉ :
+        // utilisateur={session.role === 'drh' ? 'DRH' : `Délégué · ${session.region}`}
+        // onDeconnexion={deconnecter}
         anneeScolaire={settings.anneeScolaire}
         scenario={resultatAffiche ? `${nomScenario} (${LIBELLE_SCOPE[resultatAffiche.scope].toLowerCase()})` : nomScenario}
         onEffacer={confirmerEffacement}
@@ -167,13 +186,14 @@ function Application({ acces, session }: { acces: Acces; session: SessionAcces }
                 </Notice>
               )}
 
+              {/* ACCÈS DÉSACTIVÉ :
               {entreesEnAttente > 0 && page !== 'acces' && (
                 <Notice tone="warn" title={`${entreesEnAttente} entrée(s) de délégué en attente de validation.`}>
                   <button type="button" className="btn-link" onClick={() => setPage('acces')}>
                     Ouvrir « Accès des délégués »
                   </button>
                 </Notice>
-              )}
+              )} */}
 
               {regionImposee && page === 'import' && (
                 <Notice tone="info" title={`Accès limité à la région ${regionImposee}.`}>
@@ -217,8 +237,12 @@ function Application({ acces, session }: { acces: Acces; session: SessionAcces }
               {page === 'schools' && <SchoolsPage store={store} />}
               {page === 'teachers' && <TeachersPage store={store} />}
               {page === 'prince' && estDrh && <PrincePage store={store} />}
-              {page === 'acces' && estDrh && <AccesPage acces={acces} />}
+              {/* ACCÈS DÉSACTIVÉ : {page === 'acces' && estDrh && <AccesPage acces={acces} />} */}
               {page === 'simulations' && <SimulationsPage store={store} />}
+              {page === 'voeux' && <VoeuxPage store={store} />}
+              {page === 'arbitrage' && <ArbitragePage store={store} />}
+              {page === 'recrutes' && <RecrutesPage store={store} />}
+              {page === 'projections' && <ProjectionsPage store={store} />}
               {page === 'comparison' && <ComparisonPage store={store} />}
               {page === 'reports' && <ReportPage store={store} />}
               {page === 'methodology' && <MethodologyPage store={store} />}

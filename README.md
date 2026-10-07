@@ -1,4 +1,12 @@
-# Planification des enseignants
+# AlgoPlanR — Affectation des enseignants
+
+<p align="center">
+  <img src="public/logo-full.png" alt="AlgoPlanR" height="120" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="public/logo-parec.png" alt="PAREC — Programme d’appui à la réforme de l’éducation au Cameroun" height="120" />
+</p>
+
+<p align="center"><em>Avec le soutien du PAREC — Programme d’appui à la réforme de l’éducation au Cameroun</em></p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-active%20development-blue.svg)](#état-du-projet)
@@ -22,7 +30,7 @@
 * [Objectifs](#objectifs)
 * [Principes open source](#principes-open-source)
 * [Fonctionnalités](#fonctionnalités)
-* [Fonctionnement du moteur](#fonctionnement-du-moteur)
+* [Règles de calcul](#règles-de-calcul--le-référentiel-technique-de-modélisation)
 * [Architecture technique](#architecture-technique)
 * [Installation](#installation)
 * [Format des données](#format-des-données)
@@ -204,294 +212,93 @@ Le tableau de bord affiche notamment :
 
 ---
 
-## Écoles en besoin
+## Règles de calcul : le Référentiel technique de modélisation
 
-Identification des établissements disposant de postes ouverts ou présentant un besoin en personnel.
+Le moteur applique le *Référentiel technique de modélisation des plans de rotation, de redéploiement et de déploiement*. Chaque exemple chiffré du référentiel est repris dans `tests/referentiel.test.ts` (écoles A à E, école bilingue, degré d’aléa, indices de priorité, scores, exemple de Gale et Shapley, classement unique, recrutement à prévoir).
 
----
+### Diagnostic des besoins (§2.1 à §2.4)
 
-## Écoles fournisseurs
-
-Identification des établissements pouvant alimenter le vivier d’enseignants potentiellement mobilisables.
-
----
-
-## Vivier potentiel
-
-Construction d’une liste d’enseignants éligibles à une éventuelle affectation.
-
-Chaque enseignant peut notamment être associé à :
-
-* son établissement d’origine ;
-* son ancienneté ;
-* son âge ;
-* son barème ;
-* son statut ;
-* son éventuelle destination.
-
----
-
-## Barème individuel
-
-Un score individuel peut être calculé en utilisant plusieurs critères pondérés.
-
-Exemples :
-
-* ancienneté de carrière ;
-* ancienneté au poste ;
-* situation familiale ;
-* nombre d’enfants ;
-* formation continue ;
-* âge ajusté.
-
----
-
-## Score enseignant-poste
-
-Chaque combinaison :
+Calculé école par école, et section par section pour une école bilingue (`lib/analytics/diagnostic.ts`) :
 
 ```text
-Enseignant → Poste
+E    = enseignants de l'État en poste − départs connus (retraites)
+P    = ⌈N ÷ 60⌉                       maîtres selon la norme (tolérance d'arrondi paramétrable)
+m    = niveaux ouverts ÷ niveaux par maître (minimum pédagogique)
+D    = max(P ; m)                     dotation théorique
+BMAX = salles simple flux + 2 × salles double flux
+K    = min(D ; BMAX)                  cible réellement affectable
+b    = max(0 ; K − E)                 besoin : postes à ouvrir
+x    = max(0 ; E − D)                 excédent mobilisable
+a    = max(0 ; min(E ; D) − BMAX)     surnombre lié aux salles (à examiner, jamais redéployé)
+s    = max(0 ; D − BMAX)              salles manquantes (besoin en infrastructures)
 ```
 
-peut recevoir un score.
+Classement : nécessiteuse (b > 0), excédentaire (x > 0), à examiner (a > 0), équilibrée. Sans effectif d’élèves, P se replie sur « une classe, un maître » et l’école est signalée. Les départs connus sont lus dans le fichier des établissements, ou repérés dans le fichier des enseignants à partir de l’âge de la retraite.
 
-Ce score peut notamment prendre en compte :
+### Sous-systèmes francophone et anglophone
 
-* le barème de l’enseignant ;
-* la proximité ;
-* l’ancienneté au poste ;
-* la situation familiale ;
-* des règles liées à l’âge ;
-* des règles liées à la zone d’affectation.
+Une école bilingue (une ligne par section, même code) forme deux unités de calcul. Aucun besoin n’est compensé d’un sous-système à l’autre et l’algorithme n’affecte personne hors de son sous-système ; seule une commission peut décider un changement.
 
----
-
-## Affectation séquentielle
-
-Le moteur peut effectuer les propositions d’affectation en plusieurs phases.
-
-Exemple conceptuel :
+### Priorité des postes (§3.1)
 
 ```text
-Phase 1
-Même commune
-
-        ↓
-
-Phase 2
-Même département
-
-        ↓
-
-Phase 3
-Règles ciblées
-
-        ↓
-
-Phase 4
-Traitement des postes restants
+w = accessibilité (urbain 5, rural 10, rural enclavé 20) + sécurité (verte 0, jaune 10, rouge 25)
+niveau de difficulté : 1 si w ≥ 30, 2 si w ≥ 15, sinon 3
+β = 0 (REM ≤ 80), 5 (≤ 100), 10 (≤ 150), 15 au-delà ou école sans maître ; 0 pour une structure
+u = w + β
 ```
 
----
+Les postes (écoles nécessiteuses et structures d’accueil : délégations, IAEB) sont servis par indice décroissant ; à indice égal, les écoles avant les structures, puis le REM le plus élevé.
 
-## Paramétrage du moteur
+### Demandes de mutation et score (§3.2, §3.3)
 
-L’interface permet de modifier différents paramètres :
-
-* seuils ;
-* poids du barème ;
-* poids du score enseignant-poste ;
-* points attribués à la proximité ;
-* règles d’affectation ;
-* critères métier.
-
-La configuration peut également être importée ou exportée au format JSON.
-
----
-
-## Affectations proposées
-
-L’application affiche les affectations calculées avec notamment :
-
-* l’enseignant ;
-* l’établissement d’origine ;
-* le poste proposé ;
-* la destination ;
-* la phase ;
-* le barème ;
-* le score d’affectation.
-
----
-
-## Enseignants non affectés
-
-Les enseignants restant dans le vivier après la simulation sont identifiés séparément.
-
----
-
-## Postes non pourvus
-
-Les postes qui n’ont pas pu être couverts par le moteur sont également affichés.
-
----
-
-## Méthodologie
-
-Une section dédiée explique en langage accessible :
-
-* les indicateurs ;
-* les règles ;
-* les calculs ;
-* les limites du moteur.
-
-Cette méthodologie peut être exportée en document Word.
-
----
-
-## Export Excel
-
-L’application peut produire un rapport Excel contenant plusieurs feuilles, par exemple :
-
-* synthèse ;
-* établissements ;
-* affectations ;
-* vivier ;
-* enseignants non affectés ;
-* postes non pourvus.
-
----
-
-# Fonctionnement du moteur
-
-Le cœur du moteur se trouve principalement dans :
+Une demande (trois vœux classés au plus) est recevable avec 5 ans de stabilité au poste et depuis une école excédentaire ; les départs d’une école restent dans la limite de son excédent x.
 
 ```text
-lib/affectation-engine.ts
+S(t,e) = A + Z + B
+A = min(20 ; 10 + (années au poste − 6)) − 5 à moins de 5 ans de la retraite (0 avant 6 ans)
+Z = min(10 ; 2 × années en niveau 1 + années en niveau 2)
+B = 10 pour l'école visée par un motif justifié (santé, regroupement familial)
+départage : ancienneté générale, puis âge, puis rang de tirage au sort
 ```
 
-Le traitement suit globalement les étapes suivantes.
+### Plan de rotation et de redéploiement (§3.4 à §3.10)
 
-## 1. Lecture des données
+Dans l’ordre (`lib/simulation/engine.ts`) :
 
-Les feuilles Excel sont transformées en tableaux puis en objets TypeScript.
+1. décisions de commission déjà prises (validation, rejet, correction) ;
+2. acceptation différée de Gale et Shapley sur les vœux intrarégionaux (`lib/simulation/appariement.ts`) — vœux examinés dans l’ordre de l’enseignant, ou par poids des écoles en variante ;
+3. dans le scénario étendu, niveau central pour les vœux interrégionaux ;
+4. solution la plus proche, hors vœux, hors zone rouge, pour les demandes non satisfaites ;
+5. combinaisons proposées à la commission pour les écoles non couvertes (direct, chaîne, permutation) ;
+6. redéploiement obligatoire depuis l’école excédentaire la plus proche du même sous-système, jamais en zone rouge ; l’ordre des départs dans une école suit le barème individuel (ancienneté, situation familiale, enfants, formation, âge), critères que le référentiel laisse à la DRH ;
+7. recalcul des besoins, déploiement des nouveaux recrutés par note d’admission (`lib/simulation/recrutes.ts`) et projection N+2.
 
-```text
-Excel
-  ↓
-Rows
-  ↓
-Records
-```
+Agrégation par sous-système, recrutement à prévoir `REC = R + ⌈τ* × E ÷ 100⌉` et degré d’aléa `(B + X) ÷ Σ K` : `lib/analytics/synthese.ts`.
 
----
+Après chaque simulation, onze contrôles sont vérifiés : unicité de l’enseignant et du poste, respect de l’excédent, absence de déficit créé, origine légitime des propositions, conservation du besoin, périmètre, absence de mouvement interne, faits de Prince, sous-systèmes et zone rouge.
 
-## 2. Nettoyage des enseignants
+### Reprise du moteur de référence MINEDUB (script Python)
 
-Les données sont normalisées avant utilisation.
+La logique du moteur Python (`app_affectation_enseignants.py`) est intégrée, avec ses corrections :
 
-Certains statuts peuvent être exclus du vivier selon les règles du moteur.
+| Élément du script | Dans l’application |
+|---|---|
+| Colonnes officielles (`Identifiant_Ecole`, `Salles_Simple_Flux`, `Circonscription_IAEB`, `Age`, `Motif_Bonification`…) | reconnues telles quelles ; jeu d’essai `data/exemples/format-minedub-*.xlsx` |
+| Minimum pédagogique selon `Classes_Multigrades` | école par école : 6 maîtres sans multigrade, 3 en multigrade, entre les deux selon le nombre de classes multigrades |
+| Barème individuel C1 à C5 | repris ; C1 = ancienneté + Z plafonné à 10 (le script multipliait l’ancienneté par max(10 ; 2 n1 + n2)), C2 = points A du référentiel |
+| Score d’appariement Z1 à Z4 et ajustements | repris ; choisit le maître du redéploiement obligatoire, et peut classer les candidats en variante |
+| Phase 1 « vœux » gloutonne, poste par poste | remplacée par l’acceptation différée : le résultat ne dépend plus de l’ordre des postes et respecte l’ordre des vœux |
+| Phases IAEB, département, extension | passes successives du redéploiement obligatoire, de la commune au niveau central |
+| Poids `Wp = 0,3 α + 0,7 σ` | w = α + σ (coefficients paramétrables) : avec 0,3 et 0,7, aucune école n’atteignait le seuil de 30 points du niveau de difficulté 1 |
+| Accessibilité rural = 15 | rural = 10 comme au référentiel ; semi-urbain ajouté, paramétrable |
+| Effet de Prince réservé aux enseignants du vivier, mot de passe en clair | décision du DRH sans contrôle de l’algorithme, réservée au rôle DRH ; import d’un fichier de décisions ajouté |
+| Projections N à N+3 | reprises ; retraites comptées sur tous les enseignants (et non le seul vivier), attrition appliquée au territoire et non arrondie école par école |
+| Note ministérielle et audit par IA générative (Gemini) | non repris : ils enverraient les données hors du poste |
 
----
+### Ce qui n’est pas calculé
 
-## 3. Enrichissement des établissements
-
-Le moteur calcule différents indicateurs à partir des informations disponibles.
-
-Exemples :
-
-* nombre de classes ;
-* nombre d’enseignants ;
-* nombre de postes ouverts ;
-* taux d’encadrement ;
-* zone ;
-* priorité locale ;
-* classes multigrades.
-
----
-
-## 4. Construction du vivier
-
-Le moteur identifie les enseignants potentiellement mobilisables.
-
----
-
-## 5. Calcul du barème individuel
-
-Chaque enseignant reçoit un score basé sur plusieurs critères.
-
-Conceptuellement :
-
-```text
-Barème enseignant
-=
-w1 × Ancienneté carrière
-+
-w2 × Ancienneté poste
-+
-w3 × Situation familiale
-+
-w4 × Nombre d'enfants
-+
-w5 × Formation
-+
-w6 × Âge
-```
-
-Les valeurs et pondérations sont configurables.
-
----
-
-## 6. Création des postes
-
-Les établissements en besoin génèrent les postes devant potentiellement être couverts.
-
----
-
-## 7. Calcul de la compatibilité enseignant-poste
-
-Chaque enseignant peut être comparé à différents postes.
-
-Conceptuellement :
-
-```text
-Score(E, P)
-=
-w1 × Barème enseignant
-+
-w2 × Proximité
-+
-w3 × Ancienneté
-+
-w4 × Situation familiale
-+
-w5 × Règle âge
-+
-w6 × Règle zone
-```
-
----
-
-## 8. Affectation séquentielle
-
-Les candidats sont analysés selon les phases activées dans la configuration.
-
----
-
-## 9. Production des résultats
-
-Le moteur produit :
-
-```text
-Simulation
-├── Synthèse
-├── Écoles en besoin
-├── Écoles fournisseurs
-├── Affectations
-├── Enseignants non affectés
-├── Postes non pourvus
-└── Vivier
-```
+Les taux de stabilité, de rotation et d’intégration exigent un historique pluriannuel des mouvements. Le modèle d’élasticité à la productivité n’est pas défini par les sources : conformément au référentiel (§2.7), il n’est pas intégré.
 
 ---
 
@@ -609,7 +416,7 @@ Une Pull Request ne devrait pas introduire d’erreur de compilation.
 
 ## Publier une nouvelle version de l’application de bureau
 
-L’application installée (AlgoBaba) se met à jour seule depuis les **GitHub Releases** de ce dépôt.
+L’application installée (AlgoPlanR) se met à jour seule depuis les **GitHub Releases** de ce dépôt.
 
 ### Côté utilisateur
 
@@ -661,10 +468,18 @@ commune
 departement
 region
 zone
-type_etab
+type_etab                 (IAEB, DR, DD : structure d'accueil sans élèves)
 nb_classes
+nb_salles_classe          (salles utilisables : BMAX)
+salles_double_flux        (parmi elles, salles en double flux)
+niveaux_ouverts           (minimum pédagogique)
+departs_connus            (facultatif : sinon déduits des âges)
+effectif_total_eleves     (N : norme de 60 élèves par maître)
 nb_enseignants_etat
-nb_postes_ouverts
+nb_postes_ouverts         (structures : postes fixés par la hiérarchie)
+sous_systeme              (francophone / anglophone ; école bilingue : une ligne par section)
+zone_securite             (verte / jaune / rouge)
+accessibilite             (urbain / rural / rural enclavé)
 classes_multigrades
 priorite_locale
 ```
@@ -681,17 +496,25 @@ nom
 prenom
 date_naissance
 id_etab_attache
-commune_attache
-departement_attache
-zone_attache
-anciennete_carriere_ans
-anciennete_poste_ans
+anciennete_carriere_ans   (ancienneté générale : départage)
+anciennete_poste_ans      (stabilité et points A)
 situation_familiale
 nb_enfants
 formation_continue
 statut
 paye_par_etat
+sous_systeme
+voeu_1, voeu_2, voeu_3    (codes des écoles sollicitées)
+motif_demande
+ecole_motif               (école visée par la bonification)
+annees_zone_niveau_1
+annees_zone_niveau_2
+rang_tirage
 ```
+
+## Nouveaux recrutés
+
+Fichier facultatif, importé dans la page « Nouveaux recrutés » : `matricule`, `nom`, `note`, `sous_systeme`, `sexe`, `commune_residence`, `choix_1` à `choix_3`. Jeu d’essai : `data/exemples/jeu-test-nouveaux-recrutes.xlsx`.
 
 ---
 
@@ -804,25 +627,9 @@ La transparence sur l’adoption réelle fait partie des principes du projet.
 
 La transparence sur les limites techniques fait partie intégrante du projet.
 
-## Garde-fou du taux minimal d’encadrement
+## Proximité administrative
 
-Le moteur prévoit un paramètre permettant d’éviter qu’une école fournisseuse ne tombe sous un certain seuil d’encadrement.
-
-Cette protection doit encore être appliquée de manière complète dans toutes les phases concernées.
-
-```text
-TODO:
-Ne pas vider une école fournisseuse
-sous le seuil minimal configuré.
-```
-
----
-
-## Phase dédiée à certaines règles d’âge
-
-Le moteur possède une logique de score liée à l’âge.
-
-La phase indépendante destinée à prioriser certains mouvements liés à cette règle doit encore être complètement implémentée.
+La proximité repose sur l’égalité des libellés de commune, de département et de région déclarés dans les fichiers, pas sur des distances réelles.
 
 ---
 

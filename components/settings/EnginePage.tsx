@@ -3,65 +3,96 @@
 /**
  * Configuration du moteur — Vue analyste uniquement.
  *
- * Tout ce qui relève du calcul et non de la règle de gestion : poids du barème,
- * poids du score de compatibilité, points de proximité et de situation
- * familiale, seuils d'âge, phases d'affectation. Ces réglages n'apparaissent
- * jamais en Vue simplifiée : ils modifient le classement des enseignants, et
- * cela n'a de sens que si la méthodologie correspondante a été validée.
+ * Les barèmes chiffrés : le score de priorité des candidats à une mutation
+ * (référentiel §3.3) et le barème individuel qui ordonne les départs imposés
+ * dans une école excédentaire (§3.7). Ces réglages n'apparaissent jamais en Vue
+ * simplifiée : ils modifient le classement des enseignants, et cela n'a de sens
+ * que si la méthodologie correspondante a été validée.
  */
 
 import { useMemo } from 'react'
 import { AlertTriangle, RefreshCw, ShieldAlert } from 'lucide-react'
-import type { EngineSettings } from '@/types/simulation'
+import type { EngineSettings, ReglesMobilite } from '@/types/simulation'
 import { LIBELLE_SITUATION, SITUATIONS_CONNUES, inventaireSituations } from '@/lib/data/situation-familiale'
 import { Notice, Panel, fmt } from '../common'
 import type { PlanningStore } from '../usePlanningState'
 
-const LABELS_BAREME: Record<keyof EngineSettings['scoring']['poidsBaremeIndividuel'], string> = {
-  ancienneteCarriere: 'Ancienneté de carrière',
-  anciennetePoste: 'Ancienneté au poste',
-  situationFamiliale: 'Situation familiale',
-  nbEnfants: "Nombre d'enfants",
-  formationContinue: 'Formation continue',
-  ageAjuste: 'Âge ajusté',
+type Scoring = EngineSettings['scoring']
+
+const LABELS_BAREME: Record<keyof Scoring['poidsBaremeIndividuel'], string> = {
+  carriereZone: 'C1 — carrière et zone difficile',
+  anciennetePoste: 'C2 — ancienneté au poste',
+  chargesFamiliales: 'C3 — charges familiales',
+  formationContinue: 'C4 — formation continue',
+  cohorteAge: 'C5 — cohorte d’âge',
 }
 
-const LABELS_SCORE: Record<keyof EngineSettings['scoring']['poidsScorePoste'], string> = {
-  baremeEnseignant: 'Barème de l’enseignant',
-  proximite: 'Proximité géographique',
-  anciennetePoste: 'Ancienneté au poste',
-  situationFamiliale: 'Situation familiale',
-  ageRegle: 'Règle d’âge',
-  zoneRegle: 'Règle de zone',
+const LABELS_APPARIEMENT: Record<keyof Scoring['poidsScoreAppariement'], string> = {
+  bareme: 'Z1 — barème individuel',
+  poidsPoste: 'Z2 — poids du poste (indice u)',
+  proximite: 'Z3 — proximité',
+  ajustements: 'Z4 — ajustements contextuels',
 }
 
-const LABELS_PROXIMITE: Record<keyof EngineSettings['scoring']['pointsProximite'], string> = {
+const LABELS_PROXIMITE: Record<keyof Scoring['pointsProximite'], string> = {
   memeCommune: 'Même commune',
+  memeIaeb: 'Même IAEB',
   memeDepartement: 'Même département',
   memeRegion: 'Même région',
   autre: 'Hors région',
 }
 
-const PHASES: { cle: keyof EngineSettings['phases']; titre: string; texte: string }[] = [
-  {
-    cle: 'phaseEffetPrince',
-    titre: 'Passage prioritaire, sans contrainte géographique',
-    texte:
-      "S’exécute avant toutes les autres phases et contourne l’ordre commune puis département. Désactivé par défaut. À ne pas confondre avec l’fait de Prince, qui redéploie un enseignant désigné par la DRH et se règle dans sa propre page.",
-  },
-  { cle: 'phase1Commune', titre: 'Phase 1 — même commune', texte: 'Chaque enseignant est d’abord proposé sur un poste de sa commune.' },
-  { cle: 'phase2Departement', titre: 'Phase 2 — même département', texte: 'Puis sur un poste de son département de rattachement.' },
-  {
-    cle: 'phase3JeunesVersMultigrades',
-    titre: 'Phase 3 — jeunes enseignants vers classes multigrades',
-    texte: 'Les enseignants sous le seuil d’âge « jeune » sont traités en priorité sur les postes restants.',
-  },
-  {
-    cle: 'phase3AnciensRuralVersUrbain',
-    titre: 'Phase 3 — anciens en zone rurale vers l’urbain',
-    texte: 'Les enseignants rattachés à une zone rurale avec au moins 5 ans d’ancienneté au poste sont traités ensuite.',
-  },
-  { cle: 'phase4Reste', titre: 'Phase 4 — répartition du reste', texte: 'Tous les enseignants encore disponibles sont traités.' },
+const LABELS_AJUSTEMENTS: Record<keyof Scoring['ajustements'], string> = {
+  jeuneVersMultigrades: 'Jeune vers une école à classes multigrades',
+  seniorVersEncadrement: 'Senior vers une structure d’encadrement',
+  allegementSenior: 'Senior vers une école sans multigrade',
+  transitionRuralUrbain: 'Rural vers urbain après 5 ans au poste',
+  bonificationCiblee: 'Bonification ciblée (motif justifié)',
+}
+
+/** Champ numérique d'une sous-section du barème. */
+function ChampScoring<S extends 'pointsProximite' | 'ajustements' | 'pointsCohorte' | 'seuils'>({
+  section,
+  cle,
+  label,
+  settings,
+  majSettings,
+}: {
+  section: S
+  cle: keyof Scoring[S] & string
+  label: string
+  settings: EngineSettings
+  majSettings: PlanningStore['majSettings']
+}) {
+  const valeur = (settings.scoring[section] as Record<string, number>)[cle]
+  return (
+    <div className="field">
+      <label htmlFor={`e-${section}-${cle}`}>{label}</label>
+      <input
+        id={`e-${section}-${cle}`}
+        type="number"
+        min={0}
+        max={100}
+        value={valeur}
+        onChange={e =>
+          majSettings(s => ({ ...s, scoring: { ...s.scoring, [section]: { ...(s.scoring[section] as object), [cle]: Number(e.target.value) } } }))
+        }
+      />
+    </div>
+  )
+}
+
+/** Paramètres chiffrés du score de priorité S = A + Z + B. */
+const SCORE: { cle: keyof ReglesMobilite; label: string; max: number }[] = [
+  { cle: 'ancienneteDebutPointsAns', label: 'A — ancienneté ouvrant droit aux points (ans)', max: 20 },
+  { cle: 'pointsAncienneteBase', label: 'A — points à ce seuil', max: 50 },
+  { cle: 'pointsParAnSupplementaire', label: 'A — points par année supplémentaire', max: 10 },
+  { cle: 'plafondAnciennete', label: 'A — plafond', max: 100 },
+  { cle: 'malusRetraite', label: 'A — retrait à l’approche de la retraite', max: 20 },
+  { cle: 'pointsAnneeNiveau1', label: 'Z — points par année en école de niveau 1', max: 10 },
+  { cle: 'pointsAnneeNiveau2', label: 'Z — points par année en école de niveau 2', max: 10 },
+  { cle: 'plafondZoneDifficile', label: 'Z — plafond', max: 50 },
+  { cle: 'bonificationMotif', label: 'B — bonification pour motif justifié', max: 50 },
 ]
 
 export function EnginePage({ store }: { store: PlanningStore }) {
@@ -103,99 +134,39 @@ export function EnginePage({ store }: { store: PlanningStore }) {
       <Panel
         kicker="Repère"
         title="Les règles de gestion sont ailleurs"
-        hint="Norme d’encadrement, minimum à conserver, référentiel élèves et seuils de gravité se règlent dans le Référentiel."
+        hint="Norme d’encadrement, minimum pédagogique, double flux, priorités des écoles et règles de mobilité se règlent dans le Référentiel."
       >
         <button type="button" className="btn" onClick={() => setPage('settings')}>
           Ouvrir le Référentiel
         </button>
       </Panel>
 
-      <Panel kicker="Phases" title="Étapes activables du moteur">
-        <div className="switch-list">
-          {PHASES.map(phase => (
-            <label className="switch-row" key={phase.cle}>
-              <input
-                type="checkbox"
-                checked={Boolean(settings.phases[phase.cle])}
-                onChange={e => majSettings(s => ({ ...s, phases: { ...s.phases, [phase.cle]: e.target.checked } }))}
-              />
-              <span>
-                <b>{phase.titre}</b>
-                <span>{phase.texte}</span>
-              </span>
-            </label>
-          ))}
-        </div>
-        <div className="param-grid" style={{ marginTop: 14 }}>
-          <div className="field">
-            <label htmlFor="e-anc-min">Ancienneté minimale au poste pour être mobilisable (ans)</label>
-            <input
-              id="e-anc-min"
-              type="number"
-              min={0}
-              max={40}
-              value={settings.phases.anciennetePosteMinimaleAns}
-              onChange={e => majSettings(s => ({ ...s, phases: { ...s.phases, anciennetePosteMinimaleAns: Number(e.target.value) } }))}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="e-age-max">Âge maximal mobilisable (0 = sans limite)</label>
-            <input
-              id="e-age-max"
-              type="number"
-              min={0}
-              max={70}
-              value={settings.phases.ageMaximalMobilisableAns}
-              onChange={e => majSettings(s => ({ ...s, phases: { ...s.phases, ageMaximalMobilisableAns: Number(e.target.value) } }))}
-            />
-          </div>
-        </div>
-      </Panel>
-
-      <Panel kicker="Seuils du barème" title="Bornes d’âge et d’ancienneté">
+      <Panel
+        kicker="Score de priorité (§3.3)"
+        title="Comment les candidats à une même école sont départagés"
+        hint="S = A + Z + B. A : ancienneté au poste ; Z : service en zone difficile ; B : bonification sur l’école visée par un motif justifié. À score égal : ancienneté générale, puis âge, puis rang de tirage au sort."
+      >
         <div className="param-grid">
-          <div className="field">
-            <label htmlFor="e-bonus">Ancienneté au poste donnant le bonus plafond (ans)</label>
-            <input
-              id="e-bonus"
-              type="number"
-              min={0}
-              max={25}
-              value={settings.scoring.seuils.anciennetePosteBonusAns}
-              onChange={e =>
-                majSettings(s => ({ ...s, scoring: { ...s.scoring, seuils: { ...s.scoring.seuils, anciennetePosteBonusAns: Number(e.target.value) } } }))
-              }
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="e-jeune">Seuil « jeune enseignant » (≤ ans)</label>
-            <input
-              id="e-jeune"
-              type="number"
-              min={20}
-              max={50}
-              value={settings.scoring.seuils.ageJeuneAns}
-              onChange={e => majSettings(s => ({ ...s, scoring: { ...s.scoring, seuils: { ...s.scoring.seuils, ageJeuneAns: Number(e.target.value) } } }))}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="e-age">Seuil « enseignant plus âgé » (≥ ans)</label>
-            <input
-              id="e-age"
-              type="number"
-              min={40}
-              max={70}
-              value={settings.scoring.seuils.ageAgeAns}
-              onChange={e => majSettings(s => ({ ...s, scoring: { ...s.scoring, seuils: { ...s.scoring.seuils, ageAgeAns: Number(e.target.value) } } }))}
-            />
-          </div>
+          {SCORE.map(({ cle, label, max }) => (
+            <div className="field" key={cle}>
+              <label htmlFor={`e-score-${cle}`}>{label}</label>
+              <input
+                id={`e-score-${cle}`}
+                type="number"
+                min={0}
+                max={max}
+                value={Number(settings.mobilite[cle])}
+                onChange={e => majSettings(s => ({ ...s, mobilite: { ...s.mobilite, [cle]: Number(e.target.value) } }))}
+              />
+            </div>
+          ))}
         </div>
       </Panel>
 
       <Panel
         kicker="Barème individuel"
-        title="Poids du classement des enseignants"
-        hint="Chaque critère est multiplié par son poids, puis additionné. « Nombre d’enfants » et « Situation familiale » y figurent au même titre que l’ancienneté : mettre un poids à 0 neutralise le critère."
+        title="Étage 1 — barème individuel"
+        hint="C1 = ancienneté générale + points de zone difficile Z ; C2 = points d’ancienneté au poste A ; C3 = points de situation matrimoniale − points par enfant à charge ; C4 = formation continue (plafonnée) ; C5 = cohorte d’âge. Chaque critère est multiplié par son poids. Le barème ordonne les départs imposés d’une école excédentaire (le plus élevé part le premier) et entre dans le score d’appariement. Un poids à 0 neutralise le critère."
       >
         {(Object.keys(LABELS_BAREME) as (keyof typeof LABELS_BAREME)[]).map(cle => (
           <div className="slider-row" key={cle}>
@@ -217,51 +188,62 @@ export function EnginePage({ store }: { store: PlanningStore }) {
             <span className="slider-value">{settings.scoring.poidsBaremeIndividuel[cle].toFixed(2)}</span>
           </div>
         ))}
+        <div className="param-grid" style={{ marginTop: 14 }}>
+          <div className="field">
+            <label htmlFor="e-enfant">C3 — points retirés par enfant à charge</label>
+            <input id="e-enfant" type="number" min={0} max={10} value={settings.scoring.pointsParEnfant} onChange={e => majSettings(s => ({ ...s, scoring: { ...s.scoring, pointsParEnfant: Number(e.target.value) } }))} />
+          </div>
+          <div className="field">
+            <label htmlFor="e-formation">C4 — points par formation</label>
+            <input id="e-formation" type="number" min={0} max={10} value={settings.scoring.pointsParFormation} onChange={e => majSettings(s => ({ ...s, scoring: { ...s.scoring, pointsParFormation: Number(e.target.value) } }))} />
+          </div>
+          <div className="field">
+            <label htmlFor="e-formation-max">C4 — plafond</label>
+            <input id="e-formation-max" type="number" min={0} max={50} value={settings.scoring.plafondFormation} onChange={e => majSettings(s => ({ ...s, scoring: { ...s.scoring, plafondFormation: Number(e.target.value) } }))} />
+          </div>
+          <ChampScoring section="seuils" cle="ageJeuneAns" label="C5 — jeune avant (ans)" settings={settings} majSettings={majSettings} />
+          <ChampScoring section="seuils" cle="ageSeniorAns" label="C5 — senior à partir de (ans)" settings={settings} majSettings={majSettings} />
+          <ChampScoring section="pointsCohorte" cle="jeune" label="C5 — points jeune" settings={settings} majSettings={majSettings} />
+          <ChampScoring section="pointsCohorte" cle="median" label="C5 — points médiane" settings={settings} majSettings={majSettings} />
+          <ChampScoring section="pointsCohorte" cle="senior" label="C5 — points senior" settings={settings} majSettings={majSettings} />
+        </div>
       </Panel>
 
-      <Panel kicker="Score de compatibilité" title="Poids du choix enseignant ↔ poste">
-        {(Object.keys(LABELS_SCORE) as (keyof typeof LABELS_SCORE)[]).map(cle => (
+      <Panel
+        kicker="Étage 2"
+        title="Score d’appariement enseignant ↔ poste"
+        hint="Score = Z1 × barème + Z2 × poids du poste u + Z3 × points de proximité + Z4 × ajustements. Il choisit, à proximité égale, le maître proposé en redéploiement obligatoire ; en variante (Référentiel), il classe aussi les candidats à une même école."
+      >
+        {(Object.keys(LABELS_APPARIEMENT) as (keyof typeof LABELS_APPARIEMENT)[]).map(cle => (
           <div className="slider-row" key={cle}>
-            <label htmlFor={`e-score-${cle}`}>{LABELS_SCORE[cle]}</label>
+            <label htmlFor={`e-app-${cle}`}>{LABELS_APPARIEMENT[cle]}</label>
             <input
-              id={`e-score-${cle}`}
+              id={`e-app-${cle}`}
               type="range"
               min={0}
               max={1}
               step={0.05}
-              value={settings.scoring.poidsScorePoste[cle]}
+              value={settings.scoring.poidsScoreAppariement[cle]}
               onChange={e =>
                 majSettings(s => ({
                   ...s,
-                  scoring: { ...s.scoring, poidsScorePoste: { ...s.scoring.poidsScorePoste, [cle]: Number(e.target.value) } },
+                  scoring: { ...s.scoring, poidsScoreAppariement: { ...s.scoring.poidsScoreAppariement, [cle]: Number(e.target.value) } },
                 }))
               }
             />
-            <span className="slider-value">{settings.scoring.poidsScorePoste[cle].toFixed(2)}</span>
+            <span className="slider-value">{settings.scoring.poidsScoreAppariement[cle].toFixed(2)}</span>
           </div>
         ))}
-      </Panel>
-
-      <Panel kicker="Proximité" title="Points attribués selon la distance administrative">
+        <p className="hint" style={{ margin: '14px 0 8px' }}>Points de proximité</p>
         <div className="param-grid">
           {(Object.keys(LABELS_PROXIMITE) as (keyof typeof LABELS_PROXIMITE)[]).map(cle => (
-            <div className="field" key={cle}>
-              <label htmlFor={`e-prox-${cle}`}>{LABELS_PROXIMITE[cle]}</label>
-              <input
-                id={`e-prox-${cle}`}
-                type="number"
-                min={0}
-                max={200}
-                step={5}
-                value={settings.scoring.pointsProximite[cle]}
-                onChange={e =>
-                  majSettings(s => ({
-                    ...s,
-                    scoring: { ...s.scoring, pointsProximite: { ...s.scoring.pointsProximite, [cle]: Number(e.target.value) } },
-                  }))
-                }
-              />
-            </div>
+            <ChampScoring key={cle} section="pointsProximite" cle={cle} label={LABELS_PROXIMITE[cle]} settings={settings} majSettings={majSettings} />
+          ))}
+        </div>
+        <p className="hint" style={{ margin: '14px 0 8px' }}>Ajustements contextuels (points)</p>
+        <div className="param-grid">
+          {(Object.keys(LABELS_AJUSTEMENTS) as (keyof typeof LABELS_AJUSTEMENTS)[]).map(cle => (
+            <ChampScoring key={cle} section="ajustements" cle={cle} label={LABELS_AJUSTEMENTS[cle]} settings={settings} majSettings={majSettings} />
           ))}
         </div>
       </Panel>
@@ -269,7 +251,7 @@ export function EnginePage({ store }: { store: PlanningStore }) {
       <Panel
         kicker="Situation matrimoniale"
         title="Points par situation déclarée"
-        hint="Ces points alimentent le barème individuel et le score de compatibilité. Les graphies du fichier sont rapprochées automatiquement : « Marié », « Mariée » et « MARIE(E) » comptent pour la même situation."
+        hint="Ces points alimentent le barème individuel. Les graphies du fichier sont rapprochées automatiquement : « Marié », « Mariée » et « MARIE(E) » comptent pour la même situation."
       >
         <div className="param-grid">
           {clesSituations.map(cle => {

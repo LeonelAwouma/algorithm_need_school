@@ -6,7 +6,8 @@
  */
 
 import { useState, type ReactNode } from 'react'
-import { ChevronDown, ChevronRight, Home, LogOut, Menu, RotateCcw, ShieldCheck, Trash2, UserRound, X } from 'lucide-react'
+// ACCÈS DÉSACTIVÉ : `LogOut` et `UserRound` ne servent qu'à la personne connectée, à réimporter avec elle.
+import { ChevronDown, ChevronRight, Home, Menu, RotateCcw, ShieldCheck, Trash2, X } from 'lucide-react'
 import type { SchoolSeverity, Zone } from '@/types/education'
 import type { GlobalFilters, TerritorySelection } from '@/lib/analytics/territory'
 import { breadcrumb } from '@/lib/analytics/territory'
@@ -110,7 +111,7 @@ export function Sidebar({
             <p className="nav-group-title">Configuration</p>
             <ul className="nav-list">
               {bouton(PAGE_SETTINGS)}
-              {bouton(PAGE_ACCES)}
+              {/* ACCÈS DÉSACTIVÉ (voir app/page.tsx) : {bouton(PAGE_ACCES)} */}
             </ul>
           </div>
         )}
@@ -120,7 +121,7 @@ export function Sidebar({
         <ShieldCheck size={15} aria-hidden="true" />
         <span>
           Traitement entièrement local : aucun fichier n’est envoyé sur un réseau.
-          {version && <span className="sidebar-version">AlgoBaba version {version}</span>}
+          {version && <span className="sidebar-version">AlgoPlanR version {version}</span>}
         </span>
       </p>
     </aside>
@@ -141,8 +142,9 @@ export function Topbar({
   anneeScolaire,
   scenario,
   onEffacer,
-  utilisateur,
-  onDeconnexion,
+  // ACCÈS DÉSACTIVÉ (voir app/page.tsx) :
+  // utilisateur,
+  // onDeconnexion,
 }: {
   mode: ViewMode
   onModeChange: (m: ViewMode) => void
@@ -152,9 +154,10 @@ export function Topbar({
   anneeScolaire: string
   scenario: string
   onEffacer: () => void
-  /** Personne connectée : « DRH » ou « Délégué · Centre ». */
-  utilisateur: string
-  onDeconnexion: () => void
+  // ACCÈS DÉSACTIVÉ :
+  // /** Personne connectée : « DRH » ou « Délégué · Centre ». */
+  // utilisateur: string
+  // onDeconnexion: () => void
 }) {
   return (
     <header className="topbar">
@@ -164,11 +167,19 @@ export function Topbar({
 
       <div className="brand">
         {/* Emblème du logo, décoratif : le nom de la plateforme est écrit à côté. */}
-        <img className="brand-logo" src="/logo-mark.png" alt="" width={49} height={38} />
+        <img className="brand-logo" src="/logo-mark.png" alt="" width={64} height={38} />
         <span>
-          <span className="brand-name">ALGOBABA</span>
-          <span className="brand-sub">Planification des enseignants</span>
+          <span className="brand-name">ALGOPLANR</span>
+          <span className="brand-sub">Affectation des enseignants</span>
         </span>
+        <img
+          className="brand-partner"
+          src="/logo-parec.png"
+          alt="PAREC — Programme d’appui à la réforme de l’éducation au Cameroun"
+          title="PAREC — Programme d’appui à la réforme de l’éducation au Cameroun"
+          width={42}
+          height={42}
+        />
       </div>
 
       <dl className="context">
@@ -200,6 +211,7 @@ export function Topbar({
           <Trash2 size={16} aria-hidden="true" />
           <span className="sr-only">Effacer les données de cette session</span>
         </button>
+        {/* ACCÈS DÉSACTIVÉ : personne connectée et déconnexion.
         <span className="user-chip" title="Personne connectée">
           <UserRound size={14} aria-hidden="true" />
           {utilisateur}
@@ -207,7 +219,7 @@ export function Topbar({
         <button type="button" className="icon-button" onClick={onDeconnexion} title="Se déconnecter">
           <LogOut size={16} aria-hidden="true" />
           <span className="sr-only">Se déconnecter</span>
-        </button>
+        </button> */}
       </div>
     </header>
   )

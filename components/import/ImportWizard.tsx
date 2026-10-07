@@ -198,14 +198,21 @@ export function ImportWizard({ store }: { store: PlanningStore }) {
     <div className="stack">
       {!enCours && (
         <section className="welcome">
-          <img className="welcome-logo" src="/logo-full.png" alt="Logo AlgoBaba" width={150} height={116} />
+          <img className="welcome-logo" src="/logo-full.png" alt="Logo AlgoPlanR" width={640} height={424} />
           <div>
-            <h2>Bienvenue dans AlgoBaba</h2>
+            <h2>Bienvenue dans AlgoPlanR</h2>
             <p>
               Ajoutez la liste des établissements et celle des enseignants : la plateforme contrôle les données, mesure les
               besoins de chaque école et simule des scénarios de redéploiement.
             </p>
           </div>
+          <figure className="welcome-partner">
+            <img src="/logo-parec.png" alt="" width={360} height={360} />
+            <figcaption>
+              Avec le soutien du <strong>PAREC</strong>
+              <span>Programme d’appui à la réforme de l’éducation au Cameroun</span>
+            </figcaption>
+          </figure>
         </section>
       )}
 

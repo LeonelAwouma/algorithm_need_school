@@ -114,16 +114,27 @@ export function buildDataQualityReport(input: QualityInput): DataQualityReport {
   const sansRegion = draft('ecole_sans_region', 'avertissement', 'établissements sans région', "Ces écoles sont regroupées sous « Région non renseignée » et sortent de la carte.", 'etablissements', 10)
   const sansDepartement = draft('ecole_sans_departement', 'avertissement', 'établissements sans département', 'Le scénario départemental ne peut pas les traiter.', 'etablissements', 10)
   const sansCommune = draft('ecole_sans_commune', 'avertissement', 'établissements sans commune', 'Le scénario local ne peut pas les traiter.', 'etablissements', 10)
-  const classesIncoherentes = draft('classes_incoherentes', 'erreur', 'établissements avec un nombre de classes invalide', 'Le besoin et le minimum à conserver ne peuvent pas être calculés pour ces écoles.', 'etablissements', 15)
+  const classesIncoherentes = draft('classes_incoherentes', 'erreur', 'établissements avec un nombre de classes invalide', 'Ni le besoin ni le minimum pédagogique ne peuvent être calculés pour ces écoles.', 'etablissements', 15)
   const enseignantsNegatifs = draft('enseignants_negatifs', 'erreur', "établissements avec un effectif d'enseignants négatif", "L'excédent calculé serait faux ; ces écoles sont écartées du vivier.", 'etablissements', 15)
   const elevesNegatifs = draft('eleves_negatifs', 'erreur', 'établissements avec un effectif élèves négatif', 'Les indicateurs pédagogiques de ces écoles ne sont pas calculés.', 'etablissements', 10)
   const sexeIncoherent = draft('repartition_sexe', 'avertissement', 'établissements où filles + garçons ne correspond pas au total', 'La répartition par sexe affichée peut être inexacte.', 'etablissements', 4)
   const sallesInsuffisantes = draft('salles_insuffisantes', 'avertissement', 'établissements déclarant moins de salles que de classes', 'Signale une possible double vacation ou une donnée à vérifier.', 'etablissements', 3)
-  const doublonsEcole = draft('doublon_ecole', 'erreur', "identifiants d'établissement en double", 'Seule la première ligne est retenue pour chaque identifiant en double.', 'etablissements', 15)
+  const doublonsEcole = draft('doublon_ecole', 'erreur', "identifiants d'établissement en double", 'Seule la première ligne est retenue pour chaque identifiant en double. Une école bilingue doit avoir une ligne par section, avec son sous-système.', 'etablissements', 15)
+  const sansEffectif = draft('ecole_sans_effectif', 'avertissement', "écoles sans effectif d'élèves", "Le besoin ne suit pas la norme d'élèves par maître du référentiel : il se replie sur « une classe, un maître ».", 'etablissements', 8)
+  const sansSalles = draft('ecole_sans_salles', 'avertissement', 'écoles sans nombre de salles', "BMAX ne peut pas être calculé : le besoin n'est pas plafonné par les salles et les salles manquantes ne sont pas repérées.", 'etablissements', 6)
+  const doubleFluxIncoherent = draft('double_flux_incoherent', 'avertissement', 'écoles déclarant plus de salles en double flux que de salles', 'Le double flux est limité au nombre de salles déclaré.', 'etablissements', 3)
+  const sansSousSysteme = draft('ecole_sans_sous_systeme', 'avertissement', 'écoles sans sous-système alors que d’autres en ont un', 'Ces écoles sont considérées compatibles avec les deux sous-systèmes.', 'etablissements', 4)
 
   const vusEcole = new Map<string, number>()
   const duplicates: DataQualityReport['duplicates'] = []
+  const sousSystemesRenseignes = schools.some(s => s.sousSysteme != null)
   for (const s of schools) {
+    if (!s.estStructure) {
+      if (s.effectifTotalEleves == null) ajouter(sansEffectif, s.id || `ligne ${s.ligneSource}`)
+      if (s.nbSallesClasse == null) ajouter(sansSalles, s.id || `ligne ${s.ligneSource}`)
+      if (s.sallesDoubleFlux != null && s.nbSallesClasse != null && s.sallesDoubleFlux > s.nbSallesClasse) ajouter(doubleFluxIncoherent, s.id)
+      if (sousSystemesRenseignes && s.sousSysteme == null) ajouter(sansSousSysteme, s.id || `ligne ${s.ligneSource}`)
+    }
     if (!s.id) ajouter(idEcoleManquant, `ligne ${s.ligneSource}`)
     else {
       const n = (vusEcole.get(s.id) ?? 0) + 1
@@ -134,7 +145,9 @@ export function buildDataQualityReport(input: QualityInput): DataQualityReport {
     if (!s.region) ajouter(sansRegion, s.id || `ligne ${s.ligneSource}`)
     if (!s.departement) ajouter(sansDepartement, s.id || `ligne ${s.ligneSource}`)
     if (!s.commune) ajouter(sansCommune, s.id || `ligne ${s.ligneSource}`)
-    if (!Number.isFinite(s.nbClasses) || s.nbClasses <= 0) ajouter(classesIncoherentes, s.id || `ligne ${s.ligneSource}`)
+    if (!s.estStructure && (!Number.isFinite(s.nbClasses) || s.nbClasses <= 0) && !(s.effectifTotalEleves && s.effectifTotalEleves > 0)) {
+      ajouter(classesIncoherentes, s.id || `ligne ${s.ligneSource}`)
+    }
     if (s.nbEnseignantsEtat < 0) ajouter(enseignantsNegatifs, s.id || `ligne ${s.ligneSource}`)
     if (s.effectifTotalEleves != null && s.effectifTotalEleves < 0) ajouter(elevesNegatifs, s.id || `ligne ${s.ligneSource}`)
     if (s.effectifFilles != null && s.effectifGarcons != null && s.effectifTotalEleves != null) {
@@ -154,6 +167,8 @@ export function buildDataQualityReport(input: QualityInput): DataQualityReport {
   const dateInvalide = draft('date_invalide', 'avertissement', 'enseignants avec une date de naissance illisible ou absente', "Les règles liées à l'âge sont neutralisées pour ces enseignants.", 'enseignants', 6)
   const ancienneteIncoherente = draft('anciennete_incoherente', 'avertissement', "enseignants dont l'ancienneté au poste dépasse l'ancienneté de carrière", 'Le barème individuel de ces enseignants est probablement surévalué.', 'enseignants', 5)
   const sansNom = draft('ens_sans_nom', 'avertissement', 'enseignants sans nom', 'Les propositions concernant ces enseignants sont difficiles à identifier.', 'enseignants', 4)
+  const voeuInconnu = draft('voeu_inconnu', 'avertissement', 'vœux portant sur une école inconnue', "Ces vœux ne peuvent pas être examinés par l'algorithme.", 'croisement', 4)
+  const codesEcoles = new Set(schools.flatMap(s => [s.id, s.codeEcole]).filter(Boolean).map(c => c.toLowerCase()))
 
   const idsEcoles = new Set(schools.map(s => s.id).filter(Boolean))
   const vusEns = new Map<string, number>()
@@ -172,6 +187,7 @@ export function buildDataQualityReport(input: QualityInput): DataQualityReport {
       ajouter(ecoleInconnue, `${ref} → ${t.idEtabAttache}`)
       if (unknownSchools.length < 200) unknownSchools.push({ teacherId: t.id, schoolId: t.idEtabAttache })
     }
+    for (const v of t.voeux) if (!codesEcoles.has(v.toLowerCase())) ajouter(voeuInconnu, `${ref} → ${v}`)
     if (t.dateNaissance == null) ajouter(dateInvalide, ref)
     if (t.anciennetePosteAns > t.ancienneteCarriereAns && t.ancienneteCarriereAns > 0) ajouter(ancienneteIncoherente, ref)
   }
@@ -187,8 +203,8 @@ export function buildDataQualityReport(input: QualityInput): DataQualityReport {
   }
 
   // --- Assemblage -----------------------------------------------------------
-  const draftsEcole = [idEcoleManquant, doublonsEcole, classesIncoherentes, enseignantsNegatifs, elevesNegatifs, nomManquant, sansRegion, sansDepartement, sansCommune, sexeIncoherent, sallesInsuffisantes]
-  const draftsEns = [idEnsManquant, doublonsEns, sansEcole, ecoleInconnue, dateInvalide, ancienneteIncoherente, sansNom]
+  const draftsEcole = [idEcoleManquant, doublonsEcole, classesIncoherentes, enseignantsNegatifs, elevesNegatifs, nomManquant, sansRegion, sansDepartement, sansCommune, sexeIncoherent, sallesInsuffisantes, sansEffectif, sansSalles, doubleFluxIncoherent, sansSousSysteme]
+  const draftsEns = [idEnsManquant, doublonsEns, sansEcole, ecoleInconnue, dateInvalide, ancienneteIncoherente, sansNom, voeuInconnu]
 
   const toutes = [
     ...draftsEcole.map(d => finaliser(d, nbEcoles)),

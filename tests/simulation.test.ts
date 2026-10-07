@@ -181,19 +181,16 @@ test("Les enseignants non éligibles n'entrent pas dans le vivier", () => {
   assert.deepEqual(codes, ['doublon', 'ecole_inconnue', 'non_paye_etat', 'statut_exclu'])
 })
 
-test("Un enseignant n'est jamais proposé sur un poste de sa propre école", () => {
-  // Norme renforcée : l'école a simultanément un besoin et un excédent.
+test("Un vœu portant sur sa propre école n'est jamais examiné", () => {
   const settings = cloneSettings(DEFAULT_SETTINGS)
-  settings.normeEncadrement = { enseignantsParClasse: 2 }
-  settings.minimumAConserver = { mode: 'ratioClasses', ratio: 0.5, valeurFixe: 1 }
-
   const schools = [
-    ecole({ id: 'MIXTE', nbClasses: 6, nbEnseignantsEtat: 8, commune: 'Obala' }),
-    ecole({ id: 'CIBLE', nbClasses: 6, nbEnseignantsEtat: 8, commune: 'Obala' }),
+    ecole({ id: 'SOURCE', nbClasses: 6, nbEnseignantsEtat: 9, commune: 'Obala' }),
+    ecole({ id: 'CIBLE', nbClasses: 6, nbEnseignantsEtat: 4, commune: 'Obala' }),
   ]
-  const teachers = enseignantsDe('MIXTE', 8, { communeAttache: 'Obala' })
+  const teachers = enseignantsDe('SOURCE', 9, { communeAttache: 'Obala', anciennetePosteAns: 8, voeux: ['SOURCE', 'CIBLE'] })
 
   const resultat = simuler(schools, teachers, 'commune', settings)
+  assert.ok(resultat.candidatures.every(c => c.voeux[0].statut === 'meme_ecole'))
   assert.ok(resultat.assignments.length > 0)
   assert.ok(resultat.assignments.every(a => a.schoolOrigineId !== a.schoolDestinationId))
   assert.ok(resultat.invariants.find(i => i.code === 'pas_de_mouvement_interne')?.ok)

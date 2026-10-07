@@ -44,8 +44,11 @@ function motsSignificatifs(valeur: string): string[] {
   return [...new Set(mots)]
 }
 
-/** Cherche, pour un champ donné, le meilleur en-tête disponible du fichier. */
-function meilleurCandidat(field: FieldDefinition, enTetes: string[], dejaPris: Set<string>): Candidate | null {
+/**
+ * Cherche, pour un champ donné, le meilleur en-tête disponible du fichier.
+ * `exactSeulement` : nom exact ou alias du dictionnaire uniquement (premier passage).
+ */
+function meilleurCandidat(field: FieldDefinition, enTetes: string[], dejaPris: Set<string>, exactSeulement = false): Candidate | null {
   const libres = enTetes.filter(h => h !== '' && !dejaPris.has(h))
   if (libres.length === 0) return null
 
@@ -60,6 +63,7 @@ function meilleurCandidat(field: FieldDefinition, enTetes: string[], dejaPris: S
   for (const h of libres) {
     if (clesAlias.has(normalizeKey(h))) return { enTete: h, methode: 'alias', confiance: 0.98 }
   }
+  if (exactSeulement) return null
 
   // 3 — normalisation du nom canonique lui-même.
   const cleChamp = normalizeKey(field.champ)
@@ -98,9 +102,12 @@ function meilleurCandidat(field: FieldDefinition, enTetes: string[], dejaPris: S
 }
 
 /**
- * Construit la table de correspondance d'un fichier. Les champs sont résolus
- * dans l'ordre du dictionnaire, les requis d'abord, pour qu'un en-tête ambigu
- * soit attribué en priorité à la colonne indispensable au calcul.
+ * Construit la table de correspondance d'un fichier, en deux passages : d'abord
+ * les noms exacts et les alias du dictionnaire pour tous les champs, puis les
+ * rapprochements approchants pour les champs restants. Sans ce premier passage,
+ * un champ résolu tôt pouvait capter par approximation l'en-tête exact d'un autre
+ * (« Sous_Systeme_Formation » pris pour la formation continue). Les champs requis
+ * passent en premier à chaque passage.
  */
 export function detectColumns(dataset: DatasetKind, enTetes: string[]): ColumnMappingReport {
   const fields = fieldsFor(dataset)
@@ -108,9 +115,18 @@ export function detectColumns(dataset: DatasetKind, enTetes: string[]): ColumnMa
   const dejaPris = new Set<string>()
   const parChamp = new Map<string, ColumnMatch>()
 
+  const exacts = new Map<string, Candidate>()
   for (const field of ordonnes) {
-    const candidat = meilleurCandidat(field, enTetes, dejaPris)
-    if (candidat) dejaPris.add(candidat.enTete)
+    const candidat = meilleurCandidat(field, enTetes, dejaPris, true)
+    if (candidat) {
+      dejaPris.add(candidat.enTete)
+      exacts.set(field.champ, candidat)
+    }
+  }
+
+  for (const field of ordonnes) {
+    const candidat = exacts.get(field.champ) ?? meilleurCandidat(field, enTetes, dejaPris)
+    if (candidat && !exacts.has(field.champ)) dejaPris.add(candidat.enTete)
     parChamp.set(field.champ, {
       champ: field.champ,
       label: field.label,

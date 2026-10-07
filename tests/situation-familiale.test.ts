@@ -14,7 +14,8 @@ import { inventaireSituations, libelleSituation, normaliserSituation } from '../
 import { calculerBaremeIndividuel, detaillerBareme, pointsSituation } from '../lib/simulation/scoring'
 import { enseignant } from './fixtures'
 
-const cfg = DEFAULT_SETTINGS.scoring
+const settings = DEFAULT_SETTINGS
+const cfg = settings.scoring
 
 // --- Rapprochement des graphies ----------------------------------------------
 
@@ -59,47 +60,41 @@ test('Toutes les graphies d’une situation donnent les mêmes points', () => {
 test('Deux enseignants identiques hormis la graphie ont le même barème', () => {
   const a = enseignant({ id: 'A', idEtabAttache: 'E1', situationFamiliale: 'celibataire' })
   const b = enseignant({ id: 'B', idEtabAttache: 'E1', situationFamiliale: 'Célibataire' })
-  assert.equal(calculerBaremeIndividuel(a, cfg), calculerBaremeIndividuel(b, cfg))
+  assert.equal(calculerBaremeIndividuel(a, settings), calculerBaremeIndividuel(b, settings))
 })
 
-test('Le nombre d’enfants et la situation pèsent réellement sur le barème', () => {
+test('Les charges familiales pèsent réellement sur le barème : chaque enfant retire des points', () => {
   const base = { id: 'T', idEtabAttache: 'E1', situationFamiliale: 'Marié(e)', nbEnfants: 0 }
-  const sansEnfant = calculerBaremeIndividuel(enseignant(base), cfg)
-  const avecEnfants = calculerBaremeIndividuel(enseignant({ ...base, nbEnfants: 4 }), cfg)
-  assert.ok(avecEnfants > sansEnfant, 'quatre enfants augmentent le barème')
+  const sansEnfant = calculerBaremeIndividuel(enseignant(base), settings)
+  const avecEnfants = calculerBaremeIndividuel(enseignant({ ...base, nbEnfants: 4 }), settings)
+  assert.ok(avecEnfants < sansEnfant, 'quatre enfants à charge abaissent le barème : la famille est moins mobile')
   assert.equal(
-    Math.round((avecEnfants - sansEnfant) * 10000) / 10000,
-    Math.round(4 * cfg.poidsBaremeIndividuel.nbEnfants * 10000) / 10000,
-    'la contribution vaut exactement nombre d’enfants × poids',
+    Math.round((sansEnfant - avecEnfants) * 10000) / 10000,
+    Math.round(4 * cfg.pointsParEnfant * cfg.poidsBaremeIndividuel.chargesFamiliales * 10000) / 10000,
+    'l’écart vaut exactement enfants × points par enfant × poids C3',
   )
 
-  const celibataire = calculerBaremeIndividuel(enseignant({ ...base, situationFamiliale: 'Célibataire' }), cfg)
-  assert.ok(celibataire > sansEnfant, 'un célibataire est mieux classé qu’un marié, toutes choses égales')
+  const celibataire = calculerBaremeIndividuel(enseignant({ ...base, situationFamiliale: 'Célibataire' }), settings)
+  assert.ok(celibataire > sansEnfant, 'un célibataire est plus mobile qu’un marié, toutes choses égales')
 })
 
 test('Un poids à zéro neutralise le critère', () => {
-  const neutre = { ...cfg, poidsBaremeIndividuel: { ...cfg.poidsBaremeIndividuel, nbEnfants: 0, situationFamiliale: 0 } }
+  const neutre = { ...settings, scoring: { ...cfg, poidsBaremeIndividuel: { ...cfg.poidsBaremeIndividuel, chargesFamiliales: 0 } } }
   const a = enseignant({ id: 'A', idEtabAttache: 'E1', situationFamiliale: 'Célibataire', nbEnfants: 0 })
   const b = enseignant({ id: 'B', idEtabAttache: 'E1', situationFamiliale: 'Marié(e)', nbEnfants: 6 })
   assert.equal(calculerBaremeIndividuel(a, neutre), calculerBaremeIndividuel(b, neutre))
 })
 
-test('Le détail du barème expose les deux critères, et sa somme vaut le total', () => {
+test('Le détail du barème expose les cinq critères, et sa somme vaut le total', () => {
   const t = enseignant({ id: 'T', idEtabAttache: 'E1', situationFamiliale: 'Veuve', nbEnfants: 3 })
-  const detail = detaillerBareme(t, cfg)
-  const labels = detail.components.map(c => c.label)
-
-  assert.ok(labels.some(l => /enfants/i.test(l)), 'le nombre d’enfants est listé')
-  assert.ok(labels.some(l => /situation familiale/i.test(l)), 'la situation familiale est listée')
-  assert.equal(detail.components.find(c => /enfants/i.test(c.label))?.valeur, 3)
-  assert.equal(detail.components.find(c => /situation familiale/i.test(c.label))?.valeur, cfg.pointsSituationFamiliale.veuf)
+  const detail = detaillerBareme(t, settings)
+  assert.deepEqual(detail.components.map(c => c.label.slice(0, 2)), ['C1', 'C2', 'C3', 'C4', 'C5'])
+  assert.equal(detail.components[2].valeur, cfg.pointsSituationFamiliale.veuf - 3 * cfg.pointsParEnfant)
 
   const somme = Math.round(detail.components.reduce((a, c) => a + c.contribution, 0) * 10000) / 10000
   assert.equal(somme, detail.total)
-  assert.equal(detail.total, calculerBaremeIndividuel(t, cfg), 'le détail correspond au barème réellement utilisé')
+  assert.equal(detail.total, calculerBaremeIndividuel(t, settings), 'le détail correspond au barème réellement utilisé')
 })
-
-// --- Inventaire montré dans les paramètres -------------------------------------
 
 test('L’inventaire distingue reconnues, non reconnues et non renseignées', () => {
   const inv = inventaireSituations(['Marié', 'mariée', 'MARIE(E)', 'Célibataire', 'Fiancé', 'Fiancé', '', '   ', 'Veuve'])

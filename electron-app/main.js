@@ -92,7 +92,7 @@ async function createWindow() {
     minWidth: 1024,
     minHeight: 700,
     autoHideMenuBar: true,
-    title: 'AlgoBaba',
+    title: 'AlgoPlanR',
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,

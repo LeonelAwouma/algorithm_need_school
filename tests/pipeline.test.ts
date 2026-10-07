@@ -33,14 +33,17 @@ const resultats: SimulationResult[] = SCENARIOS_GEOGRAPHIQUES.map(scope =>
 )
 
 test('Le diagnostic couvre tout le jeu de données sans perte', () => {
-  assert.equal(diagnostic.schools.length, dataset.schools.length)
+  // Les structures d'accueil (IAEB) n'ont pas d'élèves : elles portent des postes, pas un diagnostic.
+  const ecoles = dataset.schools.filter(s => !s.estStructure)
+  assert.equal(diagnostic.schools.length, ecoles.length)
+  assert.equal(diagnostic.structures.length, dataset.schools.length - ecoles.length)
   assert.equal(
     diagnostic.totals.classes,
-    dataset.schools.reduce((a, s) => a + s.nbClasses, 0),
+    ecoles.reduce((a, s) => a + s.nbClasses, 0),
   )
   assert.equal(
     diagnostic.totals.enseignantsEtat,
-    dataset.schools.reduce((a, s) => a + s.nbEnseignantsEtat, 0),
+    ecoles.reduce((a, s) => a + s.nbEnseignantsEtat, 0) - diagnostic.schools.reduce((a, d) => a + d.calcul.departsConnus, 0),
   )
   assert.ok(diagnostic.totals.postesNecessaires > 0, 'le jeu de démonstration comporte des écoles en déficit')
   assert.ok(diagnostic.totals.excedentMobilisable > 0, 'il comporte aussi des écoles en excédent')

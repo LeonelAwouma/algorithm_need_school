@@ -16,6 +16,10 @@ import {
   Building2,
   ClipboardList,
   Crown,
+  Gavel,
+  ListOrdered,
+  UserPlus,
+  TrendingUp,
   Database,
   FileText,
   FlaskConical,
@@ -41,6 +45,10 @@ export type PageKey =
   | 'schools'
   | 'teachers'
   | 'prince'
+  | 'voeux'
+  | 'arbitrage'
+  | 'recrutes'
+  | 'projections'
   | 'simulations'
   | 'comparison'
   | 'reports'
@@ -103,6 +111,10 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       { id: 'prince', label: 'Fait de Prince', sousTitre: 'Redéploiements décidés par la DRH', icon: Crown, exigeDonnees: true, drhSeulement: true },
       { id: 'simulations', label: 'Scénarios', sousTitre: 'Créer et exécuter', icon: FlaskConical, exigeDonnees: true },
+      { id: 'voeux', label: 'Vœux des enseignants', sousTitre: 'Demandes, recevabilité, scores et issue', icon: ListOrdered, exigeSimulation: true },
+      { id: 'arbitrage', label: 'Commission d’arbitrage', sousTitre: 'Valider, rejeter ou corriger les propositions', icon: Gavel, exigeSimulation: true },
+      { id: 'recrutes', label: 'Nouveaux recrutés', sousTitre: 'Déploiement sur les postes restés vacants', icon: UserPlus, exigeDonnees: true },
+      { id: 'projections', label: 'Projections N+1 → N+3', sousTitre: 'Retraites, besoins et recrutement à prévoir', icon: TrendingUp, exigeSimulation: true },
       { id: 'comparison', label: 'Comparaison', sousTitre: 'Avant / après et scénarios', icon: ArrowRightLeft, exigeDonnees: true },
     ],
   },

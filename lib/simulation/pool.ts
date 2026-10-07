@@ -1,20 +1,23 @@
 /**
- * Constitution du vivier réellement redéployable.
+ * Vivier de redéploiement (référentiel §2.4 et §3.7).
  *
- * C'est la correction métier centrale de cette refonte (§1). Le vivier n'est
- * plus « tous les enseignants actifs payés par l'État » mais :
+ * « Les maîtres au-delà de la dotation théorique forment le vivier de
+ * redéploiement » : le vivier rassemble les enseignants administrativement
+ * éligibles des écoles excédentaires (x > 0), et une école n'y fournit jamais plus
+ * de candidats que son excédent x. Il sert au redéploiement obligatoire, qui
+ * n'intervient qu'après les vœux et les propositions hors vœux.
  *
- *   « les enseignants administrativement éligibles appartenant aux écoles
- *     disposant d'un excédent réellement mobilisable »
- *
- * et le nombre de candidats retenus dans une école ne dépasse jamais son
- * excédent calculé. Le barème individuel n'intervient qu'ensuite, pour
- * déterminer lesquels de ces enseignants partiraient en premier.
+ * Sont écartés : les enseignants redéployés par fait de Prince, ceux qui partent
+ * à la retraite à la rentrée, et — si le paramètre est actif — ceux que protège
+ * la proximité de la retraite. Le barème individuel ordonne ensuite les départs
+ * au sein de chaque école.
  */
 
 import type { SchoolDiagnostic, Teacher } from '../../types/education'
 import type { EngineSettings, PoolTeacher, RedeploymentPool } from '../../types/simulation'
 import { STATUTS_EXCLUS } from '../data/parse'
+import { partALaRetraite } from '../analytics/diagnostic'
+import { procheDeLaRetraite } from './candidatures'
 import { calculerBaremeIndividuel } from './scoring'
 
 /** Statuts administrativement compatibles avec un redéploiement. */
@@ -46,17 +49,7 @@ export function estEligibleAdministrativement(t: Teacher, settings: EngineSettin
   if (STATUTS_EXCLUS.has(t.statut)) return { ok: false, motif: 'statut_exclu', label: `statut « ${t.statut} »` }
   if (!STATUTS_ELIGIBLES.has(t.statut)) return { ok: false, motif: 'statut_non_eligible', label: `statut non éligible « ${t.statut} »` }
   if (!t.payeParEtat) return { ok: false, motif: 'non_paye_etat', label: "non payé par l'État" }
-
-  const seuilAnciennete = settings.phases.anciennetePosteMinimaleAns
-  if (seuilAnciennete > 0 && t.anciennetePosteAns < seuilAnciennete) {
-    return { ok: false, motif: 'anciennete_insuffisante', label: `moins de ${seuilAnciennete} an(s) d'ancienneté au poste` }
-  }
-
-  const ageMax = settings.phases.ageMaximalMobilisableAns
-  if (ageMax > 0 && t.age != null && t.age > ageMax) {
-    return { ok: false, motif: 'age_superieur_limite', label: `âge supérieur à ${ageMax} ans` }
-  }
-
+  if (partALaRetraite(t, settings)) return { ok: false, motif: 'retraite', label: 'départ à la retraite à la rentrée' }
   return { ok: true }
 }
 
@@ -111,13 +104,23 @@ export function construireVivier(
       compteur.ajouter('ecole_sans_excedent', "école sans excédent mobilisable (son départ créerait un déficit)")
       continue
     }
+    // Comme pour une demande de mutation, un départ imposé suppose la stabilité minimale au poste.
+    if (settings.mobilite.stabilitePourObligatoire && t.anciennetePosteAns < settings.mobilite.stabiliteMinimaleAns) {
+      compteur.ajouter('stabilite', `moins de ${settings.mobilite.stabiliteMinimaleAns} ans au poste`)
+      continue
+    }
+    if (settings.mobilite.protegerProchesRetraite && procheDeLaRetraite(t, settings)) {
+      compteur.ajouter('protege', `à moins de ${settings.mobilite.anneesAvantRetraite} ans de la retraite (protégé des transferts imposés)`)
+      continue
+    }
 
     const liste = candidatsParEcole.get(ecole.school.id) ?? []
     liste.push({
       teacher: t,
-      bareme: calculerBaremeIndividuel(t, settings.scoring),
+      bareme: calculerBaremeIndividuel(t, settings, ecole.priorite.niveauDifficulte),
       ecoleOrigine: { id: ecole.school.id, nom: ecole.school.nom, excedentMobilisable: ecole.excedentTheorique },
       rangDansEcole: 0,
+      protege: false,
       affecte: false,
     })
     candidatsParEcole.set(ecole.school.id, liste)

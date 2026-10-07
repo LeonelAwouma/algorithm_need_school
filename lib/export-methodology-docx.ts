@@ -14,7 +14,7 @@ export async function downloadMethodologyDocx(anneeScolaire?: string): Promise<v
     sections: [
       {
         children: [
-          new Paragraph({ text: 'Méthodologie — Planification des enseignants', heading: HeadingLevel.TITLE }),
+          new Paragraph({ text: 'Méthodologie — Affectation des enseignants', heading: HeadingLevel.TITLE }),
           anneeScolaire
             ? new Paragraph({ text: `Année scolaire ${anneeScolaire}`, spacing: { after: 200 } })
             : new Paragraph({ text: '', spacing: { after: 200 } }),
@@ -66,7 +66,7 @@ export async function downloadMethodologyDocx(anneeScolaire?: string): Promise<v
   const url = URL.createObjectURL(blob)
   const lien = document.createElement('a')
   lien.href = url
-  lien.download = 'methodologie-planification-enseignants.docx'
+  lien.download = 'methodologie-affectation-enseignants.docx'
   lien.click()
   URL.revokeObjectURL(url)
 }

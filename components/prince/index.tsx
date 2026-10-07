@@ -13,8 +13,9 @@
  * toutes les simulations sont recalculés en la prenant pour donnée de départ.
  */
 
-import { useMemo, useState } from 'react'
-import { AlertTriangle, ArrowRight, Check, Crown, Download, Trash2 } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { AlertTriangle, ArrowRight, Check, Crown, Download, Trash2, Upload } from 'lucide-react'
+import { analyserFichierPrince } from '@/lib/data/prince-import'
 import type { SchoolDiagnostic, Teacher } from '@/types/education'
 import { exporterCSV } from '@/lib/reporting/export-csv'
 import { LIBELLE_STATUT_PRINCE, simulerImpactPrince } from '@/lib/simulation/prince'
@@ -434,6 +435,8 @@ export function PrincePage({ store }: { store: PlanningStore }) {
         </div>
       </Panel>
 
+      <ImportPrince store={store} />
+
       <Panel
         kicker="Décisions enregistrées"
         title={`${fmt(nbFaitsPrinceActifs)} redéploiement(s) en vigueur`}
@@ -477,5 +480,65 @@ export function PrincePage({ store }: { store: PlanningStore }) {
         />
       </Panel>
     </div>
+  )
+}
+
+/** Import d'un lot de décisions depuis un classeur ou un fichier CSV. */
+function ImportPrince({ store }: { store: PlanningStore }) {
+  const { datasetImporte, diagnosticSansPrince, ajouterFaitsPrinceEnLot } = store
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [bilan, setBilan] = useState<{ acceptees: number; refus: string[] } | null>(null)
+  const [erreur, setErreur] = useState<string | null>(null)
+
+  async function charger(file?: File) {
+    if (!file || !datasetImporte || !diagnosticSansPrince) return
+    setErreur(null)
+    setBilan(null)
+    try {
+      const XLSX = await import('xlsx')
+      const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', dense: true })
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: null, raw: true }) as unknown[][]
+      const { lignes, manquantes } = analyserFichierPrince(rows, datasetImporte.teachers, diagnosticSansPrince.schools)
+      if (manquantes.length > 0) {
+        setErreur(`Colonnes introuvables : ${manquantes.join(', ')}.`)
+        return
+      }
+      const introuvables = lignes.filter(l => l.erreur).map(l => `ligne ${l.ligne} : ${l.erreur}`)
+      const resultat = ajouterFaitsPrinceEnLot(lignes.filter(l => !l.erreur))
+      setBilan({ acceptees: resultat.acceptees, refus: [...introuvables, ...resultat.refus] })
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  return (
+    <Panel
+      kicker="Import"
+      title="Importer un lot de décisions"
+      hint="Une ligne par décision : matricule de l’enseignant (« id_ens » ou « Matricule_Enseignant »), école de destination (« id_etab » ou « Identifiant_Ecole ») et, facultativement, le motif ou la référence de la décision."
+      actions={
+        <button type="button" className="btn btn-sm" onClick={() => inputRef.current?.click()} disabled={!datasetImporte}>
+          <Upload size={13} aria-hidden="true" /> Importer un fichier
+        </button>
+      }
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        style={{ display: 'none' }}
+        onChange={e => {
+          void charger(e.target.files?.[0])
+          e.target.value = ''
+        }}
+      />
+      {erreur && <Notice tone="alert">{erreur}</Notice>}
+      {bilan && (
+        <Notice tone={bilan.refus.length ? 'warn' : 'info'} title={`${fmt(bilan.acceptees)} décision(s) enregistrée(s).`}>
+          {bilan.refus.length > 0 ? `${fmt(bilan.refus.length)} ligne(s) écartée(s) : ${bilan.refus.slice(0, 6).join(' ; ')}${bilan.refus.length > 6 ? '…' : ''}` : 'Toutes les lignes ont été appliquées.'}
+        </Notice>
+      )}
+      {!bilan && !erreur && <p className="hint">Chaque décision est contrôlée comme une saisie manuelle : enseignant et école connus, pas de double redéploiement.</p>}
+    </Panel>
   )
 }

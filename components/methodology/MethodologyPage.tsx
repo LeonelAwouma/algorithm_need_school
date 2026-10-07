@@ -66,18 +66,36 @@ export function MethodologyPage({ store }: { store: PlanningStore }) {
             <dd style={{ fontSize: 13 }}>{settings.anneeScolaire}</dd>
           </div>
           <div>
-            <dt>Enseignants attendus par classe</dt>
-            <dd>{settings.normeEncadrement.enseignantsParClasse}</dd>
+            <dt>Un maître pour</dt>
+            <dd>{settings.besoin.elevesParMaitre} élèves</dd>
           </div>
           <div>
-            <dt>Minimum à conserver</dt>
-            <dd style={{ fontSize: 13 }}>
-              {settings.minimumAConserver.mode === 'nbClasses'
-                ? 'Nombre de classes'
-                : settings.minimumAConserver.mode === 'ratioClasses'
-                  ? `${settings.minimumAConserver.ratio} × classes`
-                  : `${settings.minimumAConserver.valeurFixe} par école`}
-            </dd>
+            <dt>Tolérance d’arrondi</dt>
+            <dd>{settings.besoin.toleranceArrondi} élève(s)</dd>
+          </div>
+          <div>
+            <dt>Niveaux tenus par un maître</dt>
+            <dd>{settings.besoin.niveauxParMaitre}</dd>
+          </div>
+          <div>
+            <dt>Double flux</dt>
+            <dd style={{ fontSize: 13 }}>{settings.besoin.doubleFluxAutorise ? 'Autorisé' : 'Non autorisé'}</dd>
+          </div>
+          <div>
+            <dt>Âge de la retraite</dt>
+            <dd>{settings.besoin.ageRetraite} ans</dd>
+          </div>
+          <div>
+            <dt>Stabilité minimale au poste</dt>
+            <dd>{settings.mobilite.stabiliteMinimaleAns} ans</dd>
+          </div>
+          <div>
+            <dt>Ordre d’examen des vœux</dt>
+            <dd style={{ fontSize: 13 }}>{settings.mobilite.ordreExamen === 'voeux' ? 'Ordre de l’enseignant' : 'Poids des écoles'}</dd>
+          </div>
+          <div>
+            <dt>Attrition hors retraite</dt>
+            <dd>{settings.recrutement.tauxAttritionHorsRetraite.toLocaleString('fr-FR')} %</dd>
           </div>
           <div>
             <dt>Source des postes</dt>
@@ -97,18 +115,11 @@ export function MethodologyPage({ store }: { store: PlanningStore }) {
             <dt>Seuil déficit important</dt>
             <dd>{Math.round(settings.seuilsSeverite.important * 100)} %</dd>
           </div>
-          <div>
-            <dt>Cible élèves par enseignant</dt>
-            <dd>{settings.referentielEleves.cible ?? 'Non définie'}</dd>
-          </div>
-          <div>
-            <dt>Source de la cible</dt>
-            <dd style={{ fontSize: 13 }}>{settings.referentielEleves.source || 'Non précisée'}</dd>
-          </div>
+
         </dl>
         <p className="hint" style={{ marginTop: 10 }}>
-          Ces valeurs sont des choix de paramétrage effectués dans l’application. Elles ne constituent pas des normes
-          officielles et sont modifiables depuis la page Paramètres.
+          Valeurs par défaut du Référentiel technique de modélisation, désignées par lui comme paramètres à valider par la DRH.
+          Elles sont modifiables depuis le Référentiel ; chaque changement relance le calcul.
         </p>
       </Panel>
 

@@ -1,10 +1,11 @@
 /**
- * Scénarios de simulation (§5 et §12).
+ * Scénarios de simulation.
  *
- * Trois scénarios géographiques forment le socle — local, départemental,
- * étendu. Deux scénarios de règles viennent ensuite, et ne sont proposés que
- * lorsque les données permettent réellement de les appliquer : un scénario dont
- * la règle ne peut pas être évaluée n'est pas affiché comme disponible.
+ * Trois scénarios géographiques forment le socle — commune, département,
+ * étendu (niveau régional puis niveau central). Les autres font varier un
+ * paramètre que le référentiel demande de pouvoir simuler (§6.3) : ordre
+ * d'examen des vœux, redéploiement obligatoire, double flux. Un scénario dont la
+ * règle ne peut pas être évaluée avec les données chargées n'est pas proposé.
  */
 
 import type { SchoolDiagnostic } from '../../types/education'
@@ -18,14 +19,14 @@ export const LIBELLE_SCOPE: Record<GeographicScope, string> = {
 }
 
 export const DESCRIPTION_SCOPE: Record<GeographicScope, string> = {
-  commune: "Les enseignants ne peuvent être proposés que sur des postes de leur propre commune.",
+  commune: "Les mouvements restent dans la commune de l'enseignant : vœux, solutions proches et redéploiement obligatoire.",
   departement: "Les mouvements restent à l'intérieur du département de rattachement.",
-  etendu: "Aucune contrainte géographique : ce scénario mesure un plafond théorique de redistribution.",
+  etendu: "Niveau régional, puis niveau central : les vœux interrégionaux et les besoins qu'aucune école de la région ne peut couvrir sont traités entre régions.",
 }
 
 /** Message obligatoire accompagnant le scénario sans contrainte géographique (§29). */
 export const AVERTISSEMENT_SCENARIO_ETENDU =
-  "Ce scénario représente un potentiel théorique maximal et peut impliquer des déplacements géographiquement peu réalistes."
+  "Au niveau central, des mouvements entre régions sont proposés : ils supposent l’accord des deux régions et peuvent impliquer des déplacements longs."
 
 export interface ScenarioPreset {
   cle: string
@@ -68,58 +69,53 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     nom: 'Scénario C — Réduction maximale du déficit',
     description: `${DESCRIPTION_SCOPE.etendu} ${AVERTISSEMENT_SCENARIO_ETENDU}`,
     scope: 'etendu',
+    ajusterParametres: s => cloneSettings(s),
+    verifierDisponibilite: toujoursDisponible,
+  },
+  {
+    cle: 'poids',
+    nom: 'Scénario D — Vœux examinés par poids des écoles',
+    description:
+      "Variante du référentiel (§3.4) : les vœux de chaque enseignant sont examinés de l'école la plus difficile à la plus facile, bonification comprise, au lieu de l'ordre choisi par l'enseignant. Mêmes règles que le scénario départemental par ailleurs.",
+    scope: 'departement',
     ajusterParametres: s => {
       const ajuste = cloneSettings(s)
-      // La règle de ce scénario est explicite : aucune restriction géographique
-      // et toutes les phases actives, pour mesurer le plafond de redistribution.
-      ajuste.phases.phase1Commune = true
-      ajuste.phases.phase2Departement = true
-      ajuste.phases.phase4Reste = true
+      ajuste.mobilite.ordreExamen = 'poids'
+      return ajuste
+    },
+    verifierDisponibilite: diagnostics =>
+      diagnostics.some(d => d.priorite.poids !== diagnostics[0]?.priorite.poids)
+        ? { disponible: true, motif: '' }
+        : { disponible: false, motif: "Toutes les écoles ont le même poids de vulnérabilité : l'ordre par poids n'aurait aucun effet." },
+  },
+  {
+    cle: 'volontaire',
+    nom: 'Scénario E — Mobilité volontaire seulement',
+    description:
+      "Vœux et solutions proches uniquement, sans redéploiement obligatoire : mesure ce que la seule mobilité volontaire permet de couvrir. Mêmes règles que le scénario départemental par ailleurs.",
+    scope: 'departement',
+    ajusterParametres: s => {
+      const ajuste = cloneSettings(s)
+      ajuste.mobilite.redeploiementObligatoire = false
       return ajuste
     },
     verifierDisponibilite: toujoursDisponible,
   },
   {
-    cle: 'rural',
-    nom: 'Scénario D — Priorité aux zones rurales',
+    cle: 'simple-flux',
+    nom: 'Scénario F — Sans double flux',
     description:
-      "Mêmes règles que le scénario départemental, mais les postes situés en zone rurale reçoivent un bonus de score explicite.",
+      "Le double flux n'est pas autorisé : chaque salle compte pour un seul maître dans BMAX. Mesure l'effet du double flux sur le besoin reconnu et les salles manquantes (§2.4).",
     scope: 'departement',
     ajusterParametres: s => {
       const ajuste = cloneSettings(s)
-      ajuste.phases.prioriteZonesRurales = true
+      ajuste.besoin.doubleFluxAutorise = false
       return ajuste
     },
-    verifierDisponibilite: diagnostics => {
-      const rurales = diagnostics.filter(d => d.school.zone === 'rurale').length
-      return rurales > 0
+    verifierDisponibilite: diagnostics =>
+      diagnostics.some(d => (d.school.sallesDoubleFlux ?? 0) > 0)
         ? { disponible: true, motif: '' }
-        : {
-            disponible: false,
-            motif: "Aucun établissement n'est identifié comme rural : la règle de ce scénario n'aurait aucun effet.",
-          }
-    },
-  },
-  {
-    cle: 'multigrade',
-    nom: 'Scénario E — Priorité aux classes multigrades',
-    description:
-      "Mêmes règles que le scénario départemental, mais les écoles déclarant des classes multigrades reçoivent un bonus de score explicite.",
-    scope: 'departement',
-    ajusterParametres: s => {
-      const ajuste = cloneSettings(s)
-      ajuste.phases.prioriteClassesMultigrades = true
-      return ajuste
-    },
-    verifierDisponibilite: diagnostics => {
-      const multigrades = diagnostics.filter(d => d.school.classesMultigrades > 0).length
-      return multigrades > 0
-        ? { disponible: true, motif: '' }
-        : {
-            disponible: false,
-            motif: "Aucune classe multigrade n'est déclarée : la règle de ce scénario n'aurait aucun effet.",
-          }
-    },
+        : { disponible: false, motif: "Aucune salle en double flux n'est déclarée : ce scénario n'aurait aucun effet." },
   },
 ]
 

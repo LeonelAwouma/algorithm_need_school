@@ -1,5 +1,7 @@
 /**
  * Cas 1 à 3 du cahier des charges : besoin et excédent calculés école par école.
+ * Sans effectif d'élèves, la règle se replie sur les classes (un maître par
+ * classe) ; les exemples chiffrés du référentiel sont dans referentiel.test.ts.
  */
 
 import { strict as assert } from 'node:assert'
@@ -54,19 +56,20 @@ test("L'absence de postes déclarés laisse l'écart à null, sans valeur invent
   assert.equal(d.ecartBesoinDeclare, null)
 })
 
-test('La règle du minimum à conserver est configurable', () => {
-  const assoupli = cloneSettings(settings)
-  assoupli.minimumAConserver = { mode: 'ratioClasses', ratio: 0.8, valeurFixe: 1 }
-  const d = computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 10, nbEnseignantsEtat: 10 }), assoupli)
-  assert.equal(d.enseignantsMinimumAConserver, 8)
-  assert.equal(d.excedentTheorique, 2)
+test('Sans effectif, le repli sur les classes est signalé et reste paramétrable', () => {
+  const d = computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 6 }), settings)
+  assert.equal(d.calcul.methode, 'repli_classes')
+  const renforce = cloneSettings(settings)
+  renforce.besoin.enseignantsParClasseRepli = 1.5
+  assert.equal(computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 6 }), renforce).besoinTheorique, 3)
 })
 
-test("La norme d'encadrement est configurable et modifie le besoin", () => {
+test("La norme d'élèves par maître est paramétrable et modifie le besoin", () => {
   const renforce = cloneSettings(settings)
-  renforce.normeEncadrement = { enseignantsParClasse: 1.5 }
-  const d = computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 6 }), renforce)
-  assert.equal(d.besoinTheorique, 3)
+  renforce.besoin.elevesParMaitre = 40
+  const d = computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 6, effectifTotalEleves: 320 }), renforce)
+  assert.equal(d.calcul.norme, 8)
+  assert.equal(d.besoinTheorique, 2)
 })
 
 test('Les indicateurs élèves restent nuls quand les effectifs sont absents', () => {
@@ -86,14 +89,9 @@ test('Les indicateurs élèves sont calculés dès que les effectifs sont fourni
   assert.equal(d.elevesParEnseignant, 50)
 })
 
-test("La pression pédagogique n'est calculée qu'avec une cible configurée", () => {
-  const avecCible = cloneSettings(settings)
-  avecCible.referentielEleves = { cible: 50, annee: '2024', source: 'Paramètre utilisateur', commentaire: '' }
-  const d = computeSchoolDiagnostic(
-    ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 4, effectifTotalEleves: 300 }),
-    avecCible,
-  )
-  assert.equal(d.pressionPedagogique, 1.5)
+test('La pression pédagogique rapporte le REM à la norme de la note de cadrage', () => {
+  const d = computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 4, effectifTotalEleves: 300 }), settings)
+  assert.equal(d.pressionPedagogique, 1.25)
 })
 
 test('Le diagnostic national additionne besoins et excédents école par école', () => {

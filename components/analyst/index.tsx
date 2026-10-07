@@ -220,36 +220,27 @@ export function PostsPage({ store }: { store: PlanningStore }) {
   }
 
   const pourvus = new Set(resultatComplet.assignments.map(a => a.postId))
-  const tous: TeachingPost[] = [...resultatComplet.uncoveredPosts]
-  for (const a of resultatComplet.assignments) {
-    tous.push({
-      id: a.postId,
-      schoolId: a.schoolDestinationId,
-      nomEtab: a.nomEtabDestination,
-      region: a.regionDestination,
-      departement: a.departementDestination,
-      commune: a.communeDestination,
-      zone: 'inconnue',
-      typeEtab: '',
-      classesMultigrades: 0,
-      prioriteLocale: 0,
-      deficitEcole: 0,
-      elevesParEnseignantEtat: null,
-      pourvu: true,
-    })
-  }
+  const tous: TeachingPost[] = resultatComplet.postes
 
   const colonnes: Colonne<TeachingPost>[] = [
+    { cle: 'rang', entete: 'Rang', numerique: true, rendu: p => fmt(p.rang), tri: p => p.rang },
     { cle: 'id', entete: 'Poste', rendu: p => <span className="mono">{p.id}</span>, tri: p => p.id },
     { cle: 'etab', entete: 'Établissement', rendu: p => (<span><strong>{p.nomEtab || p.schoolId}</strong><small>{p.commune} · {p.departement}</small></span>), tri: p => p.nomEtab },
     { cle: 'region', entete: 'Région', rendu: p => p.region, tri: p => p.region },
+    { cle: 'ss', entete: 'Sous-système', rendu: p => (p.sousSysteme === 'anglophone' ? 'Anglophone' : p.sousSysteme === 'francophone' ? 'Francophone' : '—'), tri: p => p.sousSysteme ?? '' },
+    { cle: 'w', entete: 'Poids w', numerique: true, rendu: p => fmt(p.priorite.poids), tri: p => p.priorite.poids },
+    { cle: 'niveau', entete: 'Niveau', numerique: true, rendu: p => fmt(p.priorite.niveauDifficulte), tri: p => p.priorite.niveauDifficulte },
+    { cle: 'beta', entete: 'β', numerique: true, rendu: p => fmt(p.priorite.pointsBesoin), tri: p => p.priorite.pointsBesoin },
+    { cle: 'u', entete: 'Indice u', numerique: true, rendu: p => (<span>{fmt(p.priorite.indice)}{p.priorite.zoneRouge && <small>zone rouge</small>}{p.estStructure && <small>structure</small>}</span>), tri: p => p.priorite.indice },
     { cle: 'etat', entete: 'État', rendu: p => <Pill tone={pourvus.has(p.id) ? 'ok' : 'warn'}>{pourvus.has(p.id) ? 'Pourvu (proposition)' : 'Non pourvu'}</Pill>, tri: p => (pourvus.has(p.id) ? 1 : 0) },
   ]
 
   return (
     <div className="stack">
-      <Notice tone="neutral" title="Un poste = une unité de besoin.">
-        Les postes sont construits à partir du besoin calculé école par école, selon la source configurée dans les Paramètres.
+      <Notice tone="neutral" title="Référentiel des écoles nécessiteuses et des structures d’accueil (§3.1).">
+        Un poste = une unité de besoin b d’une école nécessiteuse, ou une place d’une structure fixée par la hiérarchie. Les postes
+        sont classés par indice de priorité u = w + β décroissant ; à indice égal, les écoles passent avant les structures, puis
+        l’école au REM actuel le plus élevé.
       </Notice>
       <Panel kicker="Postes" title={`${fmt(tous.length)} postes à couvrir`} flush>
         <DataTable lignes={tous} colonnes={colonnes} cle={p => p.id} legende="Postes à couvrir et leur état" />
@@ -364,6 +355,47 @@ export function LogsPage({ store }: { store: PlanningStore }) {
             ))}
           </tbody>
         </table>
+      </Panel>
+
+      <Panel
+        kicker="Acceptation différée (§3.4)"
+        title="Tours de l’algorithme d’appariement"
+        hint={`Chaque tour : les candidats libres demandent l’école suivante de leur liste ; chaque école garde provisoirement les mieux classés et refuse les autres.${resultatComplet.toursTronques ? ' Seuls les premiers tours de chaque niveau sont conservés.' : ''}`}
+      >
+        {resultatComplet.tours.length === 0 ? (
+          <p className="hint">Aucune demande de mutation recevable : l’algorithme n’a pas eu de tour à jouer.</p>
+        ) : (
+          <div className="table-scroll">
+            <table className="compare-table">
+              <thead>
+                <tr>
+                  <th>Niveau</th>
+                  <th className="num">Tour</th>
+                  <th className="num">Demandes</th>
+                  <th>Écoles et candidats gardés provisoirement</th>
+                  <th>Refusés</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resultatComplet.tours.map(t => (
+                  <tr key={`${t.niveau}-${t.tour}`}>
+                    <th scope="row">{t.niveau}</th>
+                    <td className="num">{t.tour}</td>
+                    <td className="num">{fmt(t.demandes.length)}</td>
+                    <td>
+                      {t.gardes
+                        .slice(0, 12)
+                        .map(g => `${g.schoolId} : ${g.teacherIds.join(', ') || '—'}`)
+                        .join(' · ')}
+                      {t.gardes.length > 12 ? ' …' : ''}
+                    </td>
+                    <td>{t.refuses.length === 0 ? '—' : `${t.refuses.slice(0, 12).join(', ')}${t.refuses.length > 12 ? ' …' : ''}`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Panel>
 
       <Panel kicker="Contrôles" title="Invariants métier vérifiés après simulation">

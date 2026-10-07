@@ -60,7 +60,7 @@ export function TeachersPage({ store }: { store: PlanningStore }) {
 
       return {
         teacher: t,
-        bareme: calculerBaremeIndividuel(t, settings.scoring),
+        bareme: calculerBaremeIndividuel(t, settings, ecole?.priorite.niveauDifficulte ?? null),
         ecoleNom: ecole?.school.nom || t.idEtabAttache,
         mobilisable,
         motif,
@@ -230,7 +230,7 @@ export function TeachersPage({ store }: { store: PlanningStore }) {
               </tr>
             </thead>
             <tbody>
-              {detaillerBareme(detail.teacher, settings.scoring).components.map(c => (
+              {detaillerBareme(detail.teacher, settings, diagnostic?.bySchoolId[detail.teacher.idEtabAttache]?.priorite.niveauDifficulte ?? null).components.map(c => (
                 <tr key={c.label}>
                   <th scope="row" style={{ fontWeight: 500 }}>
                     {c.label}

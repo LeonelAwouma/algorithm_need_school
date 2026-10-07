@@ -92,10 +92,10 @@ function sectionEnParagraphes(section: DecisionReportSection): (Paragraph | Tabl
   return blocs
 }
 
-/** Charge le logo pour l'insérer dans la page de garde ; `null` s'il est indisponible. */
-async function chargerLogo(): Promise<ArrayBuffer | null> {
+/** Charge un logo pour l'insérer dans la page de garde ; `null` s'il est indisponible. */
+async function chargerLogo(chemin: string): Promise<ArrayBuffer | null> {
   try {
-    const reponse = await fetch('/logo-full.png')
+    const reponse = await fetch(chemin)
     if (!reponse.ok) return null
     return await reponse.arrayBuffer()
   } catch {
@@ -114,22 +114,43 @@ export interface DocxExportInput {
 /** Construit le document Word et renvoie ses octets. */
 export async function construireRapportDocx(input: DocxExportInput): Promise<Blob> {
   const { rapport, scenarioNom, donneesDemonstration } = input
-  const logo = await chargerLogo()
+  const [logo, logoParec] = await Promise.all([chargerLogo('/logo-full.png'), chargerLogo('/logo-parec.png')])
 
-  const garde: (Paragraph | Table)[] = []
+  // Page de garde : logo de l'application, puis celui du PAREC qui soutient le projet.
+  const logos: (ImageRun | TextRun)[] = []
   if (logo) {
-    garde.push(
-      new Paragraph({
-        alignment: AlignmentType.RIGHT,
-        spacing: { after: 120 },
-        children: [new ImageRun({ data: logo, type: 'png', transformation: { width: 116, height: 89 } })],
+    logos.push(
+      new ImageRun({
+        data: logo,
+        type: 'png',
+        transformation: { width: 128, height: 85 },
+        altText: { name: 'AlgoPlanR', description: 'Logo AlgoPlanR' },
       }),
     )
+  }
+  if (logoParec) {
+    if (logos.length > 0) logos.push(new TextRun({ text: '      ' }))
+    logos.push(
+      new ImageRun({
+        data: logoParec,
+        type: 'png',
+        transformation: { width: 85, height: 85 },
+        altText: {
+          name: 'PAREC',
+          description: 'Logo du PAREC — Programme d’appui à la réforme de l’éducation au Cameroun',
+        },
+      }),
+    )
+  }
+
+  const garde: (Paragraph | Table)[] = []
+  if (logos.length > 0) {
+    garde.push(new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 120 }, children: logos }))
   }
   garde.push(
     new Paragraph({
       spacing: { after: 60 },
-      children: [new TextRun({ text: 'RAPPORT DE PLANIFICATION DES ENSEIGNANTS', bold: true, size: 18, color: TEAL })],
+      children: [new TextRun({ text: 'RAPPORT D’AFFECTATION DES ENSEIGNANTS', bold: true, size: 18, color: TEAL })],
     }),
     new Paragraph({ text: rapport.perimetre, heading: HeadingLevel.TITLE, spacing: { after: 60 } }),
     new Paragraph({
@@ -178,9 +199,9 @@ export async function construireRapportDocx(input: DocxExportInput): Promise<Blo
   )
 
   const doc = new Document({
-    creator: 'AlgoBaba',
-    title: `Rapport de planification des enseignants — ${rapport.perimetre}`,
-    description: 'Rapport décisionnel produit localement par AlgoBaba.',
+    creator: 'AlgoPlanR',
+    title: `Rapport d’affectation des enseignants — ${rapport.perimetre}`,
+    description: 'Rapport décisionnel produit localement par AlgoPlanR.',
     styles: {
       default: {
         document: { run: { font: 'Calibri', size: 22, color: '1F2D3D' } },
@@ -198,7 +219,7 @@ export async function construireRapportDocx(input: DocxExportInput): Promise<Blo
               new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [
-                  new TextRun({ text: 'AlgoBaba — document produit localement · page ', size: 16, color: GRIS }),
+                  new TextRun({ text: 'AlgoPlanR — document produit localement · page ', size: 16, color: GRIS }),
                   new TextRun({ children: [PageNumber.CURRENT], size: 16, color: GRIS }),
                   new TextRun({ text: ' / ', size: 16, color: GRIS }),
                   new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, color: GRIS }),

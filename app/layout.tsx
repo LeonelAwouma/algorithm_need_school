@@ -20,7 +20,7 @@ const sourceSans = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'ALGOBABA — Planification des enseignants',
+  title: 'ALGOPLANR — Affectation des enseignants',
   description:
     "Analyse des besoins, répartition territoriale et simulation de scénarios d'affectation. Traitement entièrement local, sans transmission de données.",
   icons: {

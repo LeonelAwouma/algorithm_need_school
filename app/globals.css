@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /* ===========================================================================
-   ALGOBABA — Système de design
+   ALGOPLANR — Système de design
    Langage visuel inspiré d'OpenEMIS : fond gris clair, surfaces blanches, un seul
    bleu d'action, bandeau supérieur blanc, navigation latérale claire regroupée par
    étape (Collecter, Analyser, Simuler, Restituer), tableaux et formulaires sobres.
@@ -133,6 +133,12 @@ a { color: var(--info); }
 .brand-logo { height: 38px; width: auto; flex: none; display: block; }
 .brand-name { font-size: 15px; font-weight: 700; letter-spacing: .01em; color: var(--ink); display: block; line-height: 1.2; }
 .brand-sub { font-size: 12px; color: var(--ink-faint); display: block; line-height: 1.2; }
+/* Sceau du PAREC, partenaire du projet : séparé de l'identité de l'application par un filet. */
+.brand-partner { height: 42px; width: 42px; flex: none; display: block; margin-left: 6px; padding-left: 12px; box-sizing: content-box; border-left: 1px solid var(--line); }
+/* Sur un écran de portable, le sous-titre cède sa place au sceau pour que le contexte reste lisible. */
+@media (max-width: 1500px) {
+  .brand-sub { display: none; }
+}
 
 .context { display: flex; gap: 22px; margin: 0 0 0 8px; padding: 0 0 0 24px; border-left: 1px solid var(--line); min-width: 0; }
 .context > div { min-width: 0; }
@@ -578,6 +584,7 @@ pre.code { background: #f4f7fa; border: 1px solid var(--line); border-radius: va
 @media (max-width: 520px) {
   .kpi-row { grid-template-columns: minmax(0, 1fr); }
   .brand-name { display: none; }
+  .brand-partner { display: none; }
   .mode-switch button { padding: 6px 9px; }
 }
 
@@ -676,15 +683,32 @@ pre.code { background: #f4f7fa; border: 1px solid var(--line); border-radius: va
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m);
   padding: 20px 28px; box-shadow: var(--shadow-s);
 }
-.welcome-logo { width: 150px; height: auto; flex: none; display: block; }
+.welcome-logo { width: 170px; height: auto; flex: none; display: block; }
 .welcome h2 { margin: 0 0 4px; }
 .welcome p { margin: 0; color: var(--ink-soft); max-width: 62ch; }
+.welcome-partner {
+  margin: 0 0 0 auto; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding-left: 24px; border-left: 1px solid var(--line); max-width: 190px; text-align: center;
+}
+.welcome-partner img { width: 96px; height: 96px; display: block; }
+.welcome-partner figcaption { font-size: 12.5px; color: var(--ink-soft); line-height: 1.35; }
+.welcome-partner figcaption span { display: block; color: var(--ink-faint); font-size: 11.5px; margin-top: 2px; }
 
-.report-logo { float: right; width: 116px; height: auto; margin: 0 0 8px 20px; }
+.report-logos { float: right; display: flex; align-items: center; gap: 16px; margin: 0 0 8px 20px; }
+.report-logo { width: 128px; height: auto; display: block; }
+.report-logo-partner { width: 84px; height: 84px; display: block; }
 .report-cover::after { content: ''; display: block; clear: both; }
+
+@media (max-width: 960px) {
+  .welcome { flex-wrap: wrap; }
+  .welcome-partner { margin-left: 0; padding-left: 0; border-left: 0; flex-direction: row; max-width: none; text-align: left; }
+  .welcome-partner img { width: 64px; height: 64px; }
+}
 
 @media (max-width: 640px) {
   .welcome { flex-direction: column; text-align: center; padding: 18px; }
+  .welcome-partner { flex-direction: column; text-align: center; }
+  .report-logos { float: none; justify-content: flex-start; margin: 0 0 14px; }
 }
 
 /* --- Infobulle des graphiques ---------------------------------------------- */
@@ -794,8 +818,11 @@ pre.code { background: #f4f7fa; border: 1px solid var(--line); border-radius: va
   border-radius: var(--radius-l); box-shadow: var(--shadow-m); padding: 30px 30px 22px;
   display: flex; flex-direction: column; gap: 16px;
 }
-.login-logo { height: 84px; width: auto; align-self: center; }
+.login-logos { display: flex; align-items: center; justify-content: center; gap: 22px; }
+.login-logo { height: 96px; width: auto; display: block; }
+.login-partner { height: 88px; width: 88px; display: block; padding-left: 22px; box-sizing: content-box; border-left: 1px solid var(--line); }
 .login-tagline { margin: -6px 0 0; text-align: center; color: var(--ink-faint); font-size: 13.5px; }
+.login-tagline span { display: block; margin-top: 4px; font-size: 12px; }
 .login-tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line-strong); border-radius: var(--radius-s); overflow: hidden; }
 .login-tabs button { border: 0; background: var(--surface); padding: 9px 10px; font-size: 14px; color: var(--ink-soft); }
 .login-tabs button + button { border-left: 1px solid var(--line-strong); }

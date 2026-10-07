@@ -16,6 +16,7 @@ import { exporterCSV } from '@/lib/reporting/export-csv'
 import { LIBELLE_PROXIMITE } from '@/lib/simulation/scoring'
 import { DataTable, EmptyState, Notice, Panel, Pill, SearchField, fmt, fmtDec, fmtPct, type Colonne } from '../common'
 import { LIBELLE_SEVERITE, LIBELLE_ZONE } from '../layout'
+import { LIBELLE_CLASSEMENT } from '@/lib/simulation/libelles'
 import { SeveritePill } from '../dashboard/OverviewPage'
 import type { PlanningStore } from '../usePlanningState'
 
@@ -80,7 +81,7 @@ export function SchoolsPage({ store }: { store: PlanningStore }) {
             onClick={() =>
               exporterCSV(
                 'etablissements.csv',
-                ['Code', 'Établissement', 'Région', 'Département', 'Commune', 'Zone', 'Classes', 'Élèves', "Enseignants État", 'Minimum à conserver', 'Déficit', 'Excédent', 'Postes déclarés', 'Élèves par enseignant État', 'Situation'],
+                ['Code', 'Établissement', 'Région', 'Département', 'Commune', 'Zone', 'Classes', 'Élèves', "Enseignants État", 'Dotation D', 'Déficit', 'Excédent', 'Postes déclarés', 'Élèves par enseignant État', 'Situation'],
                 lignes.map(d => [
                   d.school.id, d.school.nom, d.school.region, d.school.departement, d.school.commune, LIBELLE_ZONE[d.school.zone],
                   d.nbClasses, d.school.effectifTotalEleves, d.enseignantsEtat, d.enseignantsMinimumAConserver,
@@ -224,22 +225,65 @@ export function SchoolDetail({
 
       <div className="grid-2">
         <Panel kicker="Diagnostic" title="Situation">
+          <p style={{ marginBottom: 10 }}>
+            <Pill tone={d.classement === 'necessiteuse' ? 'alert' : d.classement === 'excedentaire' ? 'info' : d.classement === 'a_examiner' ? 'warn' : 'ok'}>
+              {LIBELLE_CLASSEMENT[d.classement]}
+            </Pill>{' '}
+            {d.school.sousSysteme && <Pill>{d.school.sousSysteme === 'francophone' ? 'Francophone' : 'Anglophone'}</Pill>}
+          </p>
           <div className="situation-block">
             <div className="situation-line">
-              <span>Enseignants minimum nécessaires</span>
-              <strong>{fmt(Math.round(d.nbClasses * settings.normeEncadrement.enseignantsParClasse))}</strong>
+              <span>N — élèves attendus</span>
+              <strong>{d.calcul.eleves == null ? 'Non renseigné' : fmt(d.calcul.eleves)}</strong>
             </div>
             <div className="situation-line">
-              <span>Enseignants présents (payés par l’État)</span>
-              <strong>{fmt(d.enseignantsEtat)}</strong>
+              <span>E — maîtres retenus à la rentrée ({fmt(d.calcul.enseignantsEnPoste)} en poste − {fmt(d.calcul.departsConnus)} départ(s) connu(s))</span>
+              <strong>{fmt(d.calcul.enseignantsRetenus)}</strong>
             </div>
             <div className="situation-line">
-              <span>Minimum à conserver en cas de redéploiement</span>
-              <strong>{fmt(d.enseignantsMinimumAConserver)}</strong>
+              <span>
+                P — maîtres selon la norme
+                {d.calcul.methode === 'norme_eleves' ? ` (⌈N ÷ ${settings.besoin.elevesParMaitre}⌉)` : ' (sans effectif : une classe = un maître)'}
+              </span>
+              <strong>{fmt(d.calcul.norme)}</strong>
             </div>
             <div className="situation-line">
-              <span>{d.besoinTheorique > 0 ? 'Déficit' : 'Excédent mobilisable maximum'}</span>
-              <strong>{fmt(d.besoinTheorique > 0 ? d.besoinTheorique : d.excedentTheorique)}</strong>
+              <span>m — minimum pédagogique</span>
+              <strong>{fmt(d.calcul.minimumPedagogique)}</strong>
+            </div>
+            <div className="situation-line">
+              <span>D — dotation théorique, max(P ; m)</span>
+              <strong>{fmt(d.calcul.dotation)}</strong>
+            </div>
+            <div className="situation-line">
+              <span>BMAX — maîtres affectables selon les salles</span>
+              <strong>{d.calcul.bmax == null ? 'Salles non renseignées' : fmt(d.calcul.bmax)}</strong>
+            </div>
+            <div className="situation-line">
+              <span>K — cible, min(D ; BMAX)</span>
+              <strong>{fmt(d.calcul.cible)}</strong>
+            </div>
+            <div className="situation-line">
+              <span>b — besoin en maîtres</span>
+              <strong>{fmt(d.calcul.besoin)}</strong>
+            </div>
+            <div className="situation-line">
+              <span>x — excédent mobilisable</span>
+              <strong>{fmt(d.calcul.excedent)}</strong>
+            </div>
+            <div className="situation-line">
+              <span>a — surnombre lié aux salles</span>
+              <strong>{fmt(d.calcul.surnombre)}</strong>
+            </div>
+            <div className="situation-line">
+              <span>s — salles manquantes</span>
+              <strong>{fmt(d.calcul.sallesManquantes)}</strong>
+            </div>
+            <div className="situation-line">
+              <span>
+                Priorité u = w + β (accessibilité {fmt(d.priorite.pointsAccessibilite)} + sécurité {fmt(d.priorite.pointsSecurite)} + besoin {fmt(d.priorite.pointsBesoin)}), niveau de difficulté {d.priorite.niveauDifficulte}
+              </span>
+              <strong>{fmt(d.priorite.indice)}</strong>
             </div>
           </div>
 
@@ -252,8 +296,7 @@ export function SchoolDetail({
 
           {d.pressionPedagogique != null && (
             <p className="hint" style={{ marginTop: 10 }}>
-              Pression pédagogique : {fmtPct(d.pressionPedagogique)} de la cible configurée ({settings.referentielEleves.cible} élèves par
-              enseignant).
+              REM actuel : {fmtPct(d.pressionPedagogique)} de la norme ({settings.besoin.elevesParMaitre} élèves par maître).
             </p>
           )}
         </Panel>

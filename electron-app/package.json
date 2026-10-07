@@ -1,7 +1,7 @@
 {
   "name": "planification-enseignants-desktop",
-  "version": "0.3.0",
-  "description": "Application de planification et d'affectation des enseignants, empaquetée en application de bureau Windows.",
+  "version": "1.0.0",
+  "description": "Application d'affectation des enseignants, empaquetée en application de bureau Windows.",
   "author": "Leonel Awouma",
   "private": true,
   "main": "main.js",
@@ -15,13 +15,13 @@
     "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "com.planification.enseignants",
+    "appId": "com.algoplanr.desktop",
     "electronLanguages": [
       "fr",
       "en-US"
     ],
     "afterPack": "build/afterPack.js",
-    "productName": "AlgoBaba",
+    "productName": "AlgoPlanR",
     "directories": {
       "output": "../dist"
     },
@@ -52,7 +52,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "artifactName": "AlgoBaba-Setup-${version}.${ext}"
+      "artifactName": "AlgoPlanR-Setup-${version}.${ext}"
     },
     "publish": [
       {
