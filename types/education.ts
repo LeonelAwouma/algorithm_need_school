@@ -297,6 +297,8 @@ export interface PrioriteEcole {
   pointsBesoin: number
   /** u = w + β. */
   indice: number
+  /** Zone de sécurité de l'école, `null` si non renseignée (comptée en zone verte). */
+  zoneSecurite: ZoneSecurite | null
   zoneRouge: boolean
 }
 

@@ -308,6 +308,35 @@ button.kpi:hover .kpi-link { text-decoration: underline; }
 .pill-alert { background: var(--alert-bg); color: var(--alert); border-color: var(--alert-line); }
 .pill-info { background: var(--info-bg); color: var(--info); border-color: var(--info-line); }
 
+/* Zones de sécurité : vert, jaune et rouge francs, toujours doublés du libellé. */
+.zone-securite {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  border-radius: 999px; padding: 2px 9px 2px 7px; font-size: 12px; font-weight: 650; border: 1px solid;
+}
+.zone-securite-point { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px rgba(0, 0, 0, .12); }
+.zone-securite-verte { background: #e7f6ec; color: #1d6b3f; border-color: #a9dcbb; }
+.zone-securite-verte .zone-securite-point { background: #22a356; }
+.zone-securite-jaune { background: #fff7d1; color: #6e5300; border-color: #ecd36b; }
+.zone-securite-jaune .zone-securite-point { background: #f5c400; }
+.zone-securite-rouge { background: #fdeaea; color: #a32020; border-color: #eba4a4; font-weight: 750; }
+.zone-securite-rouge .zone-securite-point { background: #dc2626; }
+.zone-securite-defaut { border-style: dashed; font-weight: 550; }
+
+/* Synthèse par zone de sécurité (vue d'ensemble). */
+.zones-securite-grille { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.zone-securite-carte { border: 1px solid var(--line); border-top: 4px solid; border-radius: var(--radius-s); padding: 12px 14px; background: var(--surface); }
+.zone-securite-carte[data-zone='verte'] { border-top-color: #22a356; }
+.zone-securite-carte[data-zone='jaune'] { border-top-color: #f5c400; }
+.zone-securite-carte[data-zone='rouge'] { border-top-color: #dc2626; background: #fffafa; }
+.zone-securite-carte .zone-securite-chiffre { font-size: 1.75rem; font-weight: 750; color: var(--ink); line-height: 1.1; margin: 8px 0 2px; font-variant-numeric: tabular-nums; }
+.zone-securite-carte dl { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; margin: 10px 0 0; font-size: 13px; }
+.zone-securite-carte dt { color: var(--ink-faint); }
+.zone-securite-carte dd { margin: 0; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
+.zone-securite-carte .zone-securite-regle { margin: 10px 0 0; font-size: 12px; color: var(--ink-soft); }
+@media (max-width: 760px) {
+  .zones-securite-grille { grid-template-columns: minmax(0, 1fr); }
+}
+
 .notice {
   display: flex; gap: 11px; align-items: flex-start;
   border: 1px solid var(--line); border-left-width: 4px;
@@ -627,7 +656,7 @@ pre.code { background: #f4f7fa; border: 1px solid var(--line); border-radius: va
   /* Les aplats de couleur portent une information (séries, seuils, états) :
      sans cette règle, les navigateurs les suppriment à l'impression. */
   .bar-seg, .distribution-seg, .legend-swatch, .quality-gauge, .map-shape, .report-kpi > div,
-  .report-mention, .pill, table.data th, .compare-table thead th, .compare-table tbody th {
+  .report-mention, .pill, .zone-securite, .zone-securite-point, .zone-securite-carte, table.data th, .compare-table thead th, .compare-table tbody th {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

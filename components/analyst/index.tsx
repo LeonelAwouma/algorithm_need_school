@@ -16,7 +16,8 @@ import { exporterCSV } from '@/lib/reporting/export-csv'
 import { LIBELLE_PROXIMITE } from '@/lib/simulation/scoring'
 import { DataQualityPanel } from '../data-quality/DataQualityPanel'
 import { PropositionsPanel } from '../simulations'
-import { DataTable, EmptyState, Notice, Panel, Pill, SearchField, fmt, fmtDec, type Colonne } from '../common'
+import { DataTable, EmptyState, Notice, Panel, Pill, SearchField, ZoneSecuritePill, fmt, fmtDec, type Colonne } from '../common'
+import { rangZoneSecurite } from '@/lib/simulation/libelles'
 import type { PlanningStore } from '../usePlanningState'
 
 export function DataPage({ store }: { store: PlanningStore }) {
@@ -227,11 +228,12 @@ export function PostsPage({ store }: { store: PlanningStore }) {
     { cle: 'id', entete: 'Poste', rendu: p => <span className="mono">{p.id}</span>, tri: p => p.id },
     { cle: 'etab', entete: 'Établissement', rendu: p => (<span><strong>{p.nomEtab || p.schoolId}</strong><small>{p.commune} · {p.departement}</small></span>), tri: p => p.nomEtab },
     { cle: 'region', entete: 'Région', rendu: p => p.region, tri: p => p.region },
+    { cle: 'securite', entete: 'Sécurité', rendu: p => <ZoneSecuritePill zone={p.priorite.zoneSecurite} points={p.priorite.pointsSecurite} court />, tri: p => rangZoneSecurite(p.priorite.zoneSecurite) },
     { cle: 'ss', entete: 'Sous-système', rendu: p => (p.sousSysteme === 'anglophone' ? 'Anglophone' : p.sousSysteme === 'francophone' ? 'Francophone' : '—'), tri: p => p.sousSysteme ?? '' },
     { cle: 'w', entete: 'Poids w', numerique: true, rendu: p => fmt(p.priorite.poids), tri: p => p.priorite.poids },
     { cle: 'niveau', entete: 'Niveau', numerique: true, rendu: p => fmt(p.priorite.niveauDifficulte), tri: p => p.priorite.niveauDifficulte },
     { cle: 'beta', entete: 'β', numerique: true, rendu: p => fmt(p.priorite.pointsBesoin), tri: p => p.priorite.pointsBesoin },
-    { cle: 'u', entete: 'Indice u', numerique: true, rendu: p => (<span>{fmt(p.priorite.indice)}{p.priorite.zoneRouge && <small>zone rouge</small>}{p.estStructure && <small>structure</small>}</span>), tri: p => p.priorite.indice },
+    { cle: 'u', entete: 'Indice u', numerique: true, rendu: p => (<span>{fmt(p.priorite.indice)}{p.estStructure && <small>structure</small>}</span>), tri: p => p.priorite.indice },
     { cle: 'etat', entete: 'État', rendu: p => <Pill tone={pourvus.has(p.id) ? 'ok' : 'warn'}>{pourvus.has(p.id) ? 'Pourvu (proposition)' : 'Non pourvu'}</Pill>, tri: p => (pourvus.has(p.id) ? 1 : 0) },
   ]
 

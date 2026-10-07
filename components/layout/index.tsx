@@ -8,7 +8,8 @@
 import { useState, type ReactNode } from 'react'
 // ACCÈS DÉSACTIVÉ : `LogOut` et `UserRound` ne servent qu'à la personne connectée, à réimporter avec elle.
 import { ChevronDown, ChevronRight, Home, Menu, RotateCcw, ShieldCheck, Trash2, X } from 'lucide-react'
-import type { SchoolSeverity, Zone } from '@/types/education'
+import type { SchoolSeverity, Zone, ZoneSecurite } from '@/types/education'
+import { LIBELLE_ZONE_SECURITE, ZONES_SECURITE } from '@/lib/simulation/libelles'
 import type { GlobalFilters, TerritorySelection } from '@/lib/analytics/territory'
 import { breadcrumb } from '@/lib/analytics/territory'
 import { Pill } from '../common'
@@ -327,7 +328,7 @@ export function FilterBar({
 
   const [plusOuvert, setPlusOuvert] = useState(false)
   const nbSecondaires =
-    filtres.zones.length + filtres.typesEtab.length + filtres.severites.length + (filtres.multigradesUniquement !== null ? 1 : 0)
+    filtres.zones.length + filtres.zonesSecurite.length + filtres.typesEtab.length + filtres.severites.length + (filtres.multigradesUniquement !== null ? 1 : 0)
 
   const chips: { cle: string; label: string; retirer: () => void }[] = []
   if (filtres.territoire.region) {
@@ -352,6 +353,13 @@ export function FilterBar({
       cle: `zone-${zone}`,
       label: `Zone : ${LIBELLE_ZONE[zone]}`,
       retirer: () => onChange({ ...filtres, zones: filtres.zones.filter(z => z !== zone) }),
+    })
+  }
+  for (const zone of filtres.zonesSecurite) {
+    chips.push({
+      cle: `securite-${zone}`,
+      label: `Sécurité : ${LIBELLE_ZONE_SECURITE[zone]}`,
+      retirer: () => onChange({ ...filtres, zonesSecurite: filtres.zonesSecurite.filter(z => z !== zone) }),
     })
   }
   for (const type of filtres.typesEtab) {
@@ -470,6 +478,24 @@ export function FilterBar({
                 {options.zones.map(z => (
                   <option key={z} value={z}>
                     {LIBELLE_ZONE[z]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="field">
+              <label htmlFor="f-securite">Zone de sécurité</label>
+              <select
+                id="f-securite"
+                value={filtres.zonesSecurite[0] ?? ''}
+                onChange={e =>
+                  onChange({ ...filtres, zonesSecurite: e.target.value ? [e.target.value as ZoneSecurite] : [] })
+                }
+              >
+                <option value="">Toutes (verte, jaune, rouge)</option>
+                {ZONES_SECURITE.map(z => (
+                  <option key={z} value={z}>
+                    {LIBELLE_ZONE_SECURITE[z]}
                   </option>
                 ))}
               </select>

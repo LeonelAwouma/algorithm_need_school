@@ -19,7 +19,7 @@ import type { FaitPrinceApplique } from '../../types/prince'
 import { LIBELLE_SITUATION } from '../data/situation-familiale'
 import { trierParPriorite } from '../analytics/diagnostic'
 import { LIBELLE_SOUS_SYSTEME, syntheseTerritoriale } from '../analytics/synthese'
-import { LIBELLE_CLASSEMENT, LIBELLE_NATURE, LIBELLE_STATUT_PROPOSITION } from '../simulation/libelles'
+import { LIBELLE_CLASSEMENT, LIBELLE_NATURE, LIBELLE_STATUT_PROPOSITION, LIBELLE_ZONE_SECURITE, ZONES_SECURITE } from '../simulation/libelles'
 import { libelleNiveauEnfants } from '../analytics/territory'
 import { MENTION_SIMULATION, diagnosticTerritorial, n, pct, pointsAttention, reductionDuDeficit } from '../analytics/narrative'
 import { AVERTISSEMENT_SCENARIO_ETENDU, LIBELLE_SCOPE } from '../simulation/scenarios'
@@ -183,6 +183,40 @@ export function construireRapport(input: ReportInput): DecisionReport {
         ]),
         ['Total', synthese.besoin, synthese.excedent, synthese.couvrable, synthese.restant, synthese.sallesManquantes, synthese.recrutementAPrevoir],
       ],
+    },
+  })
+
+  // 4 quater — Zones de sécurité : la zone pèse dans la priorité et règle les affectations en zone rouge.
+  const parZone = ZONES_SECURITE.map(z => {
+    const ecoles = diagnosticsFiltres.filter(d => (d.school.zoneSecurite ?? 'verte') === z)
+    return {
+      z,
+      ecoles: ecoles.length,
+      enDeficit: ecoles.filter(d => d.besoinTheorique > 0).length,
+      postesManquants: ecoles.reduce((s, d) => s + d.besoinTheorique, 0),
+      restants: resultat ? resultat.uncoveredPosts.filter(p => (p.priorite.zoneSecurite ?? 'verte') === z).length : null,
+    }
+  })
+  const sansZone = diagnosticsFiltres.filter(d => d.school.zoneSecurite === null).length
+  const rouge = parZone.find(p => p.z === 'rouge')!
+  sections.push({
+    titre: 'Zones de sécurité',
+    paragraphes: [
+      `Chaque école reçoit des points de sécurité selon sa zone (verte ${n(settings.priorite.pointsSecurite.verte)}, jaune ${n(settings.priorite.pointsSecurite.jaune)}, rouge ${n(settings.priorite.pointsSecurite.rouge)}), ajoutés à son poids de vulnérabilité : plus la zone est exposée, plus ses postes sont servis tôt.`,
+      settings.mobilite.regleZoneRouge
+        ? `Règle de la zone rouge : aucun poste n'y est imposé ni proposé hors vœux. ${n(rouge.ecoles)} école(s) en zone rouge sur ce périmètre, dont ${n(rouge.enDeficit)} en déficit${rouge.restants !== null ? ` ; ${n(rouge.restants)} poste(s) y restent à pourvoir par le volontariat, les primes de zone difficile ou le recrutement` : ''}.`
+        : 'La règle de la zone rouge est désactivée dans le référentiel : les postes en zone rouge sont traités comme les autres.',
+      ...(sansZone > 0 ? [`${n(sansZone)} école(s) sans zone renseignée sont comptées en zone verte.`] : []),
+    ],
+    tableau: {
+      entetes: ['Zone de sécurité', 'Écoles', 'En déficit', 'Postes manquants', ...(resultat ? ['Restant après le scénario'] : [])],
+      lignes: parZone.map(p => [
+        LIBELLE_ZONE_SECURITE[p.z],
+        n(p.ecoles),
+        n(p.enDeficit),
+        n(p.postesManquants),
+        ...(p.restants !== null ? [n(p.restants)] : []),
+      ]),
     },
   })
 

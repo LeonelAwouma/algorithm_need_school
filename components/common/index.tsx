@@ -22,6 +22,10 @@ import {
   ShieldAlert,
   Upload,
 } from 'lucide-react'
+import type { ZoneSecurite } from '@/types/education'
+import { libelleZoneSecurite } from '@/lib/simulation/libelles'
+
+const LIBELLE_COURT_ZONE_SECURITE: Record<ZoneSecurite, string> = { verte: 'Verte', jaune: 'Jaune', rouge: 'Rouge' }
 
 const nf = new Intl.NumberFormat('fr-FR')
 
@@ -45,6 +49,40 @@ export type Tone = 'neutral' | 'ok' | 'warn' | 'alert' | 'info'
 
 export function Pill({ tone = 'neutral', children }: { tone?: Tone; children: ReactNode }) {
   return <span className={`pill pill-${tone}`}>{children}</span>
+}
+
+/**
+ * Zone de sécurité d'une école : pastille verte, jaune ou rouge, toujours
+ * accompagnée de son libellé. L'infobulle rappelle les points de sécurité que le
+ * calcul ajoute au poids de vulnérabilité, et la règle propre à la zone rouge.
+ */
+export function ZoneSecuritePill({
+  zone,
+  points,
+  court = false,
+}: {
+  zone: ZoneSecurite | null
+  /** Points de sécurité retenus par le référentiel pour cette zone. */
+  points?: number
+  /** Affiche « Verte », « Jaune », « Rouge » au lieu de « Zone verte »… */
+  court?: boolean
+}) {
+  const effective = zone ?? 'verte'
+  const libelle = court ? LIBELLE_COURT_ZONE_SECURITE[effective] : libelleZoneSecurite(zone)
+  const details = [
+    points != null ? `${points} point(s) de sécurité dans le poids w` : null,
+    effective === 'rouge' ? 'aucun poste imposé ni proposé hors vœux' : null,
+    zone === null ? 'zone non renseignée, comptée en zone verte' : null,
+  ].filter(Boolean)
+  return (
+    <span
+      className={`zone-securite zone-securite-${effective}${zone === null ? ' zone-securite-defaut' : ''}`}
+      title={details.length > 0 ? `${libelleZoneSecurite(zone)} : ${details.join(' ; ')}` : undefined}
+    >
+      <span className="zone-securite-point" aria-hidden="true" />
+      {libelle}
+    </span>
+  )
 }
 
 export function Panel({

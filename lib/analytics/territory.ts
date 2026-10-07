@@ -14,6 +14,7 @@ import type {
   TerritorialSummary,
   TerritoryLevel,
   Zone,
+  ZoneSecurite,
 } from '../../types/education'
 import { agregerTotaux } from './diagnostic'
 
@@ -107,6 +108,8 @@ export function filtrerParTerritoire(
 export interface GlobalFilters {
   territoire: TerritorySelection
   zones: Zone[]
+  /** Zones de sécurité ; une école sans zone renseignée compte en zone verte, comme dans le calcul. */
+  zonesSecurite: ZoneSecurite[]
   typesEtab: string[]
   severites: SchoolSeverity[]
   /** `null` = indifférent, `true` = uniquement les écoles à classes multigrades. */
@@ -116,6 +119,7 @@ export interface GlobalFilters {
 export const FILTRES_VIDES: GlobalFilters = {
   territoire: SELECTION_NATIONALE,
   zones: [],
+  zonesSecurite: [],
   typesEtab: [],
   severites: [],
   multigradesUniquement: null,
@@ -127,6 +131,7 @@ export function aucunFiltreActif(f: GlobalFilters): boolean {
     !f.territoire.departement &&
     !f.territoire.commune &&
     f.zones.length === 0 &&
+    f.zonesSecurite.length === 0 &&
     f.typesEtab.length === 0 &&
     f.severites.length === 0 &&
     f.multigradesUniquement === null
@@ -137,6 +142,7 @@ export function aucunFiltreActif(f: GlobalFilters): boolean {
 export function appliquerFiltres(diagnostics: SchoolDiagnostic[], f: GlobalFilters): SchoolDiagnostic[] {
   let resultat = filtrerParTerritoire(diagnostics, f.territoire)
   if (f.zones.length > 0) resultat = resultat.filter(d => f.zones.includes(d.school.zone))
+  if (f.zonesSecurite.length > 0) resultat = resultat.filter(d => f.zonesSecurite.includes(d.school.zoneSecurite ?? 'verte'))
   if (f.typesEtab.length > 0) resultat = resultat.filter(d => f.typesEtab.includes(d.school.typeEtab))
   if (f.severites.length > 0) resultat = resultat.filter(d => f.severites.includes(d.severite))
   if (f.multigradesUniquement === true) resultat = resultat.filter(d => d.school.classesMultigrades > 0)

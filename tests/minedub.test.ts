@@ -132,7 +132,7 @@ function poste(extra: Partial<TeachingPost>): TeachingPost {
   return {
     id: 'P', schoolId: 'P', nomEtab: 'P', region: 'Centre', iaeb: '', departement: 'Mfoundi', commune: 'Yaoundé I', zone: 'urbaine', typeEtab: 'EP',
     sousSysteme: null, estStructure: false, classesMultigrades: 0, prioriteLocale: 0, deficitEcole: 1, elevesParEnseignantEtat: null,
-    priorite: { pointsAccessibilite: 5, pointsSecurite: 0, poids: 5, niveauDifficulte: 3, pointsBesoin: 0, indice: 5, zoneRouge: false },
+    priorite: { pointsAccessibilite: 5, pointsSecurite: 0, poids: 5, niveauDifficulte: 3, pointsBesoin: 0, indice: 5, zoneSecurite: null, zoneRouge: false },
     rang: 1, pourvu: false, ...extra,
   }
 }

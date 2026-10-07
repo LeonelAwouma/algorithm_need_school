@@ -18,7 +18,8 @@ import { exporterCSV } from '@/lib/reporting/export-csv'
 import { COLONNES_RECRUES, lireRecrues } from '@/lib/data/recrues'
 import { LIBELLE_ISSUE, LIBELLE_MOTIF, LIBELLE_NATURE, LIBELLE_STATUT_PROPOSITION, LIBELLE_STATUT_VOEU } from '@/lib/simulation/libelles'
 import { normalizeLabel } from '@/lib/data/normalize'
-import { DataTable, EmptyState, KpiCard, Notice, Panel, Pill, SearchField, fmt, type Colonne } from '../common'
+import { DataTable, EmptyState, KpiCard, Notice, Panel, Pill, SearchField, ZoneSecuritePill, fmt, type Colonne } from '../common'
+import type { ZoneSecurite } from '@/types/education'
 import type { PlanningStore } from '../usePlanningState'
 
 const nomDe = (c: Candidature) => `${c.teacher.nom} ${c.teacher.prenom}`.trim()
@@ -217,9 +218,9 @@ export function ArbitragePage({ store }: { store: PlanningStore }) {
 
   const nonCouvertes = useMemo(() => {
     if (!resultatComplet) return []
-    const parEcole = new Map<string, { nom: string; commune: string; indice: number; postes: number; zoneRouge: boolean }>()
+    const parEcole = new Map<string, { nom: string; commune: string; indice: number; postes: number; zoneSecurite: ZoneSecurite | null; zoneRouge: boolean }>()
     for (const p of resultatComplet.uncoveredPosts) {
-      const e = parEcole.get(p.schoolId) ?? { nom: p.nomEtab, commune: p.commune, indice: p.priorite.indice, postes: 0, zoneRouge: p.priorite.zoneRouge }
+      const e = parEcole.get(p.schoolId) ?? { nom: p.nomEtab, commune: p.commune, indice: p.priorite.indice, postes: 0, zoneSecurite: p.priorite.zoneSecurite, zoneRouge: p.priorite.zoneRouge }
       e.postes++
       parEcole.set(p.schoolId, e)
     }
@@ -380,7 +381,8 @@ export function ArbitragePage({ store }: { store: PlanningStore }) {
                 <li key={e.id} style={{ display: 'block' }}>
                   <strong>
                     {e.nom} — {e.commune}
-                  </strong>
+                  </strong>{' '}
+                  <ZoneSecuritePill zone={e.zoneSecurite} />
                   <span>
                     {' '}
                     · indice u = {fmt(e.indice)} · {fmt(e.postes)} poste(s) ouvert(s){e.zoneRouge ? ' · zone rouge : volontaires, primes ou recrutement uniquement' : ''}

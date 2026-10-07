@@ -14,7 +14,7 @@ import type { GeographicScope, OrdreExamenVoeux, ProposedAssignment, ProximityLe
 import { cloneSettings } from '@/lib/config/settings'
 import { reductionDuDeficit } from '@/lib/analytics/narrative'
 import { LIBELLE_PROXIMITE } from '@/lib/simulation/scoring'
-import { LIBELLE_NATURE, LIBELLE_STATUT_PROPOSITION } from '@/lib/simulation/libelles'
+import { LIBELLE_NATURE, LIBELLE_STATUT_PROPOSITION, rangZoneSecurite } from '@/lib/simulation/libelles'
 import {
   AVERTISSEMENT_SCENARIO_ETENDU,
   DESCRIPTION_SCOPE,
@@ -25,7 +25,7 @@ import {
 } from '@/lib/simulation/scenarios'
 import { AvantApres, CouvertureParScenario } from '../charts'
 import { FluxPanel } from './FluxPanel'
-import { DataTable, Delta, EmptyState, Notice, Panel, Pill, fmt, fmtPct, type Colonne } from '../common'
+import { DataTable, Delta, EmptyState, Notice, Panel, Pill, ZoneSecuritePill, fmt, fmtPct, type Colonne } from '../common'
 import type { PlanningStore } from '../usePlanningState'
 
 const NIVEAUX_PROXIMITE: ProximityLevel[] = ['meme_commune', 'meme_iaeb', 'meme_departement', 'meme_region', 'hors_region']
@@ -340,6 +340,9 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
     () => (filtre === 'toutes' ? resultat.assignments : resultat.assignments.filter(a => a.niveauProximite === filtre)),
     [resultat.assignments, filtre],
   )
+  /** Zone de sécurité de l'école de destination, portée par le poste pourvu. */
+  const postes = useMemo(() => new Map(resultat.postes.map(p => [p.id, p])), [resultat.postes])
+  const zoneDestination = (a: ProposedAssignment) => postes.get(a.postId)?.priorite.zoneSecurite ?? null
 
   const colonnes: Colonne<ProposedAssignment>[] = [
     {
@@ -357,6 +360,7 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
     },
     { cle: 'origine', entete: 'Origine', rendu: a => (<span>{a.nomEtabOrigine}<small>{a.communeOrigine}</small></span>), tri: a => a.nomEtabOrigine },
     { cle: 'destination', entete: 'Destination', rendu: a => (<span><strong>{a.nomEtabDestination}</strong><small>{a.communeDestination} · {a.departementDestination}</small></span>), tri: a => a.nomEtabDestination },
+    { cle: 'securite', entete: 'Sécurité (destination)', rendu: a => <ZoneSecuritePill zone={zoneDestination(a)} court />, tri: a => rangZoneSecurite(zoneDestination(a)) },
     {
       cle: 'nature',
       entete: 'Nature',

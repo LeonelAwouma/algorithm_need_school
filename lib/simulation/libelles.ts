@@ -1,7 +1,28 @@
 /** Libellés affichés des notions du référentiel, partagés par les pages, le rapport et les exports. */
 
-import type { ClassementEcole, MotifDemande } from '../../types/education'
+import type { ClassementEcole, MotifDemande, ZoneSecurite } from '../../types/education'
 import type { IssueCandidature, NatureMouvement, StatutProposition, StatutVoeu } from '../../types/simulation'
+
+export const LIBELLE_ZONE_SECURITE: Record<ZoneSecurite, string> = {
+  verte: 'Zone verte',
+  jaune: 'Zone jaune',
+  rouge: 'Zone rouge',
+}
+
+export const ZONES_SECURITE: ZoneSecurite[] = ['verte', 'jaune', 'rouge']
+
+/** Rang de tri d'une zone de sécurité : 1 verte, 2 jaune, 3 rouge (non renseignée = verte). */
+export function rangZoneSecurite(zone: ZoneSecurite | null): number {
+  return zone === 'rouge' ? 3 : zone === 'jaune' ? 2 : 1
+}
+
+/**
+ * Libellé de la zone de sécurité d'une école. Sans zone renseignée, le calcul la
+ * compte en zone verte (aucun point de sécurité) : le libellé le dit.
+ */
+export function libelleZoneSecurite(zone: ZoneSecurite | null): string {
+  return zone ? LIBELLE_ZONE_SECURITE[zone] : 'Zone verte (non renseignée)'
+}
 
 export const LIBELLE_CLASSEMENT: Record<ClassementEcole, string> = {
   necessiteuse: 'Nécessiteuse',

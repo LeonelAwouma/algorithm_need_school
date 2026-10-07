@@ -230,6 +230,7 @@ export function calculerPriorite(school: School, settings: EngineSettings, calcu
     niveauDifficulte: niveauDifficulte(poids, regles),
     pointsBesoin: beta,
     indice: poids + beta,
+    zoneSecurite: school.zoneSecurite,
     zoneRouge: school.zoneSecurite === 'rouge',
   }
 }

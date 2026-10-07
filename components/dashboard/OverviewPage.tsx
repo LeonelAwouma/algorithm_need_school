@@ -16,7 +16,8 @@ import { MENTION_SIMULATION, pointsAttention, reductionDuDeficit, syntheseTablea
 import { libelleNiveauEnfants } from '@/lib/analytics/territory'
 import { AVERTISSEMENT_SCENARIO_ETENDU, LIBELLE_SCOPE } from '@/lib/simulation/scenarios'
 import { AvantApres, Combo, CouvertureParScenario, Nuage, Repartition, type PointNuage } from '../charts'
-import { DataTable, EmptyState, KpiCard, Notice, Panel, Pill, fmt, fmtDec, fmtPct, type Colonne } from '../common'
+import { DataTable, EmptyState, KpiCard, Notice, Panel, Pill, ZoneSecuritePill, fmt, fmtDec, fmtPct, type Colonne } from '../common'
+import { LIBELLE_ZONE_SECURITE, ZONES_SECURITE } from '@/lib/simulation/libelles'
 import { LIBELLE_SEVERITE } from '../layout'
 import type { PlanningStore } from '../usePlanningState'
 import type { SchoolDiagnostic } from '@/types/education'
@@ -29,6 +30,90 @@ const ETAPES: { page: PageKey; titre: string; texte: string; Icone: typeof Uploa
   { page: 'simulations', titre: 'Simuler', texte: 'Tester des scénarios de redéploiement', Icone: FlaskConical },
   { page: 'reports', titre: 'Restituer', texte: 'Rapports et méthodologie', Icone: FileText },
 ]
+
+/**
+ * Écoles du périmètre par zone de sécurité (verte, jaune, rouge) : leur nombre,
+ * leur besoin et, quand un scénario est affiché, les postes qui restent à pourvoir.
+ * La zone pèse dans la priorité (points de sécurité du poids w) et, en rouge,
+ * interdit tout poste imposé ou proposé hors vœux.
+ */
+function ZonesSecuritePanel({ store }: { store: PlanningStore }) {
+  const { diagnosticsFiltres, resultatAffiche, settings, filtres, setFiltres, setPage } = store
+
+  const parZone = useMemo(
+    () =>
+      ZONES_SECURITE.map(zone => {
+        const ecoles = diagnosticsFiltres.filter(d => (d.school.zoneSecurite ?? 'verte') === zone)
+        return {
+          zone,
+          ecoles: ecoles.length,
+          nonRenseignees: zone === 'verte' ? ecoles.filter(d => d.school.zoneSecurite === null).length : 0,
+          enDeficit: ecoles.filter(d => d.besoinTheorique > 0).length,
+          postesManquants: ecoles.reduce((s, d) => s + d.besoinTheorique, 0),
+          restants: resultatAffiche
+            ? resultatAffiche.uncoveredPosts.filter(p => (p.priorite.zoneSecurite ?? 'verte') === zone).length
+            : null,
+        }
+      }),
+    [diagnosticsFiltres, resultatAffiche],
+  )
+
+  if (diagnosticsFiltres.length === 0) return null
+
+  return (
+    <Panel
+      kicker="Sécurité"
+      title="Écoles par zone de sécurité"
+      hint="Zone verte, jaune ou rouge, telle que déclarée dans le fichier des établissements. Elle entre dans la priorité des écoles et règle les affectations en zone rouge."
+    >
+      <div className="zones-securite-grille">
+        {parZone.map(z => (
+          <section key={z.zone} className="zone-securite-carte" data-zone={z.zone} aria-label={LIBELLE_ZONE_SECURITE[z.zone]}>
+            <ZoneSecuritePill zone={z.zone} />
+            <p className="zone-securite-chiffre">{fmt(z.ecoles)}</p>
+            <p className="hint" style={{ margin: 0 }}>
+              école(s){z.nonRenseignees > 0 ? `, dont ${fmt(z.nonRenseignees)} sans zone renseignée` : ''}
+            </p>
+            <dl>
+              <dt>En déficit</dt>
+              <dd>{fmt(z.enDeficit)}</dd>
+              <dt>Postes manquants</dt>
+              <dd>{fmt(z.postesManquants)}</dd>
+              {z.restants !== null && (
+                <>
+                  <dt>Restant après le scénario</dt>
+                  <dd>{fmt(z.restants)}</dd>
+                </>
+              )}
+              <dt>Points de sécurité (w)</dt>
+              <dd>+{fmt(settings.priorite.pointsSecurite[z.zone])}</dd>
+            </dl>
+            {z.zone === 'rouge' && (
+              <p className="zone-securite-regle">
+                {settings.mobilite.regleZoneRouge
+                  ? 'Aucun poste imposé ni proposé hors vœux : volontaires, primes ou recrutement uniquement.'
+                  : 'Règle de la zone rouge désactivée dans le référentiel.'}
+              </p>
+            )}
+            {z.ecoles > 0 && (
+              <button
+                type="button"
+                className="btn btn-sm"
+                style={{ marginTop: 10 }}
+                onClick={() => {
+                  setFiltres({ ...filtres, zonesSecurite: [z.zone] })
+                  setPage('schools')
+                }}
+              >
+                Voir ces écoles <ArrowRight size={13} aria-hidden="true" />
+              </button>
+            )}
+          </section>
+        ))}
+      </div>
+    </Panel>
+  )
+}
 
 export function OverviewPage({ store }: { store: PlanningStore }) {
   const {
@@ -352,6 +437,8 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
           )}
         </div>
       </Panel>
+
+      <ZonesSecuritePanel store={store} />
 
       <div className="grid-main">
         <Panel

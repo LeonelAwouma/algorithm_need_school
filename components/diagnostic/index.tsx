@@ -16,7 +16,8 @@ import { calculerFlux } from '@/lib/simulation/filter'
 import { Colonnes, Histogramme, construireClasses } from '../charts'
 import { CameroonMap, type IndicateurCarte, type StatsTerritoire } from '../maps/CameroonMap'
 import { FluxPanel } from '../simulations/FluxPanel'
-import { DataTable, EmptyState, Notice, Panel, SearchField, fmt, fmtDec, type Colonne } from '../common'
+import { DataTable, EmptyState, Notice, Panel, SearchField, ZoneSecuritePill, fmt, fmtDec, type Colonne } from '../common'
+import { rangZoneSecurite } from '@/lib/simulation/libelles'
 import { SeveritePill } from '../dashboard/OverviewPage'
 import type { PlanningStore } from '../usePlanningState'
 
@@ -391,6 +392,7 @@ export function TerritoriesPage({ store }: { store: PlanningStore }) {
                 ),
                 tri: d => d.school.nom,
               },
+              { cle: 'securite', entete: 'Sécurité', rendu: d => <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} court />, tri: d => rangZoneSecurite(d.school.zoneSecurite) },
               { cle: 'classes', entete: 'Classes', numerique: true, rendu: d => fmt(d.nbClasses), tri: d => d.nbClasses },
               { cle: 'ens', entete: 'Enseignants État', numerique: true, rendu: d => fmt(d.enseignantsEtat), tri: d => d.enseignantsEtat },
               { cle: 'besoin', entete: 'Déficit', numerique: true, rendu: d => fmt(d.besoinTheorique), tri: d => d.besoinTheorique },
@@ -439,6 +441,7 @@ export function PrioritySchoolsPage({ store }: { store: PlanningStore }) {
       ),
       tri: d => d.school.nom,
     },
+    { cle: 'securite', entete: 'Sécurité', rendu: d => <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} court />, tri: d => rangZoneSecurite(d.school.zoneSecurite) },
     { cle: 'classes', entete: 'Classes', numerique: true, rendu: d => fmt(d.nbClasses), tri: d => d.nbClasses },
     { cle: 'ens', entete: 'Enseignants État', numerique: true, rendu: d => fmt(d.enseignantsEtat), tri: d => d.enseignantsEtat },
     { cle: 'besoin', entete: 'Postes manquants', numerique: true, rendu: d => <strong>{fmt(d.besoinTheorique)}</strong>, tri: d => d.besoinTheorique },

@@ -14,9 +14,9 @@ import type { SchoolDiagnostic } from '@/types/education'
 import { NIVEAUX_PRIMAIRE } from '@/types/education'
 import { exporterCSV } from '@/lib/reporting/export-csv'
 import { LIBELLE_PROXIMITE } from '@/lib/simulation/scoring'
-import { DataTable, EmptyState, Notice, Panel, Pill, SearchField, fmt, fmtDec, fmtPct, type Colonne } from '../common'
+import { DataTable, EmptyState, Notice, Panel, Pill, SearchField, ZoneSecuritePill, fmt, fmtDec, fmtPct, type Colonne } from '../common'
 import { LIBELLE_SEVERITE, LIBELLE_ZONE } from '../layout'
-import { LIBELLE_CLASSEMENT } from '@/lib/simulation/libelles'
+import { LIBELLE_CLASSEMENT, libelleZoneSecurite, rangZoneSecurite } from '@/lib/simulation/libelles'
 import { SeveritePill } from '../dashboard/OverviewPage'
 import type { PlanningStore } from '../usePlanningState'
 
@@ -60,7 +60,8 @@ export function SchoolsPage({ store }: { store: PlanningStore }) {
       tri: d => d.school.nom,
     },
     { cle: 'territoire', entete: 'Territoire', rendu: d => (<span>{d.school.departement}<small>{d.school.region}</small></span>), tri: d => d.school.region },
-    { cle: 'zone', entete: 'Zone', rendu: d => LIBELLE_ZONE[d.school.zone], tri: d => d.school.zone },
+    { cle: 'zone', entete: 'Milieu', rendu: d => LIBELLE_ZONE[d.school.zone], tri: d => d.school.zone },
+    { cle: 'securite', entete: 'Sécurité', rendu: d => <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} court />, tri: d => rangZoneSecurite(d.school.zoneSecurite) },
     { cle: 'classes', entete: 'Classes', numerique: true, rendu: d => fmt(d.nbClasses), tri: d => d.nbClasses },
     { cle: 'eleves', entete: 'Élèves', numerique: true, rendu: d => fmt(d.school.effectifTotalEleves), tri: d => d.school.effectifTotalEleves ?? -1 },
     { cle: 'ens', entete: 'Enseignants État', numerique: true, rendu: d => fmt(d.enseignantsEtat), tri: d => d.enseignantsEtat },
@@ -81,9 +82,10 @@ export function SchoolsPage({ store }: { store: PlanningStore }) {
             onClick={() =>
               exporterCSV(
                 'etablissements.csv',
-                ['Code', 'Établissement', 'Région', 'Département', 'Commune', 'Zone', 'Classes', 'Élèves', "Enseignants État", 'Dotation D', 'Déficit', 'Excédent', 'Postes déclarés', 'Élèves par enseignant État', 'Situation'],
+                ['Code', 'Établissement', 'Région', 'Département', 'Commune', 'Zone', 'Zone de sécurité', 'Classes', 'Élèves', "Enseignants État", 'Dotation D', 'Déficit', 'Excédent', 'Postes déclarés', 'Élèves par enseignant État', 'Situation'],
                 lignes.map(d => [
                   d.school.id, d.school.nom, d.school.region, d.school.departement, d.school.commune, LIBELLE_ZONE[d.school.zone],
+                  libelleZoneSecurite(d.school.zoneSecurite),
                   d.nbClasses, d.school.effectifTotalEleves, d.enseignantsEtat, d.enseignantsMinimumAConserver,
                   d.besoinTheorique, d.excedentTheorique, d.postesDeclares, d.elevesParEnseignantEtat, LIBELLE_SEVERITE[d.severite],
                 ]),
@@ -148,6 +150,7 @@ export function SchoolDetail({
           <div className="topbar-actions">
             <SeveritePill severite={d.severite} />
             <Pill tone="neutral">{LIBELLE_ZONE[d.school.zone]}</Pill>
+            <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} />
             {d.school.classesMultigrades > 0 && <Pill tone="warn">{d.school.classesMultigrades} classe(s) multigrade(s)</Pill>}
             {d.school.prioriteLocale > 0 && <Pill tone="info">Priorité locale {d.school.prioriteLocale}</Pill>}
           </div>

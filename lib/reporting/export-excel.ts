@@ -14,7 +14,16 @@ import type { SchoolDiagnostic, TerritorialSummary } from '../../types/education
 import type { DataQualityReport } from '../../types/data-quality'
 import type { DecisionReport, DiagnosticResult, SimulationResult } from '../../types/simulation'
 import { LIBELLE_PROXIMITE } from '../simulation/scoring'
-import { LIBELLE_CLASSEMENT, LIBELLE_ISSUE, LIBELLE_NATURE, LIBELLE_STATUT_PROPOSITION, LIBELLE_STATUT_VOEU } from '../simulation/libelles'
+import {
+  LIBELLE_CLASSEMENT,
+  LIBELLE_ISSUE,
+  LIBELLE_NATURE,
+  LIBELLE_STATUT_PROPOSITION,
+  LIBELLE_STATUT_VOEU,
+  LIBELLE_ZONE_SECURITE,
+  ZONES_SECURITE,
+  libelleZoneSecurite,
+} from '../simulation/libelles'
 import { LIBELLE_SOUS_SYSTEME } from '../analytics/synthese'
 import type { CellValue } from './export-csv'
 
@@ -84,6 +93,10 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
       ['Établissements analysés', t.ecolesAnalysees],
       ['Établissements en déficit', t.ecolesEnDeficit],
       ['Établissements avec excédent', t.ecolesAvecExcedent],
+      ...ZONES_SECURITE.map(z => [
+        `Établissements en ${LIBELLE_ZONE_SECURITE[z].toLowerCase()}`,
+        diagnostic.schools.filter(d => (d.school.zoneSecurite ?? 'verte') === z).length,
+      ]),
       ['Classes', t.classes],
       ["Enseignants payés par l'État", t.enseignantsEtat],
       ['Postes nécessaires (besoin calculé)', t.postesNecessaires],
@@ -100,7 +113,7 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
   ajouter(
     'Diagnostic_Ecoles',
     [
-      'Code', 'Établissement', 'Région', 'Département', 'Commune', 'Zone', 'Type',
+      'Code', 'Établissement', 'Région', 'Département', 'Commune', 'Zone', 'Zone de sécurité', 'Type',
       'Sous-système', 'Classes', 'Élèves N', 'Maîtres en poste', 'Départs connus', 'Maîtres retenus E',
       'Norme P', 'Minimum pédagogique m', 'Dotation D', 'BMAX', 'Cible K',
       'Besoin b', 'Excédent x', 'Surnombre a', 'Salles manquantes s', 'Classement',
@@ -109,7 +122,7 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
       'Méthode', 'Situation',
     ],
     diagnostic.schools.map(d => [
-      d.school.id, d.school.nom, d.school.region, d.school.departement, d.school.commune, d.school.zoneBrute, d.school.typeEtab,
+      d.school.id, d.school.nom, d.school.region, d.school.departement, d.school.commune, d.school.zoneBrute, libelleZoneSecurite(d.school.zoneSecurite), d.school.typeEtab,
       d.school.sousSysteme ?? '', d.nbClasses, d.calcul.eleves ?? '', d.calcul.enseignantsEnPoste, d.calcul.departsConnus, d.calcul.enseignantsRetenus,
       d.calcul.norme, d.calcul.minimumPedagogique, d.calcul.dotation, d.calcul.bmax ?? '', d.calcul.cible,
       d.calcul.besoin, d.calcul.excedent, d.calcul.surnombre, d.calcul.sallesManquantes, LIBELLE_CLASSEMENT[d.classement],
@@ -117,6 +130,26 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
       d.priorite.pointsAccessibilite, d.priorite.pointsSecurite, d.priorite.poids, d.priorite.niveauDifficulte, d.priorite.pointsBesoin, d.priorite.indice,
       d.calcul.methode === 'norme_eleves' ? 'Norme élèves' : 'Repli : une classe = un maître', SEVERITE_LABEL[d.severite],
     ]),
+  )
+
+  ajouter(
+    'Zones_Securite',
+    ['Zone de sécurité', 'Écoles', 'Dont zone non renseignée', 'En déficit', 'Postes manquants', 'Points de sécurité σ', 'Restant après simulation', 'Règle appliquée'],
+    ZONES_SECURITE.map(z => {
+      const ecoles = diagnostic.schools.filter(d => (d.school.zoneSecurite ?? 'verte') === z)
+      return [
+        LIBELLE_ZONE_SECURITE[z],
+        ecoles.length,
+        z === 'verte' ? ecoles.filter(d => d.school.zoneSecurite === null).length : 0,
+        ecoles.filter(d => d.besoinTheorique > 0).length,
+        ecoles.reduce((s, d) => s + d.besoinTheorique, 0),
+        diagnostic.settings.priorite.pointsSecurite[z],
+        resultat ? resultat.uncoveredPosts.filter(p => (p.priorite.zoneSecurite ?? 'verte') === z).length : 'Aucune simulation',
+        z === 'rouge' && diagnostic.settings.mobilite.regleZoneRouge
+          ? 'Aucun poste imposé ni proposé hors vœux : volontaires, primes ou recrutement'
+          : 'Affectations ordinaires',
+      ]
+    }),
   )
 
   ajouter(
@@ -169,10 +202,10 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
 
     ajouter(
       'Postes_Classes',
-      ['Rang', 'Poste', 'Code', 'Établissement ou structure', 'Commune', 'Département', 'Région', 'Sous-système', 'Poids w', 'Niveau', 'β', 'Indice u', 'Zone rouge', 'Pourvu'],
+      ['Rang', 'Poste', 'Code', 'Établissement ou structure', 'Commune', 'Département', 'Région', 'Sous-système', 'Poids w', 'Niveau', 'β', 'Indice u', 'Zone de sécurité', 'Pourvu'],
       resultat.postes.map(p => [
         p.rang, p.id, p.schoolId, p.nomEtab, p.commune, p.departement, p.region, p.sousSysteme ?? '',
-        p.priorite.poids, p.priorite.niveauDifficulte, p.priorite.pointsBesoin, p.priorite.indice, p.priorite.zoneRouge ? 'Oui' : 'Non',
+        p.priorite.poids, p.priorite.niveauDifficulte, p.priorite.pointsBesoin, p.priorite.indice, libelleZoneSecurite(p.priorite.zoneSecurite),
         p.pourvu ? 'Oui' : 'Non',
       ]),
     )
@@ -312,8 +345,8 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
 
     ajouter(
       'Postes_Non_Pourvus',
-      ['Poste', 'Code établissement', 'Établissement', 'Commune', 'Département', 'Région', 'Zone', 'Classes multigrades'],
-      resultat.uncoveredPosts.map(p => [p.id, p.schoolId, p.nomEtab, p.commune, p.departement, p.region, p.zone, p.classesMultigrades]),
+      ['Poste', 'Code établissement', 'Établissement', 'Commune', 'Département', 'Région', 'Zone', 'Zone de sécurité', 'Classes multigrades'],
+      resultat.uncoveredPosts.map(p => [p.id, p.schoolId, p.nomEtab, p.commune, p.departement, p.region, p.zone, libelleZoneSecurite(p.priorite.zoneSecurite), p.classesMultigrades]),
     )
 
     ajouter(

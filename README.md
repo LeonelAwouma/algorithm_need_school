@@ -514,7 +514,7 @@ rang_tirage
 
 ## Nouveaux recrutés
 
-Fichier facultatif, importé dans la page « Nouveaux recrutés » : `matricule`, `nom`, `note`, `sous_systeme`, `sexe`, `commune_residence`, `choix_1` à `choix_3`. Jeu d’essai : `data/exemples/jeu-test-nouveaux-recrutes.xlsx`.
+Fichier facultatif, importé dans la page « Nouveaux recrutés » : `matricule`, `nom`, `note`, `sous_systeme`, `sexe`, `commune_residence`, `choix_1` à `choix_3`. Aucun jeu d’essai n’est livré pour ce fichier : `tests/exemples.test.ts` en construit un à partir du jeu MINEDUB.
 
 ---
 
