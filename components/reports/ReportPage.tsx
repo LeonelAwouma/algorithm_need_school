@@ -220,16 +220,7 @@ export function ReportPage({ store }: { store: PlanningStore }) {
         {/* Page de garde : identifie sans ambiguïté ce qui a été calculé, sur quel
             périmètre et sous quelles hypothèses de scénario. */}
         <header className="report-cover">
-          <div className="report-logos">
-            <img className="report-logo" src="/logo-full.png" alt="Logo AlgoPlanR" width={640} height={424} />
-            <img
-              className="report-logo-partner"
-              src="/logo-parec.png"
-              alt="Logo du PAREC — Programme d’appui à la réforme de l’éducation au Cameroun"
-              width={360}
-              height={360}
-            />
-          </div>
+          <img className="report-logo" src="/logo-full.png" alt="Logo AlgoPlanR" width={640} height={424} />
           <p className="report-eyebrow">Rapport d’affectation des enseignants</p>
           <h1 className="report-title">{rapport.perimetre}</h1>
           <p className="report-subtitle">

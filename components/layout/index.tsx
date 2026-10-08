@@ -173,14 +173,6 @@ export function Topbar({
           <span className="brand-name">ALGOPLANR</span>
           <span className="brand-sub">Affectation des enseignants</span>
         </span>
-        <img
-          className="brand-partner"
-          src="/logo-parec.png"
-          alt="PAREC — Programme d’appui à la réforme de l’éducation au Cameroun"
-          title="PAREC — Programme d’appui à la réforme de l’éducation au Cameroun"
-          width={42}
-          height={42}
-        />
       </div>
 
       <dl className="context">

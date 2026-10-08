@@ -2,11 +2,7 @@
 
 <p align="center">
   <img src="public/logo-full.png" alt="AlgoPlanR" height="120" />
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="public/logo-parec.png" alt="PAREC — Programme d’appui à la réforme de l’éducation au Cameroun" height="120" />
 </p>
-
-<p align="center"><em>Avec le soutien du PAREC — Programme d’appui à la réforme de l’éducation au Cameroun</em></p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-active%20development-blue.svg)](#état-du-projet)

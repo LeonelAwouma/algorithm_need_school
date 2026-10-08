@@ -206,13 +206,6 @@ export function ImportWizard({ store }: { store: PlanningStore }) {
               besoins de chaque école et simule des scénarios de redéploiement.
             </p>
           </div>
-          <figure className="welcome-partner">
-            <img src="/logo-parec.png" alt="" width={360} height={360} />
-            <figcaption>
-              Avec le soutien du <strong>PAREC</strong>
-              <span>Programme d’appui à la réforme de l’éducation au Cameroun</span>
-            </figcaption>
-          </figure>
         </section>
       )}
 

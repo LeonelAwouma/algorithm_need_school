@@ -30,20 +30,8 @@ export function EcranConnexion({ acces }: { acces: Acces }) {
   return (
     <main className="login-screen">
       <div className="login-card">
-        <div className="login-logos">
-          <img className="login-logo" src="/logo-full.png" alt="AlgoPlanR" width={640} height={424} />
-          <img
-            className="login-partner"
-            src="/logo-parec.png"
-            alt="PAREC — Programme d’appui à la réforme de l’éducation au Cameroun"
-            width={360}
-            height={360}
-          />
-        </div>
-        <p className="login-tagline">
-          Affectation des enseignants
-          <span>Avec le soutien du Programme d’appui à la réforme de l’éducation au Cameroun (PAREC)</span>
-        </p>
+        <img className="login-logo" src="/logo-full.png" alt="AlgoPlanR" width={640} height={424} />
+        <p className="login-tagline">Affectation des enseignants</p>
 
         {registre === null ? (
           <p className="hint">Ouverture…</p>

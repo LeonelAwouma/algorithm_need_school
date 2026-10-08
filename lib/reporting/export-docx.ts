@@ -114,38 +114,24 @@ export interface DocxExportInput {
 /** Construit le document Word et renvoie ses octets. */
 export async function construireRapportDocx(input: DocxExportInput): Promise<Blob> {
   const { rapport, scenarioNom, donneesDemonstration } = input
-  const [logo, logoParec] = await Promise.all([chargerLogo('/logo-full.png'), chargerLogo('/logo-parec.png')])
-
-  // Page de garde : logo de l'application, puis celui du PAREC qui soutient le projet.
-  const logos: (ImageRun | TextRun)[] = []
-  if (logo) {
-    logos.push(
-      new ImageRun({
-        data: logo,
-        type: 'png',
-        transformation: { width: 128, height: 85 },
-        altText: { name: 'AlgoPlanR', description: 'Logo AlgoPlanR' },
-      }),
-    )
-  }
-  if (logoParec) {
-    if (logos.length > 0) logos.push(new TextRun({ text: '      ' }))
-    logos.push(
-      new ImageRun({
-        data: logoParec,
-        type: 'png',
-        transformation: { width: 85, height: 85 },
-        altText: {
-          name: 'PAREC',
-          description: 'Logo du PAREC — Programme d’appui à la réforme de l’éducation au Cameroun',
-        },
-      }),
-    )
-  }
+  const logo = await chargerLogo('/logo-full.png')
 
   const garde: (Paragraph | Table)[] = []
-  if (logos.length > 0) {
-    garde.push(new Paragraph({ alignment: AlignmentType.RIGHT, spacing: { after: 120 }, children: logos }))
+  if (logo) {
+    garde.push(
+      new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        spacing: { after: 120 },
+        children: [
+          new ImageRun({
+            data: logo,
+            type: 'png',
+            transformation: { width: 128, height: 85 },
+            altText: { name: 'AlgoPlanR', description: 'Logo AlgoPlanR' },
+          }),
+        ],
+      }),
+    )
   }
   garde.push(
     new Paragraph({
