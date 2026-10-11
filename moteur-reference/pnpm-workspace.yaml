@@ -1,0 +1,2 @@
+# Paquet autonome : ses dépendances ne sont pas partagées avec frontend/.
+packages: []

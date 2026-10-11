@@ -4,38 +4,25 @@
  * Le document est produit à partir du même objet que la page affiche. Ces tests
  * vérifient qu'il est bien formé et qu'il contient réellement le contenu du
  * rapport — titres de sections, tableaux et mentions obligatoires.
+ *
+ * Le rapport testé est celui que le serveur de référence produit pour le jeu de
+ * démonstration (tests/donnees/rapport-demonstration.json, régénéré par
+ * `pnpm --dir moteur-reference fixtures`).
  */
 
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
+import { readFileSync } from 'node:fs'
+import * as path from 'node:path'
 import { gunzipSync, inflateRawSync } from 'node:zlib'
 
-import { runDiagnostic } from '../lib/analytics/diagnostic'
-import { construireArbreTerritorial } from '../lib/analytics/territory'
-import { DEFAULT_SETTINGS } from '../lib/config/settings'
-import { construireRapport } from '../lib/reporting/report'
 import { construireRapportDocx } from '../src/contextes/rapports/application/exports/export-docx'
-import type { DecisionReport } from '../types/simulation'
-import { ecole } from './fixtures'
+import type { DecisionReport } from '../src/shared/api/contrat'
 
+/** Rapport national du jeu de démonstration (compilé dans .test-build/tests, d'où les deux niveaux). */
 function rapportDeTest(): DecisionReport {
-  const schools = [
-    ecole({ id: 'A', nom: 'EP Alpha', nbClasses: 4, nbEnseignantsEtat: 6 }),
-    ecole({ id: 'B', nom: 'EP Beta', nbClasses: 6, nbEnseignantsEtat: 3 }),
-  ]
-  const diagnostic = runDiagnostic(schools, DEFAULT_SETTINGS)
-  return construireRapport({
-    diagnostic,
-    diagnosticsFiltres: diagnostic.schools,
-    arbre: construireArbreTerritorial(diagnostic.schools),
-    qualite: null,
-    resultat: null,
-    comparaison: [],
-    perimetre: 'Cameroun',
-    settings: DEFAULT_SETTINGS,
-    nbEnseignantsLus: 9,
-    donneesDemonstration: false,
-  })
+  const fichier = path.resolve(__dirname, '..', '..', 'tests', 'donnees', 'rapport-demonstration.json')
+  return JSON.parse(readFileSync(fichier, 'utf8')) as DecisionReport
 }
 
 /** Extrait `word/document.xml` de l'archive .docx, sans dépendance externe. */

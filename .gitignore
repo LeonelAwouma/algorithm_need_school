@@ -18,3 +18,7 @@ node_modules
 out/
 dist/
 .test-build/
+.build-scripts/
+
+# Données factices générées par moteur-reference (pnpm fixtures)
+frontend/public/donnees-factices/

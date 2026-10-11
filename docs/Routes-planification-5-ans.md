@@ -93,7 +93,7 @@ Le quota est d’abord **calculé**, puis éventuellement **ajusté** par l’ad
 | Méthode | Route | Rôle |
 |---|---|---|
 | `GET` | `jeux/{jeu}/quotas/` | Quotas calculés et retenus par année, territoire et sous-système. |
-| `PUT` | `jeux/{jeu}/quotas/{annee}/{codeTerritoire}/` | Ajustement administratif : valeur retenue et motif obligatoire. |
+| `PUT` | `jeux/{jeu}/quotas/{annee}/{codeTerritoire}/` | Ajustement administratif : sous-système concerné, valeur retenue et motif obligatoire. |
 | `POST` | `jeux/{jeu}/quotas/valider/` | Valide (et fige) les quotas d’une année. |
 | `GET` | `jeux/{jeu}/quotas/historique/` | Calculs, ajustements et validations successifs. |
 

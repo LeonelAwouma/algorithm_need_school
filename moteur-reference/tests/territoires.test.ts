@@ -6,6 +6,7 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
 import { existsSync, readFileSync } from 'node:fs'
+import * as path from 'node:path'
 
 import { runDiagnostic } from '../lib/analytics/diagnostic'
 import { DEFAULT_SETTINGS } from '../lib/config/settings'
@@ -23,6 +24,9 @@ import {
   type GeoFeatureCollection,
 } from '../lib/geography/cameroon'
 import { ecole, enseignantsDe } from './fixtures'
+
+/** Fonds de carte servis par l'interface (compilé dans .test-build/tests, d'où les trois niveaux). */
+const DOSSIER_GEO = path.resolve(__dirname, '..', '..', '..', 'frontend', 'public', 'geo')
 
 // --- Rapprochement des libellés -------------------------------------------
 
@@ -52,7 +56,7 @@ test('La tolérance ne confond pas deux territoires réellement différents', ()
 })
 
 test('Le fond de carte des régions, quand il est installé, couvre les dix régions', () => {
-  const chemin = 'public/geo/cameroun-regions.geojson'
+  const chemin = path.join(DOSSIER_GEO, 'cameroun-regions.geojson')
   if (!existsSync(chemin)) return // fond de carte optionnel : rien à vérifier
 
   const geo = JSON.parse(readFileSync(chemin, 'utf8')) as GeoFeatureCollection
@@ -72,7 +76,7 @@ test('Le fond de carte des régions, quand il est installé, couvre les dix rég
 })
 
 test('Le fond de carte des départements, quand il est installé, est exploitable', () => {
-  const chemin = 'public/geo/cameroun-departements.geojson'
+  const chemin = path.join(DOSSIER_GEO, 'cameroun-departements.geojson')
   if (!existsSync(chemin)) return
 
   const geo = JSON.parse(readFileSync(chemin, 'utf8')) as GeoFeatureCollection
@@ -106,7 +110,7 @@ test('Un libellé encodé deux fois est réparé, un libellé sain est laissé i
 })
 
 test('Le fond de carte des arrondissements, quand il est installé, est exploitable', () => {
-  const chemin = 'public/geo/cameroun-arrondissements.geojson'
+  const chemin = path.join(DOSSIER_GEO, 'cameroun-arrondissements.geojson')
   if (!existsSync(chemin)) return
 
   const geo = JSON.parse(readFileSync(chemin, 'utf8')) as GeoFeatureCollection

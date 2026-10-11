@@ -1,0 +1,16 @@
+{
+  // Générateur des données factices : il est compilé avec le contrat de l'API du
+  // frontend (types seulement), pour que chaque réponse produite y soit conforme.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "outDir": ".build-scripts"
+  },
+  "include": [
+    "lib/**/*.ts",
+    "types/**/*.ts",
+    "scripts/**/*.ts",
+    "../frontend/src/shared/api/contrat/**/*.ts",
+    "../frontend/src/mocks/format.ts"
+  ]
+}

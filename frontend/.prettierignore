@@ -12,3 +12,7 @@ AGENTS.md
 # Données volumineuses et fichiers fournis par des outils tiers
 public/geo/
 public/mockServiceWorker.js
+
+# Données générées par moteur-reference (pnpm fixtures)
+public/donnees-factices/
+tests/donnees/

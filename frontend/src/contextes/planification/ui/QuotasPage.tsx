@@ -139,7 +139,7 @@ export function QuotasPage() {
               {
                 annee: ajuste.annee,
                 territoire: ajuste.codeTerritoire,
-                corps: { retenu, motif, auteur: auteur.trim() },
+                corps: { sousSysteme: ajuste.sousSysteme, retenu, motif, auteur: auteur.trim() },
               },
               { onSuccess: () => setAjuste(null) },
             )

@@ -246,7 +246,12 @@ export interface QuotaRecrutement {
   valideLe: string | null
 }
 
+/**
+ * Ajustement d'un quota. Un même territoire porte un quota par sous-système :
+ * le corps précise lequel.
+ */
 export interface CorpsAjustementQuota {
+  sousSysteme: SousSysteme | 'non_renseigne'
   retenu: number
   motif: string
   auteur: string

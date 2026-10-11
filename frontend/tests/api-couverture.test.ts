@@ -108,7 +108,12 @@ describe('appels des fonctions d’infrastructure', () => {
   it('encode le code territorial d’un quota, qui contient des barres obliques', async () => {
     const { requetes, retablir } = enregistrer()
     retablirTransport = retablir
-    await ajusterQuota('7', 'N+2', 'Centre/Mfoundi', { retenu: 12, motif: 'Arbitrage budgétaire', auteur: 'DRH' })
+    await ajusterQuota('7', 'N+2', 'Centre/Mfoundi', {
+      sousSysteme: 'francophone',
+      retenu: 12,
+      motif: 'Arbitrage budgétaire',
+      auteur: 'DRH',
+    })
     assert.equal(requetes[0].chemin, 'jeux/7/quotas/N%2B2/Centre%2FMfoundi/')
   })
 })

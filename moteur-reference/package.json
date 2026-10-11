@@ -1,0 +1,19 @@
+{
+  "name": "algoplanr-moteur-reference",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Moteurs TypeScript d’AlgoPlanR conservés comme référence chiffrée du portage Python (temporaire).",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.scripts.json --noEmit",
+    "test": "node -e \"require('fs').rmSync('.test-build',{recursive:true,force:true})\" && tsc && node --test \".test-build/tests/*.test.js\"",
+    "fixtures": "tsc -p tsconfig.scripts.json && node .build-scripts/moteur-reference/scripts/generer-fixtures.js"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "5.7.3"
+  }
+}
