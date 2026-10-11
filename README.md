@@ -5,7 +5,7 @@
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-active%20development-blue.svg)](#état-du-projet)
+[![Status](<https://img.shields.io/badge/status-active%20development-blue.svg>)](#état-du-projet)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](#contribuer)
 
 **Planification des enseignants** est une application open source de simulation et d’aide à la décision pour l’affectation séquentielle des enseignants du primaire public.
@@ -278,19 +278,19 @@ Après chaque simulation, onze contrôles sont vérifiés : unicité de l’ense
 
 La logique du moteur Python (`app_affectation_enseignants.py`) est intégrée, avec ses corrections :
 
-| Élément du script | Dans l’application |
-|---|---|
-| Colonnes officielles (`Identifiant_Ecole`, `Salles_Simple_Flux`, `Circonscription_IAEB`, `Age`, `Motif_Bonification`…) | reconnues telles quelles ; jeu d’essai `data/exemples/format-minedub-*.xlsx` |
-| Minimum pédagogique selon `Classes_Multigrades` | école par école : 6 maîtres sans multigrade, 3 en multigrade, entre les deux selon le nombre de classes multigrades |
-| Barème individuel C1 à C5 | repris ; C1 = ancienneté + Z plafonné à 10 (le script multipliait l’ancienneté par max(10 ; 2 n1 + n2)), C2 = points A du référentiel |
-| Score d’appariement Z1 à Z4 et ajustements | repris ; choisit le maître du redéploiement obligatoire, et peut classer les candidats en variante |
-| Phase 1 « vœux » gloutonne, poste par poste | remplacée par l’acceptation différée : le résultat ne dépend plus de l’ordre des postes et respecte l’ordre des vœux |
-| Phases IAEB, département, extension | passes successives du redéploiement obligatoire, de la commune au niveau central |
-| Poids `Wp = 0,3 α + 0,7 σ` | w = α + σ (coefficients paramétrables) : avec 0,3 et 0,7, aucune école n’atteignait le seuil de 30 points du niveau de difficulté 1 |
-| Accessibilité rural = 15 | rural = 10 comme au référentiel ; semi-urbain ajouté, paramétrable |
-| Effet de Prince réservé aux enseignants du vivier, mot de passe en clair | décision du DRH sans contrôle de l’algorithme, réservée au rôle DRH ; import d’un fichier de décisions ajouté |
-| Projections N à N+3 | reprises ; retraites comptées sur tous les enseignants (et non le seul vivier), attrition appliquée au territoire et non arrondie école par école |
-| Note ministérielle et audit par IA générative (Gemini) | non repris : ils enverraient les données hors du poste |
+| Élément du script                                                                                                               | Dans l’application                                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Colonnes officielles (`Identifiant_Ecole`, `Salles_Simple_Flux`, `Circonscription_IAEB`, `Age`, `Motif_Bonification`…) | reconnues telles quelles ; jeu d’essai`data/exemples/format-minedub-*.xlsx`                                                                        |
+| Minimum pédagogique selon`Classes_Multigrades`                                                                                 | école par école : 6 maîtres sans multigrade, 3 en multigrade, entre les deux selon le nombre de classes multigrades                                |
+| Barème individuel C1 à C5                                                                                                       | repris ; C1 = ancienneté + Z plafonné à 10 (le script multipliait l’ancienneté par max(10 ; 2 n1 + n2)), C2 = points A du référentiel          |
+| Score d’appariement Z1 à Z4 et ajustements                                                                                      | repris ; choisit le maître du redéploiement obligatoire, et peut classer les candidats en variante                                                  |
+| Phase 1 « vœux » gloutonne, poste par poste                                                                                    | remplacée par l’acceptation différée : le résultat ne dépend plus de l’ordre des postes et respecte l’ordre des vœux                         |
+| Phases IAEB, département, extension                                                                                              | passes successives du redéploiement obligatoire, de la commune au niveau central                                                                     |
+| Poids`Wp = 0,3 α + 0,7 σ`                                                                                                     | w = α + σ (coefficients paramétrables) : avec 0,3 et 0,7, aucune école n’atteignait le seuil de 30 points du niveau de difficulté 1             |
+| Accessibilité rural = 15                                                                                                         | rural = 10 comme au référentiel ; semi-urbain ajouté, paramétrable                                                                                |
+| Effet de Prince réservé aux enseignants du vivier, mot de passe en clair                                                        | décision du DRH sans contrôle de l’algorithme, réservée au rôle DRH ; import d’un fichier de décisions ajouté                                |
+| Projections N à N+3                                                                                                              | reprises ; retraites comptées sur tous les enseignants (et non le seul vivier), attrition appliquée au territoire et non arrondie école par école |
+| Note ministérielle et audit par IA générative (Gemini)                                                                         | non repris : ils enverraient les données hors du poste                                                                                               |
 
 ### Ce qui n’est pas calculé
 
@@ -302,15 +302,15 @@ Les taux de stabilité, de rotation et d’intégration exigent un historique pl
 
 L’application est en cours de séparation en deux parties : une **interface** (Next.js) et un **serveur** (Django, en préparation), qui porte toute la logique de calcul et une base de données persistante. Le plan est décrit dans `docs/Plan-backend-Django-DDD.docx` ; les routes de l’API dans `docs/Routes-planification-5-ans.md`.
 
-| Technologie            | Usage                                                     |
-| ---------------------- | --------------------------------------------------------- |
-| Next.js 16, React 19   | Interface, compilée en site statique (`output: 'export'`) |
-| TypeScript (strict)    | Langage de l’interface et des moteurs de référence        |
-| TanStack Query         | Lectures et écritures auprès de l’API, cache, invalidations |
-| Tailwind CSS           | Styles                                                    |
-| `docx`, SheetJS (`xlsx`) | Exports Word et Excel, produits dans l’interface        |
-| MSW                    | Données factices en développement (jamais livrées)        |
-| Electron               | Application de bureau, qui sert l’interface compilée      |
+| Technologie                  | Usage                                                          |
+| ---------------------------- | -------------------------------------------------------------- |
+| Next.js 16, React 19         | Interface, compilée en site statique (`output: 'export'`)   |
+| TypeScript (strict)          | Langage de l’interface et des moteurs de référence          |
+| TanStack Query               | Lectures et écritures auprès de l’API, cache, invalidations |
+| Tailwind CSS                 | Styles                                                         |
+| `docx`, SheetJS (`xlsx`) | Exports Word et Excel, produits dans l’interface              |
+| MSW                          | Données factices en développement (jamais livrées)          |
+| Electron                     | Application de bureau, qui sert l’interface compilée         |
 
 > **Important.** L’interface n’appelle plus que l’API : sans serveur, chaque page affiche « Serveur AlgoPlanR injoignable ». **Aucune version de l’application de bureau ne doit être publiée avant la livraison du backend.** En attendant, on développe avec les données factices (voir plus bas).
 
