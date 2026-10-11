@@ -21,6 +21,15 @@ export interface EtatMiseAJour {
 }
 
 export interface ApiBureau {
+  /**
+   * Accès au backend lancé par l'application de bureau : adresse locale (port
+   * tiré au démarrage) et jeton à joindre à chaque requête. Absent tant
+   * qu'Electron ne démarre pas le backend.
+   */
+  api?: {
+    baseUrl: string
+    jeton: string
+  }
   /** Stockage durable sur fichier, limité aux clés prévues (registre des accès). */
   stockage: {
     lire: (cle: string) => Promise<unknown>
