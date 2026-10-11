@@ -19,7 +19,8 @@ import { runSimulation } from '../lib/simulation/engine'
 import { tousInvariantsOk } from '../lib/simulation/invariants'
 import { scenarioGeographique } from '../lib/simulation/scenarios'
 
-const DOSSIER = path.resolve(__dirname, '..', '..', 'data', 'exemples')
+// Compilé dans frontend/.test-build/tests : les jeux d'essai sont à la racine du dépôt.
+const DOSSIER = path.resolve(__dirname, '..', '..', '..', 'data', 'exemples')
 
 function lignes(fichier: string): unknown[][] {
   const wb = XLSX.readFile(path.join(DOSSIER, fichier))

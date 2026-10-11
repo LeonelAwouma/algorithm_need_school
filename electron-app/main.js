@@ -32,11 +32,11 @@ const MIME_TYPES = {
   '.map': 'application/json; charset=utf-8',
 }
 
-/** Dossier contenant l'export statique : à côté de l'exécutable une fois empaqueté, sous electron/.. en développement. */
+/** Dossier contenant l'export statique : à côté de l'exécutable une fois empaqueté, sous ../frontend en développement. */
 function resolveStaticDir() {
   return app.isPackaged
     ? path.join(process.resourcesPath, 'out')
-    : path.join(__dirname, '..', 'out')
+    : path.join(__dirname, '..', 'frontend', 'out')
 }
 
 /** Sert un fichier du dossier statique ; retombe sur index.html pour toute route inconnue (page unique). */

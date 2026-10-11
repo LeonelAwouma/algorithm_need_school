@@ -34,7 +34,7 @@
     ],
     "extraResources": [
       {
-        "from": "../out",
+        "from": "../frontend/out",
         "to": "out"
       }
     ],
