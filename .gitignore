@@ -22,3 +22,6 @@ dist/
 
 # Données factices générées par moteur-reference (pnpm fixtures)
 frontend/public/donnees-factices/
+
+# Lockfile vide que pnpm crée en lançant les scripts racine (aucune dépendance ici)
+/pnpm-lock.yaml

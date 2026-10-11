@@ -97,9 +97,14 @@ export default defineConfig([
     },
   },
 
-  // Infrastructure, client API et noyau partagé : testés sous Node.
+  // Infrastructure, client API, noyau partagé et données factices : testés sous Node.
   {
-    files: ['src/contextes/*/infrastructure/**/*.ts', 'src/shared/api/**/*.ts', 'src/shared/kernel/**/*.ts'],
+    files: [
+      'src/contextes/*/infrastructure/**/*.ts',
+      'src/shared/api/**/*.ts',
+      'src/shared/kernel/**/*.ts',
+      'src/mocks/**/*.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',

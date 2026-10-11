@@ -300,51 +300,52 @@ Les taux de stabilité, de rotation et d’intégration exigent un historique pl
 
 # Architecture technique
 
-Le projet utilise principalement :
+L’application est en cours de séparation en deux parties : une **interface** (Next.js) et un **serveur** (Django, en préparation), qui porte toute la logique de calcul et une base de données persistante. Le plan est décrit dans `docs/Plan-backend-Django-DDD.docx` ; les routes de l’API dans `docs/Routes-planification-5-ans.md`.
 
-| Technologie      | Usage                         |
-| ---------------- | ----------------------------- |
-| Next.js 16       | Framework web                 |
-| React 19         | Interface utilisateur         |
-| TypeScript       | Langage principal             |
-| Tailwind CSS     | Interface et styles           |
-| SheetJS / `xlsx` | Lecture et export Excel       |
-| `docx`           | Génération des documents Word |
-| Lucide React     | Icônes                        |
+| Technologie            | Usage                                                     |
+| ---------------------- | --------------------------------------------------------- |
+| Next.js 16, React 19   | Interface, compilée en site statique (`output: 'export'`) |
+| TypeScript (strict)    | Langage de l’interface et des moteurs de référence        |
+| TanStack Query         | Lectures et écritures auprès de l’API, cache, invalidations |
+| Tailwind CSS           | Styles                                                    |
+| `docx`, SheetJS (`xlsx`) | Exports Word et Excel, produits dans l’interface        |
+| MSW                    | Données factices en développement (jamais livrées)        |
+| Electron               | Application de bureau, qui sert l’interface compilée      |
 
-L’application ne dépend actuellement pas d’une base de données persistante pour exécuter les simulations.
-
-Les calculs sont effectués à partir des fichiers fournis.
+> **Important.** L’interface n’appelle plus que l’API : sans serveur, chaque page affiche « Serveur AlgoPlanR injoignable ». **Aucune version de l’application de bureau ne doit être publiée avant la livraison du backend.** En attendant, on développe avec les données factices (voir plus bas).
 
 ---
 
 ## Structure principale
 
 ```text
-algorithm_need_school/
-│
-├── app/
-│   └── Interface Next.js
-│
-├── components/
-│   └── Composants de l'interface
-│
-├── lib/
-│   ├── affectation-engine.ts
-│   ├── methodology.ts
-│   ├── read-workbook.ts
-│   ├── export-methodology-docx.ts
-│   └── utils.ts
-│
-├── data/
-│   └── Ressources locales
-│
-├── LICENSE
-├── README.md
-├── package.json
-├── pnpm-lock.yaml
-└── ...
+frontend/                 Interface Next.js et client de l’API
+  app/                    Point d’entrée (layout, page, styles)
+  src/
+    shared/               Noyau partagé
+      api/                Client HTTP, routes typées, contrat JSON de l’API, manifeste des routes
+      requetes/           Cache des requêtes (TanStack Query)
+      session/            État d’interface : jeu ouvert, page, filtres, scénario affiché
+      kernel/             Libellés, formats, outils territoriaux, sans React
+      ui/                 Composants communs, graphiques, carte, coquille de l’application
+    contextes/<contexte>/ Un dossier par contexte métier (DDD)
+      domain/             Règles d’affichage, sans React ni réseau
+      infrastructure/     Une fonction par route de l’API
+      application/        Hooks de lecture et d’écriture
+      ui/                 Pages et composants
+      index.ts, pages.ts  API publique du contexte ; pages, pour la racine seule
+    racine/               Coquille et aiguillage des pages
+    mocks/                Données factices (MSW), développement seulement
+  tests/                  Tests sous Node (client, couverture des routes, exports, données factices)
+moteur-reference/         Moteurs TypeScript actuels : référence chiffrée du portage Python (temporaire)
+  lib/, types/, tests/    Moteurs et leurs 135 tests
+  scripts/                Serveur de référence : génère les données factices et les réponses attendues
+electron-app/             Application de bureau
+data/exemples/            Classeurs d’exemple, partagés par les tests
+docs/                     Plan de migration, routes de l’API
 ```
+
+Les frontières entre couches et entre contextes sont vérifiées par ESLint (`frontend/eslint.config.mjs`) : une page ne peut pas appeler l’API directement, un contexte n’en importe un autre que par son `index.ts`, et rien n’importe `moteur-reference/`.
 
 ---
 
@@ -376,24 +377,42 @@ cd algorithm_need_school
 
 ## Installer les dépendances
 
+L’interface et les moteurs de référence sont deux paquets indépendants :
+
 ```bash
-pnpm install
+pnpm --dir frontend install
+pnpm --dir moteur-reference install
 ```
 
 ---
 
 ## Lancer l’environnement de développement
 
+**Avec les données factices** (sans serveur) :
+
+```bash
+pnpm dev:factice
+```
+
+Cette commande génère les données factices à partir des moteurs de référence (`pnpm --dir moteur-reference fixtures`, quelques secondes), puis lance Next.js avec `NEXT_PUBLIC_API_MOCK=1`. Le jeu de démonstration s’ouvre ; les écritures qui ont un cycle de vie (validation du jeu, nominations, mouvements, quotas, hypothèses, journal d’audit) évoluent en mémoire, et recharger la page repart de l’état initial. Ce qui demande un vrai calcul (nouveau scénario, actualisation des fichiers) est refusé avec un message clair. Chaque réponse porte l’en-tête `X-AlgoPlanR-Factice` (`approximation` quand un filtre n’a pas pu être appliqué).
+
+**Avec le serveur AlgoPlanR** (quand il sera livré) :
+
 ```bash
 pnpm dev
 ```
 
-Ouvrez ensuite l’adresse locale indiquée par Next.js.
+L’adresse de l’API se règle par la variable `NEXT_PUBLIC_API_URL` (par exemple `http://127.0.0.1:8000`) ; sans elle, l’interface appelle la même origine. Dans l’application de bureau, l’adresse et le jeton sont fournis par Electron.
 
-Généralement :
+Ouvrez ensuite l’adresse locale indiquée par Next.js, généralement `http://localhost:3000`.
 
-```text
-http://localhost:3000
+---
+
+## Vérifier le projet
+
+```bash
+pnpm test          # moteurs de référence, données factices, puis tests de l’interface
+pnpm --dir frontend check   # types, ESLint sans avertissement, Prettier, tests, build
 ```
 
 ---
@@ -405,6 +424,8 @@ Avant de proposer une contribution :
 ```bash
 pnpm build
 ```
+
+Le build retire de l’export les données factices et le service worker de MSW : l’application compilée n’en contient aucune trace.
 
 Une Pull Request ne devrait pas introduire d’erreur de compilation.
 
@@ -422,7 +443,7 @@ L’application installée (AlgoPlanR) se met à jour seule depuis les **GitHub 
    * **à la fermeture** de l’application, sans aucune fenêtre ;
    * ou **tout de suite**, par le bouton « Redémarrer et installer » : l’installateur affiche le logo et la barre de progression, sans poser de question, puis l’application se rouvre d’elle-même.
 
-Le bandeau rappelle que les données importées et les faits de Prince, qui ne vivent qu’en mémoire, sont effacés au redémarrage.
+Les données et les décisions sont conservées par le serveur AlgoPlanR : l’installation d’une mise à jour ne les efface pas.
 
 Sans connexion, la vérification échoue en silence et l’application fonctionne normalement. Elle ne transmet aucune donnée : seule la demande du fichier de version publié part vers GitHub. Sur un poste où tout accès extérieur est proscrit, la variable d’environnement `ALGOBABA_SANS_MISE_A_JOUR=1` désactive entièrement les mises à jour.
 

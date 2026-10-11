@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:factice": "node scripts/dev-factice.mjs",
     "build": "next build && node scripts/nettoyer-export.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node -e \"require('fs').rmSync('.test-build',{recursive:true,force:true})\" && tsc -p tsconfig.test.json && node --test \".test-build/tests/*.test.js\"",
@@ -29,10 +30,16 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.3",
     "eslint-config-prettier": "^10.1.8",
+    "msw": "^2.15.0",
     "postcss": "^8.5",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.3",
     "typescript": "5.7.3"
   },
-  "description": "Plateforme locale d’analyse, de planification et d’aide à la décision sur les ressources enseignantes."
+  "description": "Plateforme locale d’analyse, de planification et d’aide à la décision sur les ressources enseignantes.",
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
 }

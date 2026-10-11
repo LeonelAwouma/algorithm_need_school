@@ -5,9 +5,10 @@
   "description": "Plateforme locale d’analyse, de planification et d’aide à la décision sur les ressources enseignantes.",
   "scripts": {
     "dev": "pnpm --dir frontend dev",
+    "dev:factice": "pnpm --dir moteur-reference fixtures && pnpm --dir frontend dev:factice",
     "build": "pnpm --dir frontend build",
     "typecheck": "pnpm --dir frontend typecheck && pnpm --dir moteur-reference typecheck",
-    "test": "pnpm --dir frontend test && pnpm --dir moteur-reference test",
+    "test": "pnpm --dir moteur-reference test && pnpm --dir moteur-reference fixtures && pnpm --dir frontend test",
     "fixtures": "pnpm --dir moteur-reference fixtures",
     "electron:preview": "pnpm --dir frontend build && cd electron-app && npm run start",
     "dist": "pnpm --dir frontend build && cd electron-app && npm run dist",
