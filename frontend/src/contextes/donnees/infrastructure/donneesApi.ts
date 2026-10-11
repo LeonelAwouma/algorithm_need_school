@@ -4,6 +4,7 @@
  * recherche par saisie libre.
  *
  * Routes :
+ *   GET    fichiers/colonnes/
  *   POST   fichiers/                              PATCH  fichiers/{fichier}/correspondances/
  *   GET    jeux/            POST jeux/            POST   jeux/demonstration/
  *   GET    jeux/{jeu}/      DELETE jeux/{jeu}/    GET    jeux/{jeu}/qualite/
@@ -21,12 +22,12 @@ import {
   queryPage,
   route,
   type Actualisation,
+  type ColonneAttendue,
   type CorpsActualisation,
   type CorpsCorrespondances,
   type CorpsCreationJeu,
   type CorpsEnvoiFichier,
   type CorpsValidationJeu,
-  type DataQualityReport,
   type DemandePage,
   type EcartsActualisation,
   type EnseignantDetail,
@@ -38,14 +39,17 @@ import {
   type JeuCree,
   type JeuDeDonnees,
   type Page,
+  type QualiteJeu,
   type ResultatRecherche,
   type SchoolDiagnostic,
   type Teacher,
+  type TypeColonnes,
   type TypeFichier,
   type ValidationJeu,
 } from '../../../shared/api'
 
 const ROUTES = {
+  colonnesAttendues: route<ColonneAttendue[]>()('GET', 'fichiers/colonnes/'),
   envoyerFichier: route<FichierImporte, CorpsEnvoiFichier>()('POST', 'fichiers/', 'multipart'),
   corrigerCorrespondances: route<FichierImporte, CorpsCorrespondances>()(
     'PATCH',
@@ -56,7 +60,7 @@ const ROUTES = {
   creerJeuDemonstration: route<JeuCree>()('POST', 'jeux/demonstration/'),
   lireJeu: route<JeuDeDonnees>()('GET', 'jeux/{jeu}/'),
   supprimerJeu: route<void>()('DELETE', 'jeux/{jeu}/'),
-  lireQualite: route<DataQualityReport>()('GET', 'jeux/{jeu}/qualite/'),
+  lireQualite: route<QualiteJeu>()('GET', 'jeux/{jeu}/qualite/'),
   lireValidation: route<ValidationJeu>()('GET', 'jeux/{jeu}/validation/'),
   validerJeu: route<ValidationJeu, CorpsValidationJeu>()('POST', 'jeux/{jeu}/validation/'),
   listerActualisations: route<Actualisation[]>()('GET', 'jeux/{jeu}/actualisations/'),
@@ -71,6 +75,11 @@ const ROUTES = {
 }
 
 // --- Import des classeurs -------------------------------------------------------------
+
+/** Colonnes que le serveur cherche dans un classeur, indispensables d'abord. */
+export function listerColonnesAttendues(type: TypeColonnes, signal?: AbortSignal): Promise<ColonneAttendue[]> {
+  return appeler(ROUTES.colonnesAttendues, { query: { type }, signal })
+}
 
 /**
  * Envoie un classeur au serveur, qui le lit et reconnaît ses colonnes.
@@ -125,7 +134,8 @@ export function supprimerJeu(jeu: IdJeu): Promise<void> {
   return appeler(ROUTES.supprimerJeu, { params: { jeu } })
 }
 
-export function lireQualite(jeu: IdJeu, signal?: AbortSignal): Promise<DataQualityReport> {
+/** Rapport de qualité du jeu et correspondance des colonnes de ses fichiers. */
+export function lireQualite(jeu: IdJeu, signal?: AbortSignal): Promise<QualiteJeu> {
   return appeler(ROUTES.lireQualite, { params: { jeu }, signal })
 }
 
@@ -191,6 +201,11 @@ export interface FiltresEnseignants extends DemandePage {
   ecole?: string
   /** `true` : seulement les enseignants mobilisables ; `false` : seulement les autres. */
   mobilisable?: boolean
+  /**
+   * Scénario dont le vivier fixe la mobilité (au-delà de l'excédent de l'école,
+   * l'enseignant n'est pas retenu) ; sans scénario, seule la règle d'excédent s'applique.
+   */
+  scenario?: string | null
 }
 
 /** Enseignants du périmètre, avec barème et mobilité calculés par le serveur. */
@@ -208,12 +223,13 @@ export function listerEnseignants(
       q: options.recherche || undefined,
       ecole: options.ecole,
       mobilisable: options.mobilisable,
+      scenario: options.scenario ?? undefined,
     },
     signal,
   })
 }
 
-/** Fiche d'un enseignant : barème détaillé et raisons de non-mobilité. */
+/** Fiche d'un enseignant : barème détaillé et explication de sa mobilité. */
 export function lireEnseignant(jeu: IdJeu, matricule: string, signal?: AbortSignal): Promise<EnseignantDetail> {
   return appeler(ROUTES.lireEnseignant, { params: { jeu, matricule }, signal })
 }

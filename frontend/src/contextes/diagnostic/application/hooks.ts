@@ -23,9 +23,11 @@ export function useDiagnostic(jeu: IdJeu | null, filtres: GlobalFilters, sansPri
   )
 }
 
-/** Nœud territorial courant, ses enfants et l'arbre complet. */
-export function useVueTerritoriale(jeu: IdJeu | null, filtres: GlobalFilters) {
-  return useLectureJeu(jeu, 'territoires', [filtres], (id, signal) => lireVueTerritoriale(id, filtres, signal))
+/** Nœud territorial courant, ses enfants et leurs mouvements dans le scénario affiché. */
+export function useVueTerritoriale(jeu: IdJeu | null, filtres: GlobalFilters, scenario: string | null) {
+  return useLectureJeu(jeu, 'territoires', [filtres, scenario], (id, signal) =>
+    lireVueTerritoriale(id, filtres, scenario, signal),
+  )
 }
 
 /** Options des menus de filtres pour la sélection territoriale courante. */
@@ -35,7 +37,7 @@ export function useOptionsFiltres(jeu: IdJeu | null, selection: TerritorySelecti
   )
 }
 
-/** Écoles classées par priorité. */
+/** Écoles en déficit classées par priorité ; toutes si `limite` est absent. */
 export function usePriorites(jeu: IdJeu | null, filtres: GlobalFilters, limite?: number) {
   return useLectureJeu(jeu, 'priorites', [filtres, limite ?? null], (id, signal) =>
     lirePriorites(id, filtres, limite, signal),

@@ -52,13 +52,22 @@ export function lireDiagnostic(
   })
 }
 
-/** Nœud territorial sélectionné, ses enfants, le fil d'Ariane et l'arbre complet. */
+/**
+ * Nœud territorial sélectionné, ses enfants et le fil d'Ariane.
+ *
+ * @param scenario scénario dont les mouvements sont comptés pour chaque territoire enfant.
+ */
 export function lireVueTerritoriale(
   jeu: IdJeu,
   filtres: GlobalFilters,
+  scenario: string | null,
   signal?: AbortSignal,
 ): Promise<VueTerritoriale> {
-  return appeler(ROUTES.territoires, { params: { jeu }, query: queryFiltres(filtres), signal })
+  return appeler(ROUTES.territoires, {
+    params: { jeu },
+    query: { ...queryFiltres(filtres), scenario: scenario ?? undefined },
+    signal,
+  })
 }
 
 /** Options des menus de filtres, selon le niveau territorial déjà choisi. */
@@ -71,8 +80,8 @@ export function lireOptionsFiltres(
 }
 
 /**
- * Établissements classés par priorité : besoin d'abord, puis indice de priorité u,
- * puis rapport élèves par maître.
+ * Établissements en déficit, classés par priorité : indice de priorité u, puis
+ * rapport élèves par maître.
  *
  * @param limite nombre d'écoles renvoyées ; toutes si absent.
  */
@@ -88,8 +97,8 @@ export function lirePriorites(
 /**
  * Synthèse narrative et agrégats du périmètre.
  *
- * @param scenario scénario dont le résultat complète les phrases (part des besoins
- *   couverts) ; le texte se limite au diagnostic sans scénario.
+ * @param scenario scénario dont le résultat complète les phrases et les agrégats
+ *   (besoins couverts, postes restants) ; sans scénario, seul le diagnostic est décrit.
  */
 export function lireSynthese(
   jeu: IdJeu,

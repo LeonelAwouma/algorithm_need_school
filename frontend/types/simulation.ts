@@ -11,7 +11,6 @@
 
 import type {
   ClassementEcole,
-  MotifDemande,
   PrioriteEcole,
   School,
   SchoolDiagnostic,

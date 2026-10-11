@@ -72,7 +72,7 @@ const SEVERITE_LABEL: Record<SchoolDiagnostic['severite'], string> = {
 }
 
 export function construireRapport(input: ReportInput): DecisionReport {
-  const { diagnostic, diagnosticsFiltres, arbre, qualite, resultat, comparaison, settings } = input
+  const { diagnosticsFiltres, arbre, qualite, resultat, comparaison, settings } = input
   const totals = arbre.totals
   const sections: DecisionReportSection[] = []
 

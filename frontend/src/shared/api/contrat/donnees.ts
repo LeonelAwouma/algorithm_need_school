@@ -12,6 +12,23 @@ import type { ScoreBreakdown } from './simulation'
 /** Nature d'un classeur importé. */
 export type TypeFichier = 'etablissements' | 'enseignants'
 
+/** Classeurs dont le serveur publie les colonnes attendues : les deux fichiers de base et celui des recrues. */
+export type TypeColonnes = TypeFichier | 'recrues'
+
+/** Colonne que le serveur cherche dans un classeur (dictionnaire de reconnaissance). */
+export interface ColonneAttendue {
+  /** Nom du champ métier. */
+  champ: string
+  /** Libellé lisible. */
+  label: string
+  /** Colonne indispensable : son absence bloque l'analyse. */
+  requis: boolean
+  /** Ce que l'on perd si la colonne est absente. */
+  consequence: string
+  /** Intitulés reconnus, le premier servant d'exemple. */
+  alias: string[]
+}
+
 /** Classeur reçu par le serveur, prêt à être rattaché à un jeu (`POST fichiers/`). */
 export interface FichierImporte {
   id: string
@@ -71,6 +88,13 @@ export interface JeuDeDonnees {
   /** Faits du Prince actuellement appliqués. */
   nbFaitsPrinceActifs: number
   donneesElevesDisponibles: boolean
+}
+
+/** Qualité d'un jeu et correspondance des colonnes de ses fichiers (`GET jeux/{jeu}/qualite/`). */
+export interface QualiteJeu {
+  /** Rapport de qualité, `null` pour le jeu de démonstration, produit par l'application elle-même. */
+  rapport: DataQualityReport | null
+  correspondances: Record<TypeFichier, ColumnMappingReport | null>
 }
 
 /** Réponse à la création d'un jeu. */
@@ -137,10 +161,14 @@ export interface EtablissementDetail {
   structure: boolean
 }
 
-/** Raison pour laquelle un enseignant ne peut pas être mobilisé par l'algorithme. */
-export interface RaisonNonMobilite {
-  code: string
+/** Situation familiale d'un enseignant, telle que le barème la retient (C3). */
+export interface SituationRetenue {
+  /** Libellé de la situation reconnue, ou la valeur déclarée si elle n'est pas reconnue. */
   libelle: string
+  /** Vrai si la valeur déclarée correspond à une situation du barème. */
+  reconnue: boolean
+  /** Points accordés au barème. */
+  points: number
 }
 
 /** Ligne de la liste des enseignants. */
@@ -149,9 +177,14 @@ export interface EnseignantResume {
   nomEtab: string
   /** Barème individuel (étage 1). */
   bareme: number
-  /** L'enseignant peut entrer au vivier de redéploiement. */
+  /** L'enseignant entre au vivier de redéploiement du scénario demandé. */
   mobilisable: boolean
-  raisonsNonMobilite: RaisonNonMobilite[]
+  /**
+   * Explication en clair : pourquoi l'enseignant est mobilisable ou non (fait du
+   * Prince, inéligibilité, école sans excédent, au-delà de l'excédent…).
+   */
+  motif: string
+  situation: SituationRetenue
 }
 
 /** Fiche détaillée d'un enseignant. */
@@ -159,8 +192,6 @@ export interface EnseignantDetail extends EnseignantResume {
   ecole: School | null
   /** Détail du barème, composante par composante. */
   detailBareme: ScoreBreakdown
-  /** Points de situation familiale retenus (C3). */
-  pointsSituation: number
 }
 
 /** Résultat d'une recherche par saisie libre (matricule, nom, code école). */

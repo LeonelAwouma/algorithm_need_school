@@ -2943,3 +2943,376 @@ pre.code {
 .acces-vide {
   color: var(--ink-faint);
 }
+
+/* ===========================================================================
+   Interface reliée à l'API : états de chargement, pagination, onglets,
+   écrans de planification, de nominations et d'audit, et utilitaires qui
+   remplacent les anciens styles en ligne.
+   =========================================================================== */
+
+/* --- États et navigation dans les listes --------------------------------- */
+
+.chargement {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.onglets-liste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+.onglets-liste button {
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.onglets-liste button:hover {
+  color: var(--ink);
+}
+.onglets-liste button[aria-selected='true'] {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+}
+.onglets-liste button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.onglet-contenu {
+  padding: 14px;
+}
+
+/* Barre de filtres placée dans un panneau : sans cadre propre. */
+.filter-bar-integree {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  background: none;
+}
+
+/* --- Formulaires ------------------------------------------------------------ */
+
+.actions-formulaire {
+  margin-top: 12px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.champ-fichier-cache {
+  display: none;
+}
+
+.champ-reference {
+  margin-top: 14px;
+  max-width: 460px;
+}
+
+.grille-espacee {
+  margin-top: 14px;
+}
+
+.ligne-exception {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+  margin-top: 8px;
+}
+
+.btn-aligne {
+  align-self: end;
+}
+.btn-espace {
+  margin-top: 10px;
+}
+.btn-retour {
+  align-self: flex-start;
+}
+
+/* Barre « Modifications non enregistrées » : reste visible pendant le défilement. */
+.barre-enregistrement {
+  position: sticky;
+  top: calc(var(--header-h) + 8px);
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--warn-line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  box-shadow: var(--shadow-m);
+}
+
+.justification {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* Encadré de détail ouvert sous une ligne de tableau (candidats, proposition). */
+.encart {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface-muted);
+}
+.encart h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+/* --- Texte ------------------------------------------------------------------ */
+
+.bloc {
+  display: block;
+}
+
+.sans-marge {
+  margin: 0;
+}
+
+.texte-fort {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.texte-courant {
+  margin: 0;
+  max-width: 75ch;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+.texte-mesure {
+  max-width: 75ch;
+}
+
+.texte-avertissement {
+  color: var(--warn);
+}
+
+.phrase-forte {
+  margin: 14px 0 0;
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.enonce {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.liste-regles {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+}
+
+.hint-icone {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+.hint-icone svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.dd-texte {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.pastilles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.liste-compacte {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.liste-jeux {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.liste-jeux > li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+}
+.liste-jeux-actions {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.notion {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.notion:first-child {
+  border-top: 0;
+}
+.notion-titre {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.regle-titre {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.regle-texte {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.sous-titre-grille {
+  margin: 14px 0 8px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.titre-section {
+  margin: 16px 0 8px;
+  font-size: 14px;
+}
+
+.titre-proposition {
+  margin-bottom: 4px;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+/* Motifs courts affichés sous une pastille, dans une cellule de tableau. */
+.motif-mobilite,
+.motif-etroit,
+.raison-priorite small {
+  display: block;
+  max-width: 340px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+.raison-priorite {
+  display: block;
+  max-width: 420px;
+}
+
+.solde {
+  font-weight: 650;
+}
+.solde[data-sens='positif'] {
+  color: var(--ok);
+}
+.solde[data-sens='negatif'] {
+  color: var(--alert);
+}
+
+/* --- Correspondance des colonnes à l'import ------------------------------- */
+
+.upload-card-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.mapping-liste {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+.mapping-libelle {
+  display: block;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* --- Tableaux --------------------------------------------------------------- */
+
+.table-scroll-court {
+  max-height: 280px;
+  margin-top: 8px;
+}
+.table-scroll-libre {
+  max-height: none;
+}
+
+.th-normal {
+  font-weight: 400;
+}
+
+.compare-table tr.ligne-forte th,
+.compare-table tr.ligne-forte td {
+  font-weight: 650;
+  border-top: 1px solid var(--line-strong);
+}
+
+/* Tableau sur cinq ans : première colonne figée pendant le défilement horizontal. */
+.tableau-planification th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 220px;
+  background: var(--surface);
+}
+.tableau-planification thead th:first-child {
+  background: var(--surface-muted);
+}
+
+.combinaison {
+  display: inline-block;
+  margin: 2px 6px 2px 0;
+}
+
+.report-kpi-section {
+  margin-top: 12px;
+}

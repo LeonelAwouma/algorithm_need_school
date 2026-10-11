@@ -373,6 +373,8 @@ export interface VoeuAutreSousSysteme {
   nomEtab: string
   sousSystemePoste: SousSysteme | null
   posteVacant: boolean
+  /** Le départ de l'enseignant reste dans la limite de l'excédent de son école d'attache. */
+  departDansLimiteExcedent: boolean
 }
 
 /** Projection sur l'année N+2 d'un enseignant resté dans le vivier (§3.9). */

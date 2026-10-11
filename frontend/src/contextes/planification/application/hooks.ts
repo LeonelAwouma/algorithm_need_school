@@ -5,7 +5,7 @@
  * et ses ventilations, versions, quotas, indicateurs.
  */
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
 import {
   clesGlobales,
@@ -77,11 +77,16 @@ export function useModifierHypotheses(jeu: IdJeu | null) {
 }
 
 /**
- * Estimation d'un taux d'attrition. C'est une écriture du point de vue HTTP
- * (POST), mais elle n'enregistre rien : seul le journal d'audit est concerné.
+ * Estimation d'un taux d'attrition. C'est un POST, mais il n'enregistre rien :
+ * aucune donnée en cache ne devient obsolète.
  */
 export function useEstimerAttrition(jeu: IdJeu | null) {
-  return useEcritureJeu(jeu, 'recalcul', (id, _aucun: void) => estimerAttrition(id))
+  return useMutation({
+    mutationFn: () => {
+      if (jeu === null) return Promise.reject(new Error('Aucun jeu de données chargé.'))
+      return estimerAttrition(jeu)
+    },
+  })
 }
 
 // --- Tableau et ventilations ---------------------------------------------------------------------

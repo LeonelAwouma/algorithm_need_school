@@ -1,10 +1,22 @@
 /**
  * Contrat de l'API — contexte « Diagnostic » (Moteur A) : diagnostic filtré,
  * arbre territorial, priorités et synthèse narrative.
+ *
+ * Toutes les agrégations (comptes par sévérité, par zone, par territoire, flux)
+ * sont faites par le serveur : l'interface ne fait que les présenter.
  */
 
 import type { Enonce, PointAttention, TerritorySelection } from './commun'
-import type { SchoolDiagnostic, TerritorialSummary, TerritorialTotals, TerritoryLevel, Zone } from './education'
+import type {
+  EducationTerritory,
+  SchoolDiagnostic,
+  SchoolSeverity,
+  TerritorialSummary,
+  TerritorialTotals,
+  TerritoryLevel,
+  Zone,
+  ZoneSecurite,
+} from './education'
 import type { SyntheseTerritoriale } from './simulation'
 
 /** Diagnostic du périmètre filtré (`GET jeux/{jeu}/diagnostic/`). */
@@ -20,6 +32,21 @@ export interface DiagnosticPerimetre {
   ecolesSansSalles: number
 }
 
+/**
+ * Mouvements d'un territoire enfant dans un scénario, comptés dans les deux
+ * sens (vue destination et vue origine), lus sur le résultat national.
+ */
+export interface MouvementsTerritoire {
+  /** Nom du territoire enfant. */
+  territoire: string
+  besoin: number
+  couverts: number
+  residuel: number
+  recus: number
+  sortants: number
+  solde: number
+}
+
 /** Nœud courant de l'arbre territorial et son contexte (`GET jeux/{jeu}/territoires/`). */
 export interface VueTerritoriale {
   niveau: TerritoryLevel
@@ -29,8 +56,8 @@ export interface VueTerritoriale {
   /** Enfants directs du nœud courant. */
   enfants: TerritorialSummary[]
   filAriane: { label: string; selection: TerritorySelection }[]
-  /** Arbre complet, filtres non territoriaux appliqués : sert à la carte. */
-  arbre: TerritorialSummary
+  /** Mouvements de chaque enfant dans le scénario demandé ; vide sans scénario. */
+  mouvementsEnfants: MouvementsTerritoire[]
 }
 
 /** Options des menus de filtres, selon le niveau territorial déjà choisi. */
@@ -42,10 +69,34 @@ export interface OptionsFiltres {
   zones: Zone[]
 }
 
-/** Établissements classés par priorité. */
+/** Établissements en déficit, classés par priorité. */
 export interface Priorites {
   ecoles: SchoolDiagnostic[]
+  /** Nombre total d'écoles en déficit du périmètre (avant la limite demandée). */
   total: number
+}
+
+/** Écoles du périmètre dans une zone de sécurité. */
+export interface RepartitionZoneSecurite {
+  zone: ZoneSecurite
+  ecoles: number
+  /** Écoles sans zone renseignée, comptées en zone verte comme dans le calcul. */
+  nonRenseignees: number
+  enDeficit: number
+  postesManquants: number
+  /** Postes restés vacants dans le scénario demandé, `null` sans scénario. */
+  restantsApresScenario: number | null
+}
+
+/** Besoin d'un territoire enfant et sa couverture par le scénario demandé. */
+export interface BesoinTerritoireEnfant {
+  territoire: EducationTerritory
+  postesNecessaires: number
+  /** Postes couverts par le scénario, 0 sans scénario. */
+  couverts: number
+  restant: number
+  /** Taux de couverture en %, arrondi. */
+  taux: number
 }
 
 /** Synthèse du tableau de bord et du diagnostic (`GET jeux/{jeu}/synthese/`). */
@@ -64,8 +115,12 @@ export interface SyntheseDiagnostic {
   territoiresMixtes: TerritorialSummary[]
   /** Agrégats par sous-système (§2.6). */
   syntheseTerritoriale: SyntheseTerritoriale
-  /** Répartition des écoles et des besoins par zone. */
-  parZone: { zone: Zone; ecoles: number; besoin: number; excedent: number }[]
-  /** Répartition par région. */
-  parRegion: { region: string; ecoles: number; besoin: number; excedent: number; ecolesEnDeficit: number }[]
+  /** Nombre d'écoles par niveau de sévérité. */
+  parSeverite: Record<SchoolSeverity, number>
+  /** Écoles et besoins par zone de sécurité. */
+  parZoneSecurite: RepartitionZoneSecurite[]
+  /** Besoins des territoires enfants en déficit, du plus grand au plus petit (12 au plus). */
+  besoinsParEnfant: BesoinTerritoireEnfant[]
+  /** Phrase de réduction du déficit par le scénario demandé, `null` si elle ne s'applique pas. */
+  reductionDeficit: Enonce | null
 }

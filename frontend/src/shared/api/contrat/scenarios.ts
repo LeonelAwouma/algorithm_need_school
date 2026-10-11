@@ -12,6 +12,7 @@ import type {
   ProjectionEcole,
   ProjectionTerritoire,
   ProposedAssignment,
+  ProximityLevel,
   SimulationLogEntry,
   SimulationResult,
   SimulationScenario,
@@ -46,13 +47,17 @@ export interface ScenarioCalcule {
   /** Les règles courantes ont changé depuis le calcul (scénarios géographiques seulement). */
   obsolete: boolean
   calculeLe: string | null
-  /** Indicateurs principaux, pour les listes et les cartes de résumé. */
+  /** Indicateurs principaux sur l'ensemble du jeu, pour les listes et les cartes de résumé. */
   indicateurs: {
     besoinInitial: number
     postesCouverts: number
     besoinResiduel: number
     tauxCouverture: number
     enseignantsDeplaces: number
+    /** Mouvements proposés par niveau de proximité. */
+    mouvementsParPerimetre: { niveau: ProximityLevel; nombre: number }[]
+    /** Contrôles métier non satisfaits après le calcul. */
+    controlesEnEcart: number
   } | null
 }
 
@@ -91,9 +96,12 @@ export interface ExplicationProposition {
   proposition: ProposedAssignment
 }
 
-/** Comparaison des trois scénarios géographiques sur un périmètre. */
+/** Comparaison des scénarios calculés sur un périmètre. */
 export interface ComparaisonScenarios {
-  /** Résultats restreints au périmètre, dans l'ordre commune, département, étendu. */
+  /**
+   * Résultats restreints au périmètre : les trois scénarios géographiques dans
+   * l'ordre commune, département, étendu, puis les scénarios personnalisés.
+   */
   resultats: SimulationResult[]
   /** Phrase de réduction du déficit pour chaque résultat, `null` si elle ne s'applique pas. */
   reductions: (Enonce | null)[]

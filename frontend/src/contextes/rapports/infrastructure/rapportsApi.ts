@@ -6,33 +6,26 @@
  * Route : GET jeux/{jeu}/rapport/
  */
 
-import {
-  appeler,
-  querySelection,
-  route,
-  type DecisionReport,
-  type IdJeu,
-  type TerritorySelection,
-} from '../../../shared/api'
+import { appeler, queryFiltres, route, type DecisionReport, type GlobalFilters, type IdJeu } from '../../../shared/api'
 
 const ROUTES = {
   rapport: route<DecisionReport>()('GET', 'jeux/{jeu}/rapport/'),
 }
 
 /**
- * Rapport de décision du périmètre.
+ * Rapport de décision du périmètre filtré (territoire et filtres du tableau de bord).
  *
  * @param scenario scénario présenté dans le rapport ; le scénario retenu par défaut.
  */
 export function lireRapport(
   jeu: IdJeu,
-  selection: TerritorySelection,
+  filtres: GlobalFilters,
   scenario: string | null,
   signal?: AbortSignal,
 ): Promise<DecisionReport> {
   return appeler(ROUTES.rapport, {
     params: { jeu },
-    query: { ...querySelection(selection), scenario: scenario ?? undefined },
+    query: { ...queryFiltres(filtres), scenario: scenario ?? undefined },
     signal,
   })
 }

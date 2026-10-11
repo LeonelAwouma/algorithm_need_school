@@ -147,6 +147,8 @@ export interface FiltresAffectations extends DemandePage {
   selection?: TerritorySelection
   nature?: NatureMouvement
   recherche?: string
+  /** Mouvements dont l'école est l'origine ou la destination. */
+  ecole?: string
 }
 
 /** Propositions d'affectation, paginées. */
@@ -162,6 +164,7 @@ export function listerAffectations(
       ...queryPage(filtres),
       nature: filtres.nature,
       q: filtres.recherche || undefined,
+      ecole: filtres.ecole,
     },
     signal,
   })
@@ -193,12 +196,12 @@ export function lireVivierScenario(ref: RefScenario, signal?: AbortSignal): Prom
 /** Postes ouverts, classés par priorité. */
 export function listerPostes(
   ref: RefScenario,
-  options: DemandePage & { pourvu?: boolean } = {},
+  options: DemandePage & { pourvu?: boolean; ecole?: string } = {},
   signal?: AbortSignal,
 ): Promise<Page<TeachingPost>> {
   return appeler(ROUTES.postes, {
     params: { ...ref },
-    query: { ...queryPage(options), pourvu: options.pourvu },
+    query: { ...queryPage(options), pourvu: options.pourvu, ecole: options.ecole },
     signal,
   })
 }
@@ -260,7 +263,7 @@ export function lireFlux(
   return appeler(ROUTES.flux, { params: { ...ref }, query: querySelection(selection), signal })
 }
 
-/** Les trois scénarios géographiques sur le territoire sélectionné. */
+/** Scénarios calculés (géographiques puis personnalisés), restreints au territoire sélectionné. */
 export function lireComparaison(
   jeu: IdJeu,
   selection: TerritorySelection,

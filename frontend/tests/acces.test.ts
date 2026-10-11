@@ -22,7 +22,7 @@ import {
   normaliserCode,
   retirerAcces,
   verifierDrh,
-} from '../lib/acces/registre'
+} from '../src/contextes/acces/domain/registre'
 import { estDansRegion, restreindreARegion } from '../lib/acces/perimetre'
 import type { Dataset } from '../types/simulation'
 import { ecole, enseignantsDe } from './fixtures'

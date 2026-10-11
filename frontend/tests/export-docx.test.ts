@@ -14,7 +14,7 @@ import { runDiagnostic } from '../lib/analytics/diagnostic'
 import { construireArbreTerritorial } from '../lib/analytics/territory'
 import { DEFAULT_SETTINGS } from '../lib/config/settings'
 import { construireRapport } from '../lib/reporting/report'
-import { construireRapportDocx } from '../lib/reporting/export-docx'
+import { construireRapportDocx } from '../src/contextes/rapports/application/exports/export-docx'
 import type { DecisionReport } from '../types/simulation'
 import { ecole } from './fixtures'
 

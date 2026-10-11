@@ -15,6 +15,7 @@ import {
   type DemandePage,
   type GlobalFilters,
   type IdJeu,
+  type TypeColonnes,
   type TypeFichier,
 } from '../../../shared/api'
 import { useEcritureJeu, useLectureJeu } from '../../../shared/requetes'
@@ -31,6 +32,7 @@ import {
   lireQualite,
   lireValidation,
   listerActualisations,
+  listerColonnesAttendues,
   listerEnseignants,
   listerEtablissements,
   listerJeux,
@@ -45,6 +47,15 @@ import {
 const SAISIE_MINIMALE = 2
 
 // --- Import ---------------------------------------------------------------------------------
+
+/** Colonnes attendues dans un classeur ; le dictionnaire ne change pas pendant la session. */
+export function useColonnesAttendues(type: TypeColonnes) {
+  return useQuery({
+    queryKey: ['colonnes-attendues', type],
+    queryFn: ({ signal }) => listerColonnesAttendues(type, signal),
+    staleTime: Infinity,
+  })
+}
 
 /** Envoie un classeur au serveur ; rien n'est encore rattaché à un jeu. */
 export function useEnvoyerFichier() {
@@ -104,7 +115,7 @@ export function useSupprimerJeu() {
   })
 }
 
-/** Rapport de qualité des données du jeu. */
+/** Rapport de qualité du jeu et correspondance des colonnes de ses fichiers. */
 export function useQualite(jeu: IdJeu | null) {
   return useLectureJeu(jeu, 'qualite', [], lireQualite)
 }

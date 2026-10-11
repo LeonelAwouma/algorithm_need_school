@@ -154,7 +154,7 @@ export function useVivierScenario(jeu: IdJeu | null, scenario: string | null) {
 export function usePostes(
   jeu: IdJeu | null,
   scenario: string | null,
-  options: DemandePage & { pourvu?: boolean } = {},
+  options: DemandePage & { pourvu?: boolean; ecole?: string } = {},
 ) {
   return useSectionScenario(jeu, scenario, 'postes', [options], (ref, signal) => listerPostes(ref, options, signal))
 }
@@ -205,7 +205,7 @@ export function useFlux(jeu: IdJeu | null, scenario: string | null, selection: T
   return useSectionScenario(jeu, scenario, 'flux', [selection], (ref, signal) => lireFlux(ref, selection, signal))
 }
 
-/** Comparaison des trois scénarios géographiques. */
+/** Comparaison des scénarios calculés sur le territoire sélectionné. */
 export function useComparaison(jeu: IdJeu | null, selection: TerritorySelection) {
   return useLectureJeu(jeu, 'comparaison', [selection], (id, signal) => lireComparaison(id, selection, signal))
 }

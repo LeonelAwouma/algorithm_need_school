@@ -11,7 +11,8 @@
  *
  * Les couches sans React (domain, infrastructure, shared/api, shared/kernel)
  * n'utilisent que des imports relatifs : elles sont compilées et testées sous
- * Node, où l'alias `@/` n'est pas résolu.
+ * Node, où les alias ne sont pas résolus. L'interface utilise les alias
+ * `@shared/*` et `@contextes/<contexte>`.
  */
 
 import { defineConfig, globalIgnores } from 'eslint/config'
@@ -25,15 +26,31 @@ const SANS_MOTEUR_REFERENCE = {
   message: 'Le frontend ne calcule rien : passez par l’API (src/contextes/*/infrastructure).',
 }
 
-/** Un contexte n'est visible des autres que par son index public. */
+/**
+ * Un contexte n'est visible des autres que par son index public. Seule
+ * exception : `@contextes/<contexte>/pages`, réservé à la racine de
+ * l'application qui assemble les écrans.
+ */
 const SANS_IMPORT_PROFOND = {
-  group: ['@/src/contextes/*/*', '@/src/contextes/*/*/**'],
-  message: 'Importez un autre contexte par son index public : @/src/contextes/<contexte>.',
+  group: [
+    '@contextes/*/*',
+    '@contextes/*/*/**',
+    '!@contextes/*/pages',
+    '@/src/contextes/*/*',
+    '@/src/contextes/*/*/**',
+  ],
+  message: 'Importez un autre contexte par son index public : @contextes/<contexte>.',
 }
 
-/** Les couches testées sous Node ne peuvent pas utiliser l'alias `@/`. */
+/** Les pages d'un contexte ne sont assemblées que par la racine (src/racine, app). */
+const SANS_PAGES = {
+  group: ['@contextes/*/pages', '**/contextes/*/pages'],
+  message: 'Seule la racine de l’application (src/racine) importe les pages des contextes.',
+}
+
+/** Les couches testées sous Node ne peuvent pas utiliser les alias, que Node ne résout pas. */
 const SANS_ALIAS = {
-  group: ['@/*'],
+  group: ['@/*', '@shared/*', '@contextes/*'],
   message: 'Cette couche est testée sous Node : utilisez un import relatif.',
 }
 
@@ -46,6 +63,14 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'react-hooks/exhaustive-deps': 'error',
+      'no-restricted-imports': ['error', { patterns: [SANS_MOTEUR_REFERENCE, SANS_IMPORT_PROFOND, SANS_PAGES] }],
+    },
+  },
+
+  // Racine de composition : seul endroit autorisé à importer les pages des contextes.
+  {
+    files: ['src/racine/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
+    rules: {
       'no-restricted-imports': ['error', { patterns: [SANS_MOTEUR_REFERENCE, SANS_IMPORT_PROFOND] }],
     },
   },
@@ -96,6 +121,7 @@ export default defineConfig([
           patterns: [
             SANS_MOTEUR_REFERENCE,
             SANS_IMPORT_PROFOND,
+            SANS_PAGES,
             { group: ['**/infrastructure/**'], message: 'L’interface passe par les hooks de application/.' },
           ],
         },

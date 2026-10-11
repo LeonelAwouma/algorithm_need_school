@@ -27,6 +27,8 @@ export const MANIFESTE_ROUTES = {
   ],
 
   donnees: [
+    // Ajoutée lors de la migration de l'assistant d'import : dictionnaire des colonnes attendues.
+    ['GET', 'fichiers/colonnes/'],
     ['POST', 'fichiers/'],
     ['PATCH', 'fichiers/{fichier}/correspondances/'],
     ['GET', 'jeux/'],

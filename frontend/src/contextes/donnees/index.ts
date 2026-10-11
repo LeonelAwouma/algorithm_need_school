@@ -6,3 +6,6 @@
  */
 
 export * from './application/hooks'
+
+/** Composants d'interface partagés avec les autres contextes. */
+export { DataQualityPanel } from './ui/composants/DataQualityPanel'

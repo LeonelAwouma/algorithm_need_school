@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
+
+import { Fournisseurs } from '@/src/racine/Fournisseurs'
 import './globals.css'
 
 // Polices (SIL OFL 1.1) embarquées dans l'application : aucune requête vers un service de
@@ -22,7 +24,7 @@ const sourceSans = localFont({
 export const metadata: Metadata = {
   title: 'ALGOPLANR — Affectation des enseignants',
   description:
-    "Analyse des besoins, répartition territoriale et simulation de scénarios d'affectation. Traitement entièrement local, sans transmission de données.",
+    "Analyse des besoins, répartition territoriale et simulation de scénarios d'affectation. Traitement local par le serveur AlgoPlanR, sans transmission de données.",
   icons: {
     icon: [{ url: '/icon-logo-64.png', type: 'image/png', sizes: '64x64' }],
     apple: '/apple-icon-logo.png',
@@ -39,7 +41,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className={`${figtree.variable} ${sourceSans.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Fournisseurs>{children}</Fournisseurs>
+      </body>
     </html>
   )
 }
