@@ -24,7 +24,7 @@ import type {
   ScoreBreakdown,
   StatutNomination,
   TransitionNomination,
-} from '../../../frontend/src/shared/api/contrat'
+} from '../../../frontend/components/shared/api/contrat'
 import { JEU, REFERENCE, SCENARIO_RETENU, scenarioDe, type Contexte } from './contexte'
 import type { Catalogue } from './outils'
 

@@ -25,8 +25,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import * as path from 'node:path'
 
-import type { EtatInitial } from '../../frontend/src/mocks/format'
-import type { DecisionReport } from '../../frontend/src/shared/api/contrat'
+import type { EtatInitial } from '../../frontend/mocks/format'
+import type { DecisionReport } from '../../frontend/components/shared/api/contrat'
 import { JEU, SCENARIO_RETENU, construireContexte } from './serveur/contexte'
 import { routesDecisions } from './serveur/decisions'
 import { routesDiagnostic } from './serveur/diagnostic'

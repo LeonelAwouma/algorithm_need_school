@@ -1,10 +1,10 @@
 /**
  * Outils du serveur de référence : conversion en JSON typée et catalogue des
  * réponses enregistrées, au format des données factices du frontend
- * (frontend/src/mocks/format.ts).
+ * (frontend/mocks/format.ts).
  */
 
-import type { EntreeCatalogue, FichierCatalogue, Query } from '../../../frontend/src/mocks/format'
+import type { EntreeCatalogue, FichierCatalogue, Query } from '../../../frontend/mocks/format'
 
 export type { Query }
 

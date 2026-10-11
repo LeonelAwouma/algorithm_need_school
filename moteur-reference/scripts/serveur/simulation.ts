@@ -21,7 +21,7 @@ import type {
   PresetScenario,
   ProjectionsScenario,
   ScenarioCalcule,
-} from '../../../frontend/src/shared/api/contrat'
+} from '../../../frontend/components/shared/api/contrat'
 import { JEU, REFERENCE_ISO, noeuds, type Contexte, type ScenarioDeReference } from './contexte'
 import { querySelection, resultatDuPerimetre, selectionDe } from './diagnostic'
 import { json, type Catalogue } from './outils'

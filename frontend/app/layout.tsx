@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 
-import { Fournisseurs } from '@/src/racine/Fournisseurs'
+import { Fournisseurs } from '@components/racine'
 import './globals.css'
 
 // Polices (SIL OFL 1.1) embarquées dans l'application : aucune requête vers un service de

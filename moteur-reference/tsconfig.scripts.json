@@ -10,7 +10,7 @@
     "lib/**/*.ts",
     "types/**/*.ts",
     "scripts/**/*.ts",
-    "../frontend/src/shared/api/contrat/**/*.ts",
-    "../frontend/src/mocks/format.ts"
+    "../frontend/components/shared/api/contrat/**/*.ts",
+    "../frontend/mocks/format.ts"
   ]
 }

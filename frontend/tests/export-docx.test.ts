@@ -16,8 +16,8 @@ import { readFileSync } from 'node:fs'
 import * as path from 'node:path'
 import { gunzipSync, inflateRawSync } from 'node:zlib'
 
-import { construireRapportDocx } from '../src/contextes/rapports/application/exports/export-docx'
-import type { DecisionReport } from '../src/shared/api/contrat'
+import { construireRapportDocx } from '../components/rapports/application/exports/export-docx'
+import type { DecisionReport } from '../components/shared/api/contrat'
 
 /** Rapport national du jeu de démonstration (compilé dans .test-build/tests, d'où les deux niveaux). */
 function rapportDeTest(): DecisionReport {

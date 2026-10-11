@@ -18,27 +18,23 @@ import * as path from 'node:path'
 import { after, before, describe, it } from 'node:test'
 import { setupServer } from 'msw/node'
 
-import { listerEtablissements } from '../src/contextes/donnees/infrastructure/donneesApi'
-import { lireSynthese } from '../src/contextes/diagnostic/infrastructure/diagnosticApi'
+import { listerEtablissements } from '../components/donnees/infrastructure/donneesApi'
+import { lireSynthese } from '../components/diagnostic/infrastructure/diagnosticApi'
 import {
   listerMouvements,
   listerNominations,
   mettreEnOeuvreNomination,
   proposerNomination,
   validerNomination,
-} from '../src/contextes/nominations/infrastructure/nominationsApi'
-import {
-  ajusterQuota,
-  listerQuotas,
-  validerQuotas,
-} from '../src/contextes/planification/infrastructure/planificationApi'
-import { listerEvenementsAudit } from '../src/contextes/audit/infrastructure/auditApi'
-import { creerScenario, executerScenario } from '../src/contextes/simulation/infrastructure/simulationApi'
-import { ApiError, FILTRES_VIDES } from '../src/shared/api'
-import { routesDuManifeste } from '../src/shared/api/manifeste'
-import { definirLecture, lireEtatInitial } from '../src/mocks/catalogue'
-import { etat, initialiserEtat } from '../src/mocks/etat'
-import { gestionnaires } from '../src/mocks/gestionnaires'
+} from '../components/nominations/infrastructure/nominationsApi'
+import { ajusterQuota, listerQuotas, validerQuotas } from '../components/planification/infrastructure/planificationApi'
+import { listerEvenementsAudit } from '../components/audit/infrastructure/auditApi'
+import { creerScenario, executerScenario } from '../components/simulation/infrastructure/simulationApi'
+import { ApiError, FILTRES_VIDES } from '../components/shared/api'
+import { routesDuManifeste } from '../components/shared/api/manifeste'
+import { definirLecture, lireEtatInitial } from '../mocks/catalogue'
+import { etat, initialiserEtat } from '../mocks/etat'
+import { gestionnaires } from '../mocks/gestionnaires'
 
 /** Données générées (compilé dans .test-build/tests, d'où les deux niveaux). */
 const DOSSIER = path.resolve(__dirname, '..', '..', 'public', 'donnees-factices')

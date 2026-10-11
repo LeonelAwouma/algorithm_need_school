@@ -211,7 +211,7 @@ Pour chaque année de N+1 à N+5, par territoire et par sous-système. Les règl
 
 ## 8. Conséquences sur l’architecture
 
-Trois contextes délimités s’ajoutent au plan de migration, côté backend (applications Django et domaine Python) comme côté frontend (`src/contextes/`) :
+Trois contextes délimités s’ajoutent au plan de migration, côté backend (applications Django et domaine Python) comme côté frontend (`frontend/components/`) :
 
 | Contexte | Domaine | Nouvelles entités persistées |
 |---|---|---|

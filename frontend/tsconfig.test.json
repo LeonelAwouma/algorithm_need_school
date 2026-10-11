@@ -10,6 +10,6 @@
     "outDir": ".test-build",
     "types": ["node"]
   },
-  "include": ["tests/**/*.ts", "src/**/*.ts"],
+  "include": ["tests/**/*.ts", "components/**/*.ts", "mocks/**/*.ts"],
   "exclude": ["node_modules", ".next", "out", "dist", "electron-app"]
 }

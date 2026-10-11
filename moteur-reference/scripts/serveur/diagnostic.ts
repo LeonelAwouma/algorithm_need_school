@@ -29,7 +29,7 @@ import type {
   SyntheseDiagnostic,
   TerritorySelection,
   VueTerritoriale,
-} from '../../../frontend/src/shared/api/contrat'
+} from '../../../frontend/components/shared/api/contrat'
 import { JEU, noeuds, type Contexte } from './contexte'
 import { json, nettoyerQuery, type Catalogue, type Query } from './outils'
 

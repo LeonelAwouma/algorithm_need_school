@@ -25,7 +25,7 @@ import type {
   QualiteJeu,
   TypeFichier,
   ValidationJeu,
-} from '../../../frontend/src/shared/api/contrat'
+} from '../../../frontend/components/shared/api/contrat'
 import { JEU, REFERENCE_ISO, type Contexte } from './contexte'
 import { json, type Catalogue } from './outils'
 

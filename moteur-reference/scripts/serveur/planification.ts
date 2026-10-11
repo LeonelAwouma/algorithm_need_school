@@ -45,7 +45,7 @@ import {
   type VentilationTerritoriale,
   type VersionHypotheses,
   type VersionPlanification,
-} from '../../../frontend/src/shared/api/contrat'
+} from '../../../frontend/components/shared/api/contrat'
 import { JEU, REFERENCE_ISO, SCENARIO_RETENU, noeuds, scenarioDe, type Contexte } from './contexte'
 import { querySelection, selectionDe } from './diagnostic'
 import type { Catalogue, Query } from './outils'

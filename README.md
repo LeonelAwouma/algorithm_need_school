@@ -319,33 +319,52 @@ L’application est en cours de séparation en deux parties : une **interface** 
 ## Structure principale
 
 ```text
-frontend/                 Interface Next.js et client de l’API
-  app/                    Point d’entrée (layout, page, styles)
-  src/
-    shared/               Noyau partagé
-      api/                Client HTTP, routes typées, contrat JSON de l’API, manifeste des routes
-      requetes/           Cache des requêtes (TanStack Query)
-      session/            État d’interface : jeu ouvert, page, filtres, scénario affiché
-      kernel/             Libellés, formats, outils territoriaux, sans React
-      ui/                 Composants communs, graphiques, carte, coquille de l’application
-    contextes/<contexte>/ Un dossier par contexte métier (DDD)
-      domain/             Règles d’affichage, sans React ni réseau
-      infrastructure/     Une fonction par route de l’API
-      application/        Hooks de lecture et d’écriture
-      ui/                 Pages et composants
-      index.ts, pages.ts  API publique du contexte ; pages, pour la racine seule
-    racine/               Coquille et aiguillage des pages
-    mocks/                Données factices (MSW), développement seulement
-  tests/                  Tests sous Node (client, couverture des routes, exports, données factices)
-moteur-reference/         Moteurs TypeScript actuels : référence chiffrée du portage Python (temporaire)
-  lib/, types/, tests/    Moteurs et leurs 135 tests
-  scripts/                Serveur de référence : génère les données factices et les réponses attendues
-electron-app/             Application de bureau
-data/exemples/            Classeurs d’exemple, partagés par les tests
-docs/                     Plan de migration, routes de l’API
+frontend/
+  app/                      Point d’entrée Next.js (layout, page, styles)
+  components/               Toute l’interface, en modules autonomes
+    <module>/               Un module par domaine métier (voir le tableau ci-dessous)
+      domain/               Règles d’affichage, sans React ni réseau
+      infrastructure/       Une fonction par route de l’API du module
+      application/          Hooks de lecture et d’écriture (cache, invalidations)
+      ui/                   Pages et composants du module
+      index.ts              API publique du module (hooks, composants partagés)
+      pages.ts              Pages du module, importées par la racine seule
+    shared/                 Noyau commun à tous les modules
+      api/                  Client HTTP, routes typées, contrat JSON, manifeste des routes
+      requetes/             Cache des requêtes (TanStack Query)
+      session/              État d’interface : jeu ouvert, page, filtres, scénario affiché
+      kernel/               Libellés, formats, outils territoriaux, sans React
+      ui/                   Composants communs, graphiques, carte, coquille
+    racine/                 Assemblage des modules : coquille et aiguillage des pages
+  mocks/                    Données factices (MSW), développement seulement
+  tests/                    Tests sous Node (client, couverture des routes, exports, données factices)
+moteur-reference/           Moteurs TypeScript actuels : référence chiffrée du portage Python (temporaire)
+  lib/, types/, tests/      Moteurs et leurs 135 tests
+  scripts/                  Serveur de référence : génère les données factices et les réponses attendues
+electron-app/               Application de bureau
+data/exemples/              Classeurs d’exemple, partagés par les tests
+docs/                       Plan de migration, routes de l’API
 ```
 
-Les frontières entre couches et entre contextes sont vérifiées par ESLint (`frontend/eslint.config.mjs`) : une page ne peut pas appeler l’API directement, un contexte n’en importe un autre que par son `index.ts`, et rien n’importe `moteur-reference/`.
+Chaque module fonctionne comme un petit service : il possède ses écrans, ses appels à l’API et ses règles d’affichage, et ne communique avec les autres que par son `index.ts`. Les modules partagent un seul build, une seule session et un seul cache, ce que demandent l’export statique et l’application de bureau.
+
+| Module | Rôle | Routes de l’API |
+| --- | --- | --- |
+| `donnees` | Import, jeux, validation, actualisations, écoles, enseignants | `fichiers/`, `jeux/`, `…/etablissements/`, `…/enseignants/` |
+| `diagnostic` | Vue d’ensemble, situation nationale, territoires, priorités | `…/diagnostic/`, `…/territoires/`, `…/priorites/`, `…/synthese/` |
+| `parametrage` | Référentiel et configuration du moteur | `parametres/`, `…/situations-familiales/` |
+| `prince` | Faits du Prince | `…/faits-prince/` |
+| `simulation` | Scénarios, résultats, vœux, comparaison, vue analyste | `scenarios/`, `…/scenarios/{scenario}/…`, `…/comparaison/` |
+| `arbitrage` | Commission d’arbitrage | `…/arbitrages/` |
+| `recrutement` | Nouveaux recrutés | `…/recrues/` |
+| `planification` | Planification sur 5 ans, hypothèses, quotas, indicateurs | `…/planification/`, `…/hypotheses/`, `…/quotas/`, `…/indicateurs/` |
+| `nominations` | Vivier, postes ouverts, nominations, mouvements | `…/vivier/`, `…/postes-ouverts/`, `…/nominations/`, `…/mouvements/` |
+| `audit` | Journal d’audit | `…/journal-audit/` |
+| `rapports` | Rapport de décision et exports | `…/rapport/` |
+| `methodologie` | Méthodologie et son export Word | — |
+| `acces` | Accès des délégués (désactivé) | — |
+
+Les frontières entre modules et entre couches sont vérifiées par ESLint (`frontend/eslint.config.mjs`) : une page ne peut pas appeler l’API directement, un module n’en importe un autre que par son `index.ts` (`@components/<module>`), le noyau commun s’importe par `@shared/*`, seule la racine importe les pages, et rien n’importe `moteur-reference/`.
 
 ---
 

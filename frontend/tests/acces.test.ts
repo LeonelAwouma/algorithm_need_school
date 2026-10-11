@@ -25,7 +25,7 @@ import {
   normaliserCode,
   retirerAcces,
   verifierDrh,
-} from '../src/contextes/acces/domain/registre'
+} from '../components/acces/domain/registre'
 
 const T0 = new Date(Date.UTC(2026, 8, 30, 8, 0, 0))
 

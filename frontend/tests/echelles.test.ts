@@ -9,7 +9,7 @@
 import { strict as assert } from 'node:assert'
 import { test } from 'node:test'
 
-import { construireClasses, graduations } from '../src/shared/kernel/echelles'
+import { construireClasses, graduations } from '../components/shared/kernel/echelles'
 
 test('La dernière graduation couvre toujours la valeur maximale', () => {
   for (const max of [1, 3, 7, 15, 18, 23, 38, 99, 100, 313, 1684, 0.4, 1.4, 2.5, 53.6]) {

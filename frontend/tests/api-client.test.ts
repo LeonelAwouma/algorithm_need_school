@@ -7,10 +7,16 @@
 import assert from 'node:assert/strict'
 import { afterEach, beforeEach, describe, it } from 'node:test'
 
-import { appeler, serialiserQuery } from '../src/shared/api/client'
-import { EN_TETE_JETON } from '../src/shared/api/config'
-import { ApiError, STATUT_INJOIGNABLE, estConflit, estInjoignable, estRefusMetier } from '../src/shared/api/erreurs'
-import { construireChemin, route } from '../src/shared/api/routes'
+import { appeler, serialiserQuery } from '../components/shared/api/client'
+import { EN_TETE_JETON } from '../components/shared/api/config'
+import {
+  ApiError,
+  STATUT_INJOIGNABLE,
+  estConflit,
+  estInjoignable,
+  estRefusMetier,
+} from '../components/shared/api/erreurs'
+import { construireChemin, route } from '../components/shared/api/routes'
 
 /** Appel reçu par le `fetch` simulé. */
 interface AppelFetch {
