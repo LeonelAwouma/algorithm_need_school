@@ -37,10 +37,7 @@ export interface GroupeTerritorial {
   nombre: number
 }
 
-function grouper(
-  assignments: ProposedAssignment[],
-  cle: (a: ProposedAssignment) => string,
-): GroupeTerritorial[] {
+function grouper(assignments: ProposedAssignment[], cle: (a: ProposedAssignment) => string): GroupeTerritorial[] {
   const compteur = new Map<string, number>()
   for (const a of assignments) {
     const libelle = cle(a) || 'Territoire non renseigné'
@@ -54,7 +51,9 @@ function grouper(
 const libelleOrigine = (a: ProposedAssignment): string =>
   a.departementOrigine ? `${a.departementOrigine} (${a.regionOrigine || 'région non renseignée'})` : a.regionOrigine
 const libelleDestination = (a: ProposedAssignment): string =>
-  a.departementDestination ? `${a.departementDestination} (${a.regionDestination || 'région non renseignée'})` : a.regionDestination
+  a.departementDestination
+    ? `${a.departementDestination} (${a.regionDestination || 'région non renseignée'})`
+    : a.regionDestination
 
 /** Bilan des mouvements d'un territoire, dans les deux sens. */
 export interface FluxTerritorial {
@@ -178,7 +177,9 @@ export function restreindreResultat(resultat: SimulationResult, schoolIds: Set<s
     ecolesBeneficiaires: new Set(assignments.map(a => a.schoolDestinationId)).size,
     ecolesSources: new Set(assignments.map(a => a.schoolOrigineId)).size,
     tauxCouverture: besoinInitial > 0 ? assignments.length / besoinInitial : 0,
-    mouvementsParPerimetre: (['meme_commune', 'meme_iaeb', 'meme_departement', 'meme_region', 'hors_region'] as ProximityLevel[])
+    mouvementsParPerimetre: (
+      ['meme_commune', 'meme_iaeb', 'meme_departement', 'meme_region', 'hors_region'] as ProximityLevel[]
+    )
       .map(niveau => ({ niveau, nombre: compteur.get(niveau) ?? 0 }))
       .filter(m => m.nombre > 0),
     assignments,

@@ -57,7 +57,18 @@ export function ReportPage({ store }: { store: PlanningStore }) {
       donneesDemonstration: dataset?.demonstration ?? false,
       faitsPrince: faitsPrinceAppliques,
     })
-  }, [diagnostic, diagnosticsFiltres, noeudCourant, qualite, resultatAffiche, comparaison, perimetre, settings, dataset, faitsPrinceAppliques])
+  }, [
+    diagnostic,
+    diagnosticsFiltres,
+    noeudCourant,
+    qualite,
+    resultatAffiche,
+    comparaison,
+    perimetre,
+    settings,
+    dataset,
+    faitsPrinceAppliques,
+  ])
 
   /** Besoins par région, limités aux territoires qui en ont, pour le graphique du rapport. */
   const besoinsParRegion = useMemo(() => {
@@ -83,7 +94,10 @@ export function ReportPage({ store }: { store: PlanningStore }) {
 
   if (!diagnostic || !rapport) {
     return (
-      <EmptyState titre="Aucun rapport disponible" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucun rapport disponible"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         Le rapport est construit à partir du diagnostic et, quand elle existe, de la simulation sélectionnée.
       </EmptyState>
     )
@@ -142,11 +156,35 @@ export function ReportPage({ store }: { store: PlanningStore }) {
   function exporterEcolesCSV() {
     exporterCSV(
       `diagnostic-ecoles-${settings.anneeScolaire}.csv`,
-      ['Code', 'Établissement', 'Région', 'Département', 'Commune', 'Classes', "Enseignants État", 'Dotation D', 'Besoin calculé', 'Postes déclarés', 'Excédent mobilisable', 'Élèves', 'Élèves par enseignant État'],
+      [
+        'Code',
+        'Établissement',
+        'Région',
+        'Département',
+        'Commune',
+        'Classes',
+        'Enseignants État',
+        'Dotation D',
+        'Besoin calculé',
+        'Postes déclarés',
+        'Excédent mobilisable',
+        'Élèves',
+        'Élèves par enseignant État',
+      ],
       diagnosticsFiltres.map(d => [
-        d.school.id, d.school.nom, d.school.region, d.school.departement, d.school.commune,
-        d.nbClasses, d.enseignantsEtat, d.enseignantsMinimumAConserver, d.besoinTheorique,
-        d.postesDeclares, d.excedentTheorique, d.school.effectifTotalEleves, d.elevesParEnseignantEtat,
+        d.school.id,
+        d.school.nom,
+        d.school.region,
+        d.school.departement,
+        d.school.commune,
+        d.nbClasses,
+        d.enseignantsEtat,
+        d.enseignantsMinimumAConserver,
+        d.besoinTheorique,
+        d.postesDeclares,
+        d.excedentTheorique,
+        d.school.effectifTotalEleves,
+        d.elevesParEnseignantEtat,
       ]),
     )
   }
@@ -177,7 +215,12 @@ export function ReportPage({ store }: { store: PlanningStore }) {
               <button type="button" className="btn" onClick={exporterEcolesCSV}>
                 <Table size={14} aria-hidden="true" /> Écoles (CSV)
               </button>
-              <button type="button" className="btn btn-primary" onClick={exporterWord} disabled={exportEnCours === 'word'}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={exporterWord}
+                disabled={exportEnCours === 'word'}
+              >
                 {exportEnCours === 'word' ? (
                   <RefreshCw size={14} className="spin" aria-hidden="true" />
                 ) : (
@@ -197,10 +240,10 @@ export function ReportPage({ store }: { store: PlanningStore }) {
           }
         >
           <p className="hint">
-            Le rapport Word reprend le document ci-dessous, section par section, avec ses tableaux : il est modifiable avant
-            transmission. L’impression produit la même mise en page sans navigation ni filtres, et le navigateur permet de
-            l’enregistrer en PDF. Le classeur Excel contient en plus le diagnostic école par école, les agrégats territoriaux,
-            les propositions avec leur justification et les contrôles.
+            Le rapport Word reprend le document ci-dessous, section par section, avec ses tableaux : il est modifiable
+            avant transmission. L’impression produit la même mise en page sans navigation ni filtres, et le navigateur
+            permet de l’enregistrer en PDF. Le classeur Excel contient en plus le diagnostic école par école, les
+            agrégats territoriaux, les propositions avec leur justification et les contrôles.
           </p>
           {erreurExport && (
             <Notice tone="alert" title="Export impossible.">
@@ -250,8 +293,8 @@ export function ReportPage({ store }: { store: PlanningStore }) {
           </dl>
 
           <p className="report-mention">
-            Les résultats présentés sont issus d’une simulation d’aide à la décision. Ils ne constituent pas des décisions
-            administratives de mutation, d’affectation ou de recrutement.
+            Les résultats présentés sont issus d’une simulation d’aide à la décision. Ils ne constituent pas des
+            décisions administratives de mutation, d’affectation ou de recrutement.
           </p>
         </header>
 

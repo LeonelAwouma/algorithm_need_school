@@ -46,8 +46,15 @@ const NIVEAU_CHAMPS: { champ: string; niveau: NiveauPrimaire }[] = [
 export function parseSousSysteme(v: unknown): SousSysteme | null {
   const k = normalizeKey(v)
   if (!k) return null
-  if (k.includes('franco') || k.includes('francais') || k.includes('french') || ['fr', 'f', 'fra', 'ssf'].includes(k)) return 'francophone'
-  if (k.includes('anglo') || k.includes('anglais') || k.includes('english') || ['en', 'an', 'a', 'e', 'ang', 'eng', 'ssa'].includes(k)) return 'anglophone'
+  if (k.includes('franco') || k.includes('francais') || k.includes('french') || ['fr', 'f', 'fra', 'ssf'].includes(k))
+    return 'francophone'
+  if (
+    k.includes('anglo') ||
+    k.includes('anglais') ||
+    k.includes('english') ||
+    ['en', 'an', 'a', 'e', 'ang', 'eng', 'ssa'].includes(k)
+  )
+    return 'anglophone'
   return null
 }
 
@@ -76,8 +83,16 @@ export function parseAccessibilite(v: unknown): Accessibilite | null {
 export function parseMotif(v: unknown): MotifDemande | null {
   const k = normalizeKey(v)
   if (!k) return null
-  if (k.includes('sante') || k.includes('medical') || k.includes('maladie') || k.includes('suivimed') || k.includes('handicap')) return 'sante'
-  if (k.includes('regroupement') || k.includes('familial') || k.includes('conjoint') || k.includes('rapprochement')) return 'regroupement_familial'
+  if (
+    k.includes('sante') ||
+    k.includes('medical') ||
+    k.includes('maladie') ||
+    k.includes('suivimed') ||
+    k.includes('handicap')
+  )
+    return 'sante'
+  if (k.includes('regroupement') || k.includes('familial') || k.includes('conjoint') || k.includes('rapprochement'))
+    return 'regroupement_familial'
   if (k.includes('rotation') || k.includes('difficile')) return 'rotation_zone_difficile'
   if (k.includes('convenance') || k.includes('personnel')) return 'convenance'
   return 'autre'
@@ -107,7 +122,12 @@ export function parseMultigrades(v: unknown): number {
 export function estTypeStructure(typeEtab: string): boolean {
   const k = normalizeKey(typeEtab)
   if (!k) return false
-  return ['iaeb', 'dr', 'dd', 'dreb', 'ddeb', 'drebs', 'ddebs'].includes(k) || k.startsWith('iaeb') || k.includes('delegation') || k.startsWith('inspection')
+  return (
+    ['iaeb', 'dr', 'dd', 'dreb', 'ddeb', 'drebs', 'ddebs'].includes(k) ||
+    k.startsWith('iaeb') ||
+    k.includes('delegation') ||
+    k.startsWith('inspection')
+  )
 }
 
 /** Construit les établissements à partir des lignes et de la table de correspondance. */
@@ -208,7 +228,9 @@ export function parseTeachers(
     const dateNaissance = parseDateValue(get(v, 'dateNaissance'))
     const ageLu = numOrNull(get(v, 'age'))
     const id = text(get(v, 'id'))
-    const voeux = ['voeu1', 'voeu2', 'voeu3'].map(c => text(get(v, c))).filter(x => x !== '' && !['nan', 'none', 'n/a', 'na', 'null', '-'].includes(x.toLowerCase()))
+    const voeux = ['voeu1', 'voeu2', 'voeu3']
+      .map(c => text(get(v, c)))
+      .filter(x => x !== '' && !['nan', 'none', 'n/a', 'na', 'null', '-'].includes(x.toLowerCase()))
     const motifBrut = text(get(v, 'motifDemande'))
     // Un motif rédigé librement peut nommer l'école qu'il vise : elle reçoit alors la bonification.
     const ecoleCitee = voeux.find(code => code && motifBrut.toLowerCase().includes(code.toLowerCase())) ?? null
@@ -230,7 +252,7 @@ export function parseTeachers(
       communeAttache: communeLue || ecole?.commune || '',
       departementAttache: departementLu || ecole?.departement || '',
       regionAttache: regionLue || ecole?.region || '',
-      zoneAttache: zoneLue ? parseZone(zoneLue) : ecole?.zone ?? 'inconnue',
+      zoneAttache: zoneLue ? parseZone(zoneLue) : (ecole?.zone ?? 'inconnue'),
       iaebAttache: ecole?.iaeb ?? '',
 
       ancienneteCarriereAns: Math.max(0, num(get(v, 'ancienneteCarriereAns'), 0)),
@@ -268,7 +290,10 @@ const SUFFIXE: Record<SousSysteme, string> = { francophone: 'FR', anglophone: 'E
  * Les vœux restent exprimés par code d'école : la section est choisie au moment
  * de l'examen, d'après le sous-système de l'enseignant.
  */
-export function separerSectionsBilingues(schools: School[], teachers: Teacher[]): { schools: School[]; teachers: Teacher[] } {
+export function separerSectionsBilingues(
+  schools: School[],
+  teachers: Teacher[],
+): { schools: School[]; teachers: Teacher[] } {
   const parCode = new Map<string, School[]>()
   for (const s of schools) parCode.set(s.id, [...(parCode.get(s.id) ?? []), s])
 

@@ -212,7 +212,11 @@ function apparierAvecPlafond(
 }
 
 /** Photographie de la situation de départ, telle que le diagnostic la décrit. */
-function snapshotAvant(diagnostics: SchoolDiagnostic[], settings: SimulationScenario['settings'], besoinInitial: number): SituationSnapshot {
+function snapshotAvant(
+  diagnostics: SchoolDiagnostic[],
+  settings: SimulationScenario['settings'],
+  besoinInitial: number,
+): SituationSnapshot {
   const parRegion = new Map<string, number>()
   let sommePression = 0
   let nbPression = 0
@@ -231,7 +235,9 @@ function snapshotAvant(diagnostics: SchoolDiagnostic[], settings: SimulationScen
     ecolesEnDeficit: diagnostics.filter(d => nombreDePostes(d, settings) > 0).length,
     postesVacants: besoinInitial,
     deficitTotal: besoinInitial,
-    parRegion: [...parRegion.entries()].map(([region, deficit]) => ({ region, deficit })).sort((a, b) => b.deficit - a.deficit),
+    parRegion: [...parRegion.entries()]
+      .map(([region, deficit]) => ({ region, deficit }))
+      .sort((a, b) => b.deficit - a.deficit),
     pressionMoyenne: nbPression > 0 ? round2(sommePression / nbPression) : null,
   }
 }
@@ -281,7 +287,9 @@ function snapshotApres(
       ecolesEnDeficit,
       postesVacants: deficitTotal,
       deficitTotal,
-      parRegion: [...parRegion.entries()].map(([region, deficit]) => ({ region, deficit })).sort((a, b) => b.deficit - a.deficit),
+      parRegion: [...parRegion.entries()]
+        .map(([region, deficit]) => ({ region, deficit }))
+        .sort((a, b) => b.deficit - a.deficit),
       pressionMoyenne: nbPression > 0 ? round2(sommePression / nbPression) : null,
     },
     effectifsApres,
@@ -308,7 +316,8 @@ export function runSimulation(input: SimulationInput): SimulationResult {
   if (nbFaitsPrince > 0) {
     logs.push({
       etape: 'Fait de Prince',
-      message: 'Redéploiements décidés par la DRH, appliqués avant le calcul comme acquis : effectifs mis à jour, enseignants hors de tout mouvement.',
+      message:
+        'Redéploiements décidés par la DRH, appliqués avant le calcul comme acquis : effectifs mis à jour, enseignants hors de tout mouvement.',
       valeur: nbFaitsPrince,
     })
   }
@@ -321,7 +330,11 @@ export function runSimulation(input: SimulationInput): SimulationResult {
   // 1 — Référentiel des postes, classé par priorité.
   const postes = new Postes(construirePostes(diagnostics, settings, structures))
   const besoinInitial = postes.tous.length
-  logs.push({ etape: 'Postes ouverts', message: `Écoles nécessiteuses et structures d'accueil, classées par indice de priorité u = w + β.`, valeur: besoinInitial })
+  logs.push({
+    etape: 'Postes ouverts',
+    message: `Écoles nécessiteuses et structures d'accueil, classées par indice de priorité u = w + β.`,
+    valeur: besoinInitial,
+  })
 
   const departs = new Departs(diagnostics)
   const assignments: ProposedAssignment[] = []
@@ -331,7 +344,15 @@ export function runSimulation(input: SimulationInput): SimulationResult {
   const affecter = (
     t: Teacher,
     poste: TeachingPost,
-    o: { phase: string; nature: NatureMouvement; rangVoeu: number | null; statut: StatutProposition; bareme: number; breakdown: ScoreBreakdown; arbitrageId?: string },
+    o: {
+      phase: string
+      nature: NatureMouvement
+      rangVoeu: number | null
+      statut: StatutProposition
+      bareme: number
+      breakdown: ScoreBreakdown
+      arbitrageId?: string
+    },
   ) => {
     affectes.add(t.id)
     departs.consommer(t.idEtabAttache)
@@ -371,7 +392,7 @@ export function runSimulation(input: SimulationInput): SimulationResult {
     const t = teacherParId.get(decision.teacherId)
     const refuser = (motif: string) => arbitrages.push({ decision, appliquee: false, motif })
     if (!t) {
-      refuser("Enseignant absent des données chargées.")
+      refuser('Enseignant absent des données chargées.')
       continue
     }
     if (decision.decision === 'rejeter') {
@@ -379,7 +400,8 @@ export function runSimulation(input: SimulationInput): SimulationResult {
       arbitrages.push({ decision, appliquee: true, motif: 'Proposition écartée : l’algorithme est relancé sans elle.' })
       continue
     }
-    const destination = decision.decision === 'valider' ? decision.propositionInitiale?.schoolId : decision.schoolDestinationId
+    const destination =
+      decision.decision === 'valider' ? decision.propositionInitiale?.schoolId : decision.schoolDestinationId
     if (!destination) {
       refuser('Aucune école de destination.')
       continue
@@ -409,11 +431,21 @@ export function runSimulation(input: SimulationInput): SimulationResult {
     const rang = t.voeux.findIndex(code => unites.resoudre(code, t.sousSysteme)?.id === destination)
     affecter(t, poste, {
       phase: decision.decision === 'valider' ? 'Validé par la commission' : 'Décision de la commission',
-      nature: decision.decision === 'valider' ? decision.propositionInitiale?.nature ?? 'voeu' : 'arbitrage',
+      nature: decision.decision === 'valider' ? (decision.propositionInitiale?.nature ?? 'voeu') : 'arbitrage',
       rangVoeu: rang >= 0 ? rang + 1 : null,
       statut: decision.decision === 'valider' ? 'valide' : 'arbitre',
       bareme: 0,
-      breakdown: { total: 0, components: [{ label: `Décision de la commission ${decision.instance === 'centrale' ? 'centrale' : 'régionale'} — ${decision.motif || 'sans motif saisi'}`, valeur: 0, poids: 0, contribution: 0 }] },
+      breakdown: {
+        total: 0,
+        components: [
+          {
+            label: `Décision de la commission ${decision.instance === 'centrale' ? 'centrale' : 'régionale'} — ${decision.motif || 'sans motif saisi'}`,
+            valeur: 0,
+            poids: 0,
+            contribution: 0,
+          },
+        ],
+      },
       arbitrageId: decision.id,
     })
     arbitrages.push({
@@ -423,7 +455,11 @@ export function runSimulation(input: SimulationInput): SimulationResult {
     })
   }
   if (arbitrages.length > 0) {
-    logs.push({ etape: 'Arbitrage', message: 'Décisions des commissions appliquées avant le calcul.', valeur: arbitrages.filter(a => a.appliquee).length })
+    logs.push({
+      etape: 'Arbitrage',
+      message: 'Décisions des commissions appliquées avant le calcul.',
+      valeur: arbitrages.filter(a => a.appliquee).length,
+    })
   }
 
   // 2 — Synthèse des vœux et scores.
@@ -435,14 +471,22 @@ export function runSimulation(input: SimulationInput): SimulationResult {
     }
   }
   const recevables = candidatures.filter(c => c.recevable && !affectes.has(c.teacher.id))
-  logs.push({ etape: 'Demandes de mutation', message: 'Enseignants ayant formulé au moins un vœu.', valeur: candidatures.length })
-  logs.push({ etape: 'Demandes recevables', message: `Stabilité d'au moins ${m.stabiliteMinimaleAns} ans et école d'attache excédentaire.`, valeur: recevables.length })
+  logs.push({
+    etape: 'Demandes de mutation',
+    message: 'Enseignants ayant formulé au moins un vœu.',
+    valeur: candidatures.length,
+  })
+  logs.push({
+    etape: 'Demandes recevables',
+    message: `Stabilité d'au moins ${m.stabiliteMinimaleAns} ans et école d'attache excédentaire.`,
+    valeur: recevables.length,
+  })
 
   /** École visée par un motif justifié : celle désignée, sinon le premier vœu. */
   const ecoleVisee = (t: Teacher): string | null => {
     if (!motifJustifie(t)) return null
     const code = t.ecoleMotif ?? t.voeux[0]
-    return code ? unites.resoudre(code, t.sousSysteme)?.id ?? null : null
+    return code ? (unites.resoudre(code, t.sousSysteme)?.id ?? null) : null
   }
   const niveauDe = (schoolId: string) => diagParId.get(schoolId)?.priorite.niveauDifficulte ?? null
   /** Un poste représentatif d'une unité, pour calculer un score d'appariement même sans poste ouvert (projection N+2). */
@@ -452,11 +496,24 @@ export function runSimulation(input: SimulationInput): SimulationResult {
     const d = diagParId.get(schoolId)
     if (!d) return null
     return {
-      id: `${schoolId}::projete`, schoolId, nomEtab: d.school.nom, region: d.school.region, iaeb: d.school.iaeb,
-      departement: d.school.departement, commune: d.school.commune, zone: d.school.zone, typeEtab: d.school.typeEtab,
-      sousSysteme: d.school.sousSysteme, estStructure: false, classesMultigrades: d.school.classesMultigrades,
-      prioriteLocale: d.school.prioriteLocale, deficitEcole: 0, elevesParEnseignantEtat: d.elevesParEnseignantEtat,
-      priorite: d.priorite, rang: 0, pourvu: true,
+      id: `${schoolId}::projete`,
+      schoolId,
+      nomEtab: d.school.nom,
+      region: d.school.region,
+      iaeb: d.school.iaeb,
+      departement: d.school.departement,
+      commune: d.school.commune,
+      zone: d.school.zone,
+      typeEtab: d.school.typeEtab,
+      sousSysteme: d.school.sousSysteme,
+      estStructure: false,
+      classesMultigrades: d.school.classesMultigrades,
+      prioriteLocale: d.school.prioriteLocale,
+      deficitEcole: 0,
+      elevesParEnseignantEtat: d.elevesParEnseignantEtat,
+      priorite: d.priorite,
+      rang: 0,
+      pourvu: true,
     }
   }
   if (m.classementCandidats === 'score_appariement') {
@@ -472,20 +529,30 @@ export function runSimulation(input: SimulationInput): SimulationResult {
     if (m.classementCandidats !== 'score_appariement' || !v.schoolId) return detaillerScore(c, v.bonification)
     const poste = posteDe(v.schoolId)
     const bareme = calculerBaremeIndividuel(c.teacher, settings, niveauDe(c.teacher.idEtabAttache))
-    return poste ? scoreAppariement(c.teacher, bareme, poste, settings, ecoleVisee(c.teacher)) : detaillerScore(c, v.bonification)
+    return poste
+      ? scoreAppariement(c.teacher, bareme, poste, settings, ecoleVisee(c.teacher))
+      : detaillerScore(c, v.bonification)
   }
 
   const voeuxPossibles = (c: Candidature, interregional: boolean) =>
     c.voeux.filter(
-      v => v.statut === 'examine' && v.schoolId != null && (interregional || !v.interregional) && !interdits.has(cle(c.teacher.id, v.schoolId)),
+      v =>
+        v.statut === 'examine' &&
+        v.schoolId != null &&
+        (interregional || !v.interregional) &&
+        !interdits.has(cle(c.teacher.id, v.schoolId)),
     )
 
   // 3 et 4 — Acceptation différée, niveau régional puis niveau central.
   const tours: TourAppariement[] = []
   let toursTronques = false
-  const niveaux: { nom: string; interregional: boolean }[] = m.phaseVoeux ? [{ nom: 'Niveau régional — vœux intrarégionaux', interregional: false }] : []
-  if (m.phaseVoeux && scope === 'etendu') niveaux.push({ nom: 'Niveau central — vœux interrégionaux', interregional: true })
-  if (!m.phaseVoeux) logs.push({ etape: 'Vœux', message: 'Phase des vœux désactivée dans les paramètres.', valeur: null })
+  const niveaux: { nom: string; interregional: boolean }[] = m.phaseVoeux
+    ? [{ nom: 'Niveau régional — vœux intrarégionaux', interregional: false }]
+    : []
+  if (m.phaseVoeux && scope === 'etendu')
+    niveaux.push({ nom: 'Niveau central — vœux interrégionaux', interregional: true })
+  if (!m.phaseVoeux)
+    logs.push({ etape: 'Vœux', message: 'Phase des vœux désactivée dans les paramètres.', valeur: null })
 
   for (const niveau of niveaux) {
     const libres = recevables.filter(c => !affectes.has(c.teacher.id) && c.issue !== 'depart_non_valide')
@@ -504,7 +571,8 @@ export function runSimulation(input: SimulationInput): SimulationResult {
       const c = libres.find(x => x.teacher.id === id)
       if (c) {
         c.issue = 'depart_non_valide'
-        c.detailIssue = "Départ non validé : l'excédent de l'école d'attache est atteint par des candidats mieux classés."
+        c.detailIssue =
+          "Départ non validé : l'excédent de l'école d'attache est atteint par des candidats mieux classés."
       }
     }
     let ajoutes = 0
@@ -541,7 +609,10 @@ export function runSimulation(input: SimulationInput): SimulationResult {
       }
       const t = c.teacher
       if (departs.restant(t.idEtabAttache) <= 0) continue
-      const souhaits = c.voeux.filter(v => v.schoolId).map(v => unites.parId.get(v.schoolId as string)).filter((u): u is School => !!u)
+      const souhaits = c.voeux
+        .filter(v => v.schoolId)
+        .map(v => unites.parId.get(v.schoolId as string))
+        .filter((u): u is School => !!u)
       const communes = new Set(souhaits.map(u => lower(u.commune)))
       const iaebs = new Set(souhaits.map(u => lower(u.iaeb)).filter(Boolean))
       const departements = new Set(souhaits.map(u => lower(u.departement)))
@@ -578,12 +649,30 @@ export function runSimulation(input: SimulationInput): SimulationResult {
       c.detailIssue = `Proposition hors vœux : ${poste.nomEtab} (${['commune', 'IAEB', 'département', 'région'][meilleur.niveau]} des écoles demandées), soumise à l'accord de l'enseignant.`
       ajoutes++
     }
-    logs.push({ etape: 'Solution la plus proche', message: 'Propositions hors vœux, hors zone rouge, dans le sous-système de l’enseignant.', valeur: ajoutes })
+    logs.push({
+      etape: 'Solution la plus proche',
+      message: 'Propositions hors vœux, hors zone rouge, dans le sous-système de l’enseignant.',
+      valeur: ajoutes,
+    })
   }
 
   // 6 — Combinaisons proposées à la commission pour les écoles restées non couvertes.
-  const pool = construireVivier(teachers.filter(t => !affectes.has(t.id)), diagnostics, settings)
-  const combinaisons = construireCombinaisons(postes, pool, candidatures, unites, departs, diagParId, affectes, scope, m.regleZoneRouge)
+  const pool = construireVivier(
+    teachers.filter(t => !affectes.has(t.id)),
+    diagnostics,
+    settings,
+  )
+  const combinaisons = construireCombinaisons(
+    postes,
+    pool,
+    candidatures,
+    unites,
+    departs,
+    diagParId,
+    affectes,
+    scope,
+    m.regleZoneRouge,
+  )
 
   // 7 — Redéploiement obligatoire, depuis les écoles excédentaires du même sous-système.
   if (m.redeploiementObligatoire) {
@@ -597,50 +686,53 @@ export function runSimulation(input: SimulationInput): SimulationResult {
     // locaux sont pourvus avant qu'une école prioritaire éloignée n'attire un maître
     // qui aurait couvert une école de sa propre commune (référentiel §3.6).
     for (let passe = 0; passe <= RANG_PROXIMITE.hors_region; passe++)
-    for (const poste of postes.tous) {
-      if (poste.pourvu || poste.estStructure) continue
-      if (m.regleZoneRouge && poste.priorite.zoneRouge) continue
-      // Proximité d'abord (commune, IAEB, département, région), puis score d'appariement :
-      // le plus proche des maîtres excédentaires, et à proximité égale le mieux apparié.
-      let choix: { p: (typeof pool.teachers)[number]; proximite: number; score: ScoreBreakdown } | null = null
-      for (const [ecoleId, liste] of parEcole) {
-        if (ecoleId === poste.schoolId || departs.restant(ecoleId) <= 0) continue
-        for (const p of liste) {
-          if (
-            p.affecte ||
-            !sousSystemesCompatibles(p.teacher.sousSysteme ?? diagParId.get(ecoleId)?.school.sousSysteme ?? null, poste.sousSysteme) ||
-            !dansLePerimetre(p.teacher, poste, scope) ||
-            interdits.has(cle(p.teacher.id, poste.schoolId))
-          ) {
-            continue
-          }
-          const proximite = RANG_PROXIMITE[niveauProximite(p.teacher, poste)]
-          if (proximite > passe || (choix && proximite > choix.proximite)) continue
-          const score = scoreAppariement(p.teacher, p.bareme, poste, settings, ecoleVisee(p.teacher))
-          if (
-            !choix ||
-            proximite < choix.proximite ||
-            score.total > choix.score.total ||
-            (score.total === choix.score.total && p.teacher.id < choix.p.teacher.id)
-          ) {
-            choix = { p, proximite, score }
+      for (const poste of postes.tous) {
+        if (poste.pourvu || poste.estStructure) continue
+        if (m.regleZoneRouge && poste.priorite.zoneRouge) continue
+        // Proximité d'abord (commune, IAEB, département, région), puis score d'appariement :
+        // le plus proche des maîtres excédentaires, et à proximité égale le mieux apparié.
+        let choix: { p: (typeof pool.teachers)[number]; proximite: number; score: ScoreBreakdown } | null = null
+        for (const [ecoleId, liste] of parEcole) {
+          if (ecoleId === poste.schoolId || departs.restant(ecoleId) <= 0) continue
+          for (const p of liste) {
+            if (
+              p.affecte ||
+              !sousSystemesCompatibles(
+                p.teacher.sousSysteme ?? diagParId.get(ecoleId)?.school.sousSysteme ?? null,
+                poste.sousSysteme,
+              ) ||
+              !dansLePerimetre(p.teacher, poste, scope) ||
+              interdits.has(cle(p.teacher.id, poste.schoolId))
+            ) {
+              continue
+            }
+            const proximite = RANG_PROXIMITE[niveauProximite(p.teacher, poste)]
+            if (proximite > passe || (choix && proximite > choix.proximite)) continue
+            const score = scoreAppariement(p.teacher, p.bareme, poste, settings, ecoleVisee(p.teacher))
+            if (
+              !choix ||
+              proximite < choix.proximite ||
+              score.total > choix.score.total ||
+              (score.total === choix.score.total && p.teacher.id < choix.p.teacher.id)
+            ) {
+              choix = { p, proximite, score }
+            }
           }
         }
+        if (!choix) continue
+        const pris = postes.prendre(poste.schoolId)
+        if (!pris) continue
+        choix.p.affecte = true
+        affecter(choix.p.teacher, pris, {
+          phase: 'Redéploiement obligatoire',
+          nature: 'obligatoire',
+          rangVoeu: null,
+          statut: 'propose',
+          bareme: choix.p.bareme,
+          breakdown: choix.score,
+        })
+        ajoutes++
       }
-      if (!choix) continue
-      const pris = postes.prendre(poste.schoolId)
-      if (!pris) continue
-      choix.p.affecte = true
-      affecter(choix.p.teacher, pris, {
-        phase: 'Redéploiement obligatoire',
-        nature: 'obligatoire',
-        rangVoeu: null,
-        statut: 'propose',
-        bareme: choix.p.bareme,
-        breakdown: choix.score,
-      })
-      ajoutes++
-    }
     logs.push({
       etape: 'Redéploiement obligatoire',
       message: `Écoles non couvertes servies par ordre de priorité ; maître excédentaire le plus proche, puis le mieux apparié (score d’appariement)${m.regleZoneRouge ? ', zone rouge exclue' : ''}.`,
@@ -655,9 +747,14 @@ export function runSimulation(input: SimulationInput): SimulationResult {
   const { snapshot: after, effectifsApres } = snapshotApres(diagnostics, settings, assignments)
 
   // Nouveaux recrutés, sur les postes restés vacants.
-  const recrutes = input.recrues && input.recrues.length > 0 ? deployerRecrues(input.recrues, uncoveredPosts, unites, settings) : null
+  const recrutes =
+    input.recrues && input.recrues.length > 0 ? deployerRecrues(input.recrues, uncoveredPosts, unites, settings) : null
   if (recrutes) {
-    logs.push({ etape: 'Nouveaux recrutés', message: 'Postes restés vacants pourvus par note d’admission.', valeur: recrutes.affectations.length })
+    logs.push({
+      etape: 'Nouveaux recrutés',
+      message: 'Postes restés vacants pourvus par note d’admission.',
+      valeur: recrutes.affectations.length,
+    })
   }
 
   // Projection N+2 du vivier.
@@ -673,7 +770,12 @@ export function runSimulation(input: SimulationInput): SimulationResult {
       c.detailIssue = `Possibilité en N+2 : ${p.nomEtab}, sous réserve du départ attendu et du recalcul des besoins.`
     }
   }
-  if (m.projectionN2) logs.push({ etape: 'Projection N+2', message: 'Postes projetés après les départs prévisibles pendant N+1.', valeur: postesProjetes })
+  if (m.projectionN2)
+    logs.push({
+      etape: 'Projection N+2',
+      message: 'Postes projetés après les départs prévisibles pendant N+1.',
+      valeur: postesProjetes,
+    })
 
   // Vœux portant sur l'autre sous-système, présentés à la commission.
   const voeuxAutreSousSysteme: VoeuAutreSousSysteme[] = []
@@ -696,7 +798,8 @@ export function runSimulation(input: SimulationInput): SimulationResult {
   const ecolesBeneficiaires = new Set(assignments.map(a => a.schoolDestinationId)).size
   const ecolesSources = new Set(assignments.map(a => a.schoolOrigineId)).size
   const compteurPerimetre = new Map<ProximityLevel, number>()
-  for (const a of assignments) compteurPerimetre.set(a.niveauProximite, (compteurPerimetre.get(a.niveauProximite) ?? 0) + 1)
+  for (const a of assignments)
+    compteurPerimetre.set(a.niveauProximite, (compteurPerimetre.get(a.niveauProximite) ?? 0) + 1)
   const compteurNature = new Map<NatureMouvement, number>()
   for (const a of assignments) compteurNature.set(a.nature, (compteurNature.get(a.nature) ?? 0) + 1)
 
@@ -712,7 +815,9 @@ export function runSimulation(input: SimulationInput): SimulationResult {
     ecolesBeneficiaires,
     ecolesSources,
     tauxCouverture: besoinInitial > 0 ? assignments.length / besoinInitial : 0,
-    mouvementsParPerimetre: (['meme_commune', 'meme_iaeb', 'meme_departement', 'meme_region', 'hors_region'] as ProximityLevel[])
+    mouvementsParPerimetre: (
+      ['meme_commune', 'meme_iaeb', 'meme_departement', 'meme_region', 'hors_region'] as ProximityLevel[]
+    )
       .map(niveau => ({ niveau, nombre: compteurPerimetre.get(niveau) ?? 0 }))
       .filter(x => x.nombre > 0),
     mouvementsParNature: (['voeu', 'hors_voeux', 'obligatoire', 'arbitrage'] as NatureMouvement[])
@@ -751,7 +856,11 @@ export function runSimulation(input: SimulationInput): SimulationResult {
   }
 
   resultat.invariants = verifierInvariants(resultat, diagnostics, settings, effectifsApres)
-  logs.push({ etape: 'Vérifications', message: 'Invariants métier contrôlés après simulation.', valeur: resultat.invariants.filter(i => i.ok).length })
+  logs.push({
+    etape: 'Vérifications',
+    message: 'Invariants métier contrôlés après simulation.',
+    valeur: resultat.invariants.filter(i => i.ok).length,
+  })
   return resultat
 }
 
@@ -792,7 +901,10 @@ function construireCombinaisons(
         p =>
           p.ecoleOrigine.id !== poste.schoolId &&
           departs.restant(p.ecoleOrigine.id) > 0 &&
-          sousSystemesCompatibles(p.teacher.sousSysteme ?? diagParId.get(p.ecoleOrigine.id)?.school.sousSysteme ?? null, poste.sousSysteme) &&
+          sousSystemesCompatibles(
+            p.teacher.sousSysteme ?? diagParId.get(p.ecoleOrigine.id)?.school.sousSysteme ?? null,
+            poste.sousSysteme,
+          ) &&
           dansLePerimetre(p.teacher, poste, scope),
       )
       .map(p => ({ p, proximite: niveauProximite(p.teacher, poste) }))
@@ -806,7 +918,16 @@ function construireCombinaisons(
         schoolId: poste.schoolId,
         nomEtab: poste.nomEtab,
         indicePriorite: poste.priorite.indice,
-        mouvements: [{ teacherId: p.teacher.id, nom: nomDe(p.teacher), deId: p.ecoleOrigine.id, deNom: p.ecoleOrigine.nom, versId: poste.schoolId, versNom: poste.nomEtab }],
+        mouvements: [
+          {
+            teacherId: p.teacher.id,
+            nom: nomDe(p.teacher),
+            deId: p.ecoleOrigine.id,
+            deNom: p.ecoleOrigine.nom,
+            versId: poste.schoolId,
+            versNom: poste.nomEtab,
+          },
+        ],
         proximite,
         description: `${nomDe(p.teacher)}, de ${p.ecoleOrigine.nom} (école excédentaire), rejoint ${poste.nomEtab}.`,
       })
@@ -839,8 +960,22 @@ function construireCombinaisons(
         nomEtab: poste.nomEtab,
         indicePriorite: poste.priorite.indice,
         mouvements: [
-          { teacherId: c.teacher.id, nom: nomDe(c.teacher), deId: origine.id, deNom: origine.nom, versId: poste.schoolId, versNom: poste.nomEtab },
-          { teacherId: releve.p.teacher.id, nom: nomDe(releve.p.teacher), deId: releve.p.ecoleOrigine.id, deNom: releve.p.ecoleOrigine.nom, versId: origine.id, versNom: origine.nom },
+          {
+            teacherId: c.teacher.id,
+            nom: nomDe(c.teacher),
+            deId: origine.id,
+            deNom: origine.nom,
+            versId: poste.schoolId,
+            versNom: poste.nomEtab,
+          },
+          {
+            teacherId: releve.p.teacher.id,
+            nom: nomDe(releve.p.teacher),
+            deId: releve.p.ecoleOrigine.id,
+            deNom: releve.p.ecoleOrigine.nom,
+            versId: origine.id,
+            versNom: origine.nom,
+          },
         ],
         proximite: releve.proximite,
         description: `${nomDe(c.teacher)} rejoint ${poste.nomEtab} (vœu), et ${nomDe(releve.p.teacher)}, de ${releve.p.ecoleOrigine.nom}, reprend son poste à ${origine.nom}.`,
@@ -862,7 +997,11 @@ function construireCombinaisons(
   const dejaPermutes = new Set<string>()
   for (const a of candidatures) {
     if (affectes.has(a.teacher.id) || dejaPermutes.has(a.teacher.id)) continue
-    const stable = (c: Candidature) => !c.motifsIrrecevabilite.some(mo => mo.startsWith('stabilité') || mo.startsWith('départ à la retraite') || mo.startsWith("hors de l'effectif"))
+    const stable = (c: Candidature) =>
+      !c.motifsIrrecevabilite.some(
+        mo =>
+          mo.startsWith('stabilité') || mo.startsWith('départ à la retraite') || mo.startsWith("hors de l'effectif"),
+      )
     if (!stable(a)) continue
     const partenaire = (parEcoleDemandee.get(a.teacher.idEtabAttache) ?? []).find(
       b =>
@@ -885,7 +1024,14 @@ function construireCombinaisons(
       indicePriorite: diagParId.get(ub.id)?.priorite.indice ?? 0,
       mouvements: [
         { teacherId: a.teacher.id, nom: nomDe(a.teacher), deId: ua.id, deNom: ua.nom, versId: ub.id, versNom: ub.nom },
-        { teacherId: partenaire.teacher.id, nom: nomDe(partenaire.teacher), deId: ub.id, deNom: ub.nom, versId: ua.id, versNom: ua.nom },
+        {
+          teacherId: partenaire.teacher.id,
+          nom: nomDe(partenaire.teacher),
+          deId: ub.id,
+          deNom: ub.nom,
+          versId: ua.id,
+          versNom: ua.nom,
+        },
       ],
       proximite: niveauProximite(a.teacher, ub),
       description: `${nomDe(a.teacher)} et ${nomDe(partenaire.teacher)} échangent leurs postes, sans créer de déficit.`,
@@ -948,7 +1094,10 @@ function projeterN2(
 
   const res = apparierAvecPlafond(
     vivier,
-    c => c.voeux.filter(v => v.statut === 'examine' && v.schoolId != null && !interdits.has(cle(c.teacher.id, v.schoolId))),
+    c =>
+      c.voeux.filter(
+        v => v.statut === 'examine' && v.schoolId != null && !interdits.has(cle(c.teacher.id, v.schoolId)),
+      ),
     capacites,
     id => departs.restant(id),
     'Projection N+2',
@@ -968,4 +1117,3 @@ function projeterN2(
   })
   return { projections, postesProjetes }
 }
-

@@ -11,7 +11,12 @@ import { DEFAULT_SETTINGS } from '../lib/config/settings'
 import { runSimulation } from '../lib/simulation/engine'
 import { tousInvariantsOk } from '../lib/simulation/invariants'
 import { scenarioGeographique } from '../lib/simulation/scenarios'
-import { appliquerFaitsPrince, nouveauFaitPrince, simulerImpactPrince, verifierFaitPrince } from '../lib/simulation/prince'
+import {
+  appliquerFaitsPrince,
+  nouveauFaitPrince,
+  simulerImpactPrince,
+  verifierFaitPrince,
+} from '../lib/simulation/prince'
 import { construireRapport } from '../lib/reporting/report'
 import { construireArbreTerritorial } from '../lib/analytics/territory'
 import type { Dataset } from '../types/simulation'
@@ -27,14 +32,28 @@ function jeu(): Dataset {
   const schools = [
     ecole({ id: 'A', nom: 'EP A', nbClasses: 4, nbEnseignantsEtat: 6 }),
     ecole({ id: 'B', nom: 'EP B', nbClasses: 6, nbEnseignantsEtat: 3, nbPostesOuvertsDeclares: 3 }),
-    ecole({ id: 'C', nom: 'EP C', nbClasses: 5, nbEnseignantsEtat: 5, region: 'Est', departement: 'Kadey', commune: 'Batouri' }),
+    ecole({
+      id: 'C',
+      nom: 'EP C',
+      nbClasses: 5,
+      nbEnseignantsEtat: 5,
+      region: 'Est',
+      departement: 'Kadey',
+      commune: 'Batouri',
+    }),
   ]
   const teachers = [
     ...enseignantsDe('A', 6),
     ...enseignantsDe('B', 3),
     ...enseignantsDe('C', 5, { regionAttache: 'Est', departementAttache: 'Kadey', communeAttache: 'Batouri' }),
   ]
-  return { schools, teachers, demonstration: false, importedAt: '2026-09-21T00:00:00.000Z', sourceFiles: { etablissements: null, enseignants: null } }
+  return {
+    schools,
+    teachers,
+    demonstration: false,
+    importedAt: '2026-09-21T00:00:00.000Z',
+    sourceFiles: { etablissements: null, enseignants: null },
+  }
 }
 
 function decision(donnees: Dataset, teacherId: string, destinationId: string, reference = ''): FaitPrince {
@@ -58,7 +77,11 @@ test('Un fait de Prince rattache l’enseignant à sa nouvelle école et met à 
   assert.equal(t.faitPrinceId, appliques[0].fait.id)
   assert.equal(dataset.schools.find(s => s.id === 'A')!.nbEnseignantsEtat, 5)
   assert.equal(dataset.schools.find(s => s.id === 'B')!.nbEnseignantsEtat, 4)
-  assert.equal(dataset.schools.find(s => s.id === 'B')!.nbPostesOuvertsDeclares, 2, 'un poste déclaré de moins à pourvoir')
+  assert.equal(
+    dataset.schools.find(s => s.id === 'B')!.nbPostesOuvertsDeclares,
+    2,
+    'un poste déclaré de moins à pourvoir',
+  )
 })
 
 test('Les données importées ne sont jamais modifiées', () => {
@@ -106,7 +129,11 @@ test('Un enseignant ne peut faire l’objet que d’une décision : la suivante 
   const seconde = { ...decision(donnees, 'A-T1', 'C'), id: 'p2', decideLe: '2026-09-02T00:00:00.000Z' }
   const { dataset, appliques } = appliquerFaitsPrince(donnees, [seconde, premiere])
 
-  assert.equal(appliques.find(a => a.fait.id === 'p1')!.statut, 'applique', 'l’ordre chronologique prime sur l’ordre de saisie')
+  assert.equal(
+    appliques.find(a => a.fait.id === 'p1')!.statut,
+    'applique',
+    'l’ordre chronologique prime sur l’ordre de saisie',
+  )
   assert.equal(appliques.find(a => a.fait.id === 'p2')!.statut, 'doublon')
   assert.equal(dataset.teachers.find(x => x.id === 'A-T1')!.idEtabAttache, 'B')
 })
@@ -146,11 +173,20 @@ test('L’algorithme tient compte de la décision : moins de postes, moins d’e
   const donnees = jeu()
   const scenario = scenarioGeographique('departement', DEFAULT_SETTINGS)
 
-  const sans = runSimulation({ diagnostics: runDiagnostic(donnees.schools, DEFAULT_SETTINGS).schools, teachers: donnees.teachers, scenario })
+  const sans = runSimulation({
+    diagnostics: runDiagnostic(donnees.schools, DEFAULT_SETTINGS).schools,
+    teachers: donnees.teachers,
+    scenario,
+  })
 
   const { dataset, appliques } = appliquerFaitsPrince(donnees, [decision(donnees, 'A-T1', 'B')])
   const diag = runDiagnostic(dataset.schools, DEFAULT_SETTINGS)
-  const avec = runSimulation({ diagnostics: diag.schools, teachers: dataset.teachers, scenario, faitsPrince: appliques })
+  const avec = runSimulation({
+    diagnostics: diag.schools,
+    teachers: dataset.teachers,
+    scenario,
+    faitsPrince: appliques,
+  })
 
   assert.equal(sans.besoinInitial, 3)
   assert.equal(avec.besoinInitial, 2, 'un des trois postes de B est déjà pourvu par la décision')
@@ -174,19 +210,31 @@ test('Un enseignant que l’algorithme n’aurait jamais mobilisé peut être re
   const scenario = scenarioGeographique('etendu', DEFAULT_SETTINGS)
 
   // C est à l'équilibre : sans excédent, aucun de ses enseignants n'est dans le vivier.
-  const sans = runSimulation({ diagnostics: runDiagnostic(donnees.schools, DEFAULT_SETTINGS).schools, teachers: donnees.teachers, scenario })
+  const sans = runSimulation({
+    diagnostics: runDiagnostic(donnees.schools, DEFAULT_SETTINGS).schools,
+    teachers: donnees.teachers,
+    scenario,
+  })
   assert.ok(!sans.pool.teachers.some(p => p.teacher.idEtabAttache === 'C'))
 
-  const { dataset, appliques } = appliquerFaitsPrince(donnees, [decision(donnees, 'C-T1', 'B', 'Note de service n° 12')])
+  const { dataset, appliques } = appliquerFaitsPrince(donnees, [
+    decision(donnees, 'C-T1', 'B', 'Note de service n° 12'),
+  ])
   const diag = runDiagnostic(dataset.schools, DEFAULT_SETTINGS)
-  const avec = runSimulation({ diagnostics: diag.schools, teachers: dataset.teachers, scenario, faitsPrince: appliques })
+  const avec = runSimulation({
+    diagnostics: diag.schools,
+    teachers: dataset.teachers,
+    scenario,
+    faitsPrince: appliques,
+  })
 
   assert.equal(dataset.teachers.find(t => t.id === 'C-T1')!.idEtabAttache, 'B')
   assert.ok(!avec.assignments.some(a => a.teacherId === 'C-T1'), 'la décision de la DRH n’est pas remise en cause')
   // C est désormais en déficit d'un poste : c'est un poste de plus que l'algorithme doit couvrir.
   assert.equal(diag.bySchoolId.C.besoinTheorique, 1)
   const postesDeC =
-    avec.assignments.filter(a => a.schoolDestinationId === 'C').length + avec.uncoveredPosts.filter(p => p.schoolId === 'C').length
+    avec.assignments.filter(a => a.schoolDestinationId === 'C').length +
+    avec.uncoveredPosts.filter(p => p.schoolId === 'C').length
   assert.equal(postesDeC, 1)
   assert.equal(avec.faitsPrince[0].fait.reference, 'Note de service n° 12')
   assert.ok(tousInvariantsOk(avec.invariants))
@@ -223,7 +271,12 @@ test('L’impact prévisible signale ce que l’algorithme n’aurait pas fait, 
   assert.match(texte, /n'est pas en déficit/)
 
   // A → B : B est en déficit, le poste est comblé.
-  const utile = simulerImpactPrince(donnees.teachers.find(x => x.id === 'A-T1')!, diag.bySchoolId.A, diag.bySchoolId.B, DEFAULT_SETTINGS)
+  const utile = simulerImpactPrince(
+    donnees.teachers.find(x => x.id === 'A-T1')!,
+    diag.bySchoolId.A,
+    diag.bySchoolId.B,
+    DEFAULT_SETTINGS,
+  )
   assert.equal(utile.destination.besoinApres, 2)
   assert.match(utile.observations.join(' '), /comble un poste/)
 })

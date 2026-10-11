@@ -70,7 +70,13 @@ export function nouveauFaitPrince(
     enseignant: `${enseignant.nom} ${enseignant.prenom}`.trim(),
     origine: origine
       ? lieuDe(origine)
-      : { id: enseignant.idEtabAttache, nom: enseignant.idEtabAttache || 'École non renseignée', commune: enseignant.communeAttache, departement: enseignant.departementAttache, region: enseignant.regionAttache },
+      : {
+          id: enseignant.idEtabAttache,
+          nom: enseignant.idEtabAttache || 'École non renseignée',
+          commune: enseignant.communeAttache,
+          departement: enseignant.departementAttache,
+          region: enseignant.regionAttache,
+        },
     destination: lieuDe(destination),
   }
 }
@@ -84,7 +90,10 @@ export function nouveauFaitPrince(
  * Une décision qui vise un enseignant ou une école absents des données actuelles
  * est conservée dans la liste, mais sans effet.
  */
-export function appliquerFaitsPrince(dataset: Dataset, faits: FaitPrince[]): { dataset: Dataset; appliques: FaitPrinceApplique[] } {
+export function appliquerFaitsPrince(
+  dataset: Dataset,
+  faits: FaitPrince[],
+): { dataset: Dataset; appliques: FaitPrinceApplique[] } {
   if (faits.length === 0) return { dataset, appliques: [] }
 
   const enseignants = new Map<string, Teacher>()
@@ -148,7 +157,11 @@ export function appliquerFaitsPrince(dataset: Dataset, faits: FaitPrince[]): { d
       zoneAttache: destination.zone,
       faitPrinceId: fait.id,
     })
-    appliques.push({ fait, statut: 'applique', motif: 'Décision appliquée : l’enseignant est rattaché à sa nouvelle école.' })
+    appliques.push({
+      fait,
+      statut: 'applique',
+      motif: 'Décision appliquée : l’enseignant est rattaché à sa nouvelle école.',
+    })
   }
 
   return {
@@ -215,7 +228,9 @@ export function simulerImpactPrince(
   const observations: string[] = []
 
   if (!enseignant.payeParEtat) {
-    observations.push("Cet enseignant n'est pas payé par l'État : les effectifs comptabilisés des écoles ne changent pas.")
+    observations.push(
+      "Cet enseignant n'est pas payé par l'État : les effectifs comptabilisés des écoles ne changent pas.",
+    )
   }
 
   const eligibilite = estEligibleAdministrativement(enseignant, settings)
@@ -225,20 +240,28 @@ export function simulerImpactPrince(
 
   if (origine) {
     if (origine.excedentTheorique <= 0) {
-      observations.push("L'école d'origine n'a aucun excédent mobilisable : l'algorithme n'aurait pas retenu ce départ.")
+      observations.push(
+        "L'école d'origine n'a aucun excédent mobilisable : l'algorithme n'aurait pas retenu ce départ.",
+      )
     }
     if (impactOrigine && impactOrigine.besoinApres > impactOrigine.besoinAvant) {
       const cree = impactOrigine.besoinApres - impactOrigine.besoinAvant
-      observations.push(`Ce départ met l'école d'origine en déficit de ${cree} poste${cree > 1 ? 's' : ''} supplémentaire${cree > 1 ? 's' : ''}.`)
+      observations.push(
+        `Ce départ met l'école d'origine en déficit de ${cree} poste${cree > 1 ? 's' : ''} supplémentaire${cree > 1 ? 's' : ''}.`,
+      )
     }
   } else {
-    observations.push("L'école de rattachement actuelle de cet enseignant est absente du fichier des établissements : seule l'école de destination est mise à jour.")
+    observations.push(
+      "L'école de rattachement actuelle de cet enseignant est absente du fichier des établissements : seule l'école de destination est mise à jour.",
+    )
   }
 
   if (destination.besoinTheorique <= 0) {
     observations.push("L'école de destination n'est pas en déficit : l'algorithme n'y aurait proposé personne.")
   } else if (impactDestination.besoinApres < impactDestination.besoinAvant) {
-    observations.push(`Ce redéploiement comble un poste sur les ${destination.besoinTheorique} qui manquaient à l'école de destination.`)
+    observations.push(
+      `Ce redéploiement comble un poste sur les ${destination.besoinTheorique} qui manquaient à l'école de destination.`,
+    )
   }
 
   return { origine: impactOrigine, destination: impactDestination, observations }

@@ -75,7 +75,10 @@ function ChampScoring<S extends 'pointsProximite' | 'ajustements' | 'pointsCohor
         max={100}
         value={valeur}
         onChange={e =>
-          majSettings(s => ({ ...s, scoring: { ...s.scoring, [section]: { ...(s.scoring[section] as object), [cle]: Number(e.target.value) } } }))
+          majSettings(s => ({
+            ...s,
+            scoring: { ...s.scoring, [section]: { ...(s.scoring[section] as object), [cle]: Number(e.target.value) } },
+          }))
         }
       />
     </div>
@@ -96,7 +99,16 @@ const SCORE: { cle: keyof ReglesMobilite; label: string; max: number }[] = [
 ]
 
 export function EnginePage({ store }: { store: PlanningStore }) {
-  const { settings, majSettings, calculerScenariosDeBase, calculEnCours, donneesChargees, resultatsObsoletes, setPage, dataset } = store
+  const {
+    settings,
+    majSettings,
+    calculerScenariosDeBase,
+    calculEnCours,
+    donneesChargees,
+    resultatsObsoletes,
+    setPage,
+    dataset,
+  } = store
 
   /**
    * Ce que le fichier importé contient réellement comme situations matrimoniales.
@@ -181,7 +193,10 @@ export function EnginePage({ store }: { store: PlanningStore }) {
               onChange={e =>
                 majSettings(s => ({
                   ...s,
-                  scoring: { ...s.scoring, poidsBaremeIndividuel: { ...s.scoring.poidsBaremeIndividuel, [cle]: Number(e.target.value) } },
+                  scoring: {
+                    ...s.scoring,
+                    poidsBaremeIndividuel: { ...s.scoring.poidsBaremeIndividuel, [cle]: Number(e.target.value) },
+                  },
                 }))
               }
             />
@@ -191,21 +206,78 @@ export function EnginePage({ store }: { store: PlanningStore }) {
         <div className="param-grid" style={{ marginTop: 14 }}>
           <div className="field">
             <label htmlFor="e-enfant">C3 — points retirés par enfant à charge</label>
-            <input id="e-enfant" type="number" min={0} max={10} value={settings.scoring.pointsParEnfant} onChange={e => majSettings(s => ({ ...s, scoring: { ...s.scoring, pointsParEnfant: Number(e.target.value) } }))} />
+            <input
+              id="e-enfant"
+              type="number"
+              min={0}
+              max={10}
+              value={settings.scoring.pointsParEnfant}
+              onChange={e =>
+                majSettings(s => ({ ...s, scoring: { ...s.scoring, pointsParEnfant: Number(e.target.value) } }))
+              }
+            />
           </div>
           <div className="field">
             <label htmlFor="e-formation">C4 — points par formation</label>
-            <input id="e-formation" type="number" min={0} max={10} value={settings.scoring.pointsParFormation} onChange={e => majSettings(s => ({ ...s, scoring: { ...s.scoring, pointsParFormation: Number(e.target.value) } }))} />
+            <input
+              id="e-formation"
+              type="number"
+              min={0}
+              max={10}
+              value={settings.scoring.pointsParFormation}
+              onChange={e =>
+                majSettings(s => ({ ...s, scoring: { ...s.scoring, pointsParFormation: Number(e.target.value) } }))
+              }
+            />
           </div>
           <div className="field">
             <label htmlFor="e-formation-max">C4 — plafond</label>
-            <input id="e-formation-max" type="number" min={0} max={50} value={settings.scoring.plafondFormation} onChange={e => majSettings(s => ({ ...s, scoring: { ...s.scoring, plafondFormation: Number(e.target.value) } }))} />
+            <input
+              id="e-formation-max"
+              type="number"
+              min={0}
+              max={50}
+              value={settings.scoring.plafondFormation}
+              onChange={e =>
+                majSettings(s => ({ ...s, scoring: { ...s.scoring, plafondFormation: Number(e.target.value) } }))
+              }
+            />
           </div>
-          <ChampScoring section="seuils" cle="ageJeuneAns" label="C5 — jeune avant (ans)" settings={settings} majSettings={majSettings} />
-          <ChampScoring section="seuils" cle="ageSeniorAns" label="C5 — senior à partir de (ans)" settings={settings} majSettings={majSettings} />
-          <ChampScoring section="pointsCohorte" cle="jeune" label="C5 — points jeune" settings={settings} majSettings={majSettings} />
-          <ChampScoring section="pointsCohorte" cle="median" label="C5 — points médiane" settings={settings} majSettings={majSettings} />
-          <ChampScoring section="pointsCohorte" cle="senior" label="C5 — points senior" settings={settings} majSettings={majSettings} />
+          <ChampScoring
+            section="seuils"
+            cle="ageJeuneAns"
+            label="C5 — jeune avant (ans)"
+            settings={settings}
+            majSettings={majSettings}
+          />
+          <ChampScoring
+            section="seuils"
+            cle="ageSeniorAns"
+            label="C5 — senior à partir de (ans)"
+            settings={settings}
+            majSettings={majSettings}
+          />
+          <ChampScoring
+            section="pointsCohorte"
+            cle="jeune"
+            label="C5 — points jeune"
+            settings={settings}
+            majSettings={majSettings}
+          />
+          <ChampScoring
+            section="pointsCohorte"
+            cle="median"
+            label="C5 — points médiane"
+            settings={settings}
+            majSettings={majSettings}
+          />
+          <ChampScoring
+            section="pointsCohorte"
+            cle="senior"
+            label="C5 — points senior"
+            settings={settings}
+            majSettings={majSettings}
+          />
         </div>
       </Panel>
 
@@ -227,23 +299,44 @@ export function EnginePage({ store }: { store: PlanningStore }) {
               onChange={e =>
                 majSettings(s => ({
                   ...s,
-                  scoring: { ...s.scoring, poidsScoreAppariement: { ...s.scoring.poidsScoreAppariement, [cle]: Number(e.target.value) } },
+                  scoring: {
+                    ...s.scoring,
+                    poidsScoreAppariement: { ...s.scoring.poidsScoreAppariement, [cle]: Number(e.target.value) },
+                  },
                 }))
               }
             />
             <span className="slider-value">{settings.scoring.poidsScoreAppariement[cle].toFixed(2)}</span>
           </div>
         ))}
-        <p className="hint" style={{ margin: '14px 0 8px' }}>Points de proximité</p>
+        <p className="hint" style={{ margin: '14px 0 8px' }}>
+          Points de proximité
+        </p>
         <div className="param-grid">
           {(Object.keys(LABELS_PROXIMITE) as (keyof typeof LABELS_PROXIMITE)[]).map(cle => (
-            <ChampScoring key={cle} section="pointsProximite" cle={cle} label={LABELS_PROXIMITE[cle]} settings={settings} majSettings={majSettings} />
+            <ChampScoring
+              key={cle}
+              section="pointsProximite"
+              cle={cle}
+              label={LABELS_PROXIMITE[cle]}
+              settings={settings}
+              majSettings={majSettings}
+            />
           ))}
         </div>
-        <p className="hint" style={{ margin: '14px 0 8px' }}>Ajustements contextuels (points)</p>
+        <p className="hint" style={{ margin: '14px 0 8px' }}>
+          Ajustements contextuels (points)
+        </p>
         <div className="param-grid">
           {(Object.keys(LABELS_AJUSTEMENTS) as (keyof typeof LABELS_AJUSTEMENTS)[]).map(cle => (
-            <ChampScoring key={cle} section="ajustements" cle={cle} label={LABELS_AJUSTEMENTS[cle]} settings={settings} majSettings={majSettings} />
+            <ChampScoring
+              key={cle}
+              section="ajustements"
+              cle={cle}
+              label={LABELS_AJUSTEMENTS[cle]}
+              settings={settings}
+              majSettings={majSettings}
+            />
           ))}
         </div>
       </Panel>
@@ -268,7 +361,13 @@ export function EnginePage({ store }: { store: PlanningStore }) {
                   onChange={e =>
                     majSettings(s => ({
                       ...s,
-                      scoring: { ...s.scoring, pointsSituationFamiliale: { ...s.scoring.pointsSituationFamiliale, [cle]: Number(e.target.value) } },
+                      scoring: {
+                        ...s.scoring,
+                        pointsSituationFamiliale: {
+                          ...s.scoring.pointsSituationFamiliale,
+                          [cle]: Number(e.target.value),
+                        },
+                      },
                     }))
                   }
                 />
@@ -286,8 +385,8 @@ export function EnginePage({ store }: { store: PlanningStore }) {
 
         {situations.nonReconnues.length > 0 && (
           <Notice tone="warn" title="Des situations déclarées ne sont rattachées à aucun barème.">
-            Ces valeurs du fichier ne correspondent à aucune situation connue : elles valent <strong>0 point</strong> dans le
-            classement. Ajoutez-les ci-dessous pour leur attribuer des points.
+            Ces valeurs du fichier ne correspondent à aucune situation connue : elles valent <strong>0 point</strong>{' '}
+            dans le classement. Ajoutez-les ci-dessous pour leur attribuer des points.
           </Notice>
         )}
 
@@ -306,7 +405,10 @@ export function EnginePage({ store }: { store: PlanningStore }) {
                         ...s,
                         scoring: {
                           ...s.scoring,
-                          pointsSituationFamiliale: { ...s.scoring.pointsSituationFamiliale, [v.valeur.trim().toLowerCase()]: 0 },
+                          pointsSituationFamiliale: {
+                            ...s.scoring.pointsSituationFamiliale,
+                            [v.valeur.trim().toLowerCase()]: 0,
+                          },
                         },
                       }))
                     }
@@ -321,16 +423,22 @@ export function EnginePage({ store }: { store: PlanningStore }) {
 
         {situations.nonRenseignees > 0 && (
           <p className="hint" style={{ marginTop: 10 }}>
-            {fmt(situations.nonRenseignees)} enseignant(s) n’ont aucune situation matrimoniale renseignée : ce critère vaut 0
-            point pour eux, les autres critères du barème s’appliquent normalement.
+            {fmt(situations.nonRenseignees)} enseignant(s) n’ont aucune situation matrimoniale renseignée : ce critère
+            vaut 0 point pour eux, les autres critères du barème s’appliquent normalement.
           </p>
         )}
       </Panel>
 
       <Panel kicker="Vérification" title="Configuration effective">
         <div className="topbar-actions" style={{ marginBottom: 12 }}>
-          <button type="button" className="btn btn-primary" disabled={!donneesChargees || calculEnCours} onClick={calculerScenariosDeBase}>
-            <RefreshCw size={14} className={calculEnCours ? 'spin' : undefined} aria-hidden="true" /> Mettre à jour les simulations
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!donneesChargees || calculEnCours}
+            onClick={calculerScenariosDeBase}
+          >
+            <RefreshCw size={14} className={calculEnCours ? 'spin' : undefined} aria-hidden="true" /> Mettre à jour les
+            simulations
           </button>
         </div>
         <details className="advanced">

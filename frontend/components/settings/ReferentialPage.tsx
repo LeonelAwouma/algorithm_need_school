@@ -19,7 +19,17 @@ import { Notice, Panel } from '../common'
 import type { PlanningStore } from '../usePlanningState'
 
 /** Un réglage présenté comme une phrase à compléter. */
-function Regle({ enonce, precision, htmlFor, children }: { enonce: string; precision?: string; htmlFor: string; children: ReactNode }) {
+function Regle({
+  enonce,
+  precision,
+  htmlFor,
+  children,
+}: {
+  enonce: string
+  precision?: string
+  htmlFor: string
+  children: ReactNode
+}) {
   return (
     <div className="regle">
       <label htmlFor={htmlFor} className="regle-enonce">
@@ -32,7 +42,17 @@ function Regle({ enonce, precision, htmlFor, children }: { enonce: string; preci
 }
 
 /** Case à cocher décrite par un titre et une conséquence. */
-function Interrupteur({ titre, texte, coche, onChange }: { titre: string; texte: string; coche: boolean; onChange: (v: boolean) => void }) {
+function Interrupteur({
+  titre,
+  texte,
+  coche,
+  onChange,
+}: {
+  titre: string
+  texte: string
+  coche: boolean
+  onChange: (v: boolean) => void
+}) {
   return (
     <label className="switch-row">
       <input type="checkbox" checked={coche} onChange={e => onChange(e.target.checked)} />
@@ -45,7 +65,16 @@ function Interrupteur({ titre, texte, coche, onChange }: { titre: string; texte:
 }
 
 export function ReferentialPage({ store }: { store: PlanningStore }) {
-  const { settings, majSettings, mode, setPage, calculerScenariosDeBase, calculEnCours, donneesChargees, resultatsObsoletes } = store
+  const {
+    settings,
+    majSettings,
+    mode,
+    setPage,
+    calculerScenariosDeBase,
+    calculEnCours,
+    donneesChargees,
+    resultatsObsoletes,
+  } = store
   const [erreurImport, setErreurImport] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -53,7 +82,8 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
     majSettings(s => ({ ...s, besoin: { ...s.besoin, [cle]: valeur } }))
   const mobilite = <K extends keyof ReglesMobilite>(cle: K, valeur: ReglesMobilite[K]) =>
     majSettings(s => ({ ...s, mobilite: { ...s.mobilite, [cle]: valeur } }))
-  const priorite = (maj: (p: ReglesPriorite) => ReglesPriorite) => majSettings(s => ({ ...s, priorite: maj(s.priorite) }))
+  const priorite = (maj: (p: ReglesPriorite) => ReglesPriorite) =>
+    majSettings(s => ({ ...s, priorite: maj(s.priorite) }))
   const nombre = (v: string) => (v === '' ? 0 : Number(v))
 
   function chargerConfiguration(file?: File) {
@@ -62,7 +92,8 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
       .text()
       .then(texte => {
         const brut: unknown = JSON.parse(texte)
-        if (typeof brut !== 'object' || brut === null) throw new Error('Le fichier ne contient pas un jeu de règles exploitable.')
+        if (typeof brut !== 'object' || brut === null)
+          throw new Error('Le fichier ne contient pas un jeu de règles exploitable.')
         majSettings(courant => mergeSettings(courant, brut as Partial<EngineSettings>))
         setErreurImport(null)
       })
@@ -75,8 +106,8 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
     <div className="stack">
       <Notice tone="info" title="Ce que vous réglez ici.">
         Ces règles sont celles du Référentiel technique de modélisation des plans de rotation, de redéploiement et de
-        déploiement. Le référentiel les désigne comme paramètres à valider par la DRH : les valeurs proposées sont ses valeurs
-        par défaut. Elles sont reprises telles quelles dans la Méthodologie et dans le rapport.
+        déploiement. Le référentiel les désigne comme paramètres à valider par la DRH : les valeurs proposées sont ses
+        valeurs par défaut. Elles sont reprises telles quelles dans la Méthodologie et dans le rapport.
       </Notice>
 
       {resultatsObsoletes && (
@@ -95,7 +126,12 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
             precision="Les départs à la retraite sont repérés à la date du 1er septembre de cette rentrée ; la projection N+2 porte sur la rentrée suivante."
             htmlFor="r-annee"
           >
-            <input id="r-annee" type="text" value={settings.anneeScolaire} onChange={e => majSettings(s => ({ ...s, anneeScolaire: e.target.value }))} />
+            <input
+              id="r-annee"
+              type="text"
+              value={settings.anneeScolaire}
+              onChange={e => majSettings(s => ({ ...s, anneeScolaire: e.target.value }))}
+            />
           </Regle>
         </div>
       </Panel>
@@ -106,8 +142,19 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
         hint="Ces règles décident, pour chaque école, s’il lui manque des maîtres, si elle en a de trop, ou s’il lui manque des salles."
       >
         <div className="regles">
-          <Regle enonce="La norme d’encadrement est d’un maître pour" precision="Note de cadrage : 60 élèves. 250 élèves demandent alors ⌈250 ÷ 60⌉ = 5 maîtres." htmlFor="r-norme">
-            <input id="r-norme" type="number" min={20} max={120} value={settings.besoin.elevesParMaitre} onChange={e => besoin('elevesParMaitre', nombre(e.target.value))} />
+          <Regle
+            enonce="La norme d’encadrement est d’un maître pour"
+            precision="Note de cadrage : 60 élèves. 250 élèves demandent alors ⌈250 ÷ 60⌉ = 5 maîtres."
+            htmlFor="r-norme"
+          >
+            <input
+              id="r-norme"
+              type="number"
+              min={20}
+              max={120}
+              value={settings.besoin.elevesParMaitre}
+              onChange={e => besoin('elevesParMaitre', nombre(e.target.value))}
+            />
             <span className="regle-unite">élèves</span>
           </Regle>
           <Regle
@@ -115,7 +162,14 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
             precision="0 : arrondi supérieur strict. Avec 20 élèves, une école de 250 élèves ne demande plus que 4 maîtres."
             htmlFor="r-tolerance"
           >
-            <input id="r-tolerance" type="number" min={0} max={59} value={settings.besoin.toleranceArrondi} onChange={e => besoin('toleranceArrondi', nombre(e.target.value))} />
+            <input
+              id="r-tolerance"
+              type="number"
+              min={0}
+              max={59}
+              value={settings.besoin.toleranceArrondi}
+              onChange={e => besoin('toleranceArrondi', nombre(e.target.value))}
+            />
             <span className="regle-unite">élèves</span>
           </Regle>
           <Regle
@@ -123,14 +177,29 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
             precision="Avec 2 niveaux par maître, une école complète de 6 niveaux a besoin d’au moins 3 maîtres, quel que soit son effectif."
             htmlFor="r-niveaux"
           >
-            <select id="r-niveaux" value={settings.besoin.niveauxParMaitre} onChange={e => besoin('niveauxParMaitre', Number(e.target.value))}>
+            <select
+              id="r-niveaux"
+              value={settings.besoin.niveauxParMaitre}
+              onChange={e => besoin('niveauxParMaitre', Number(e.target.value))}
+            >
               <option value={1}>un seul niveau</option>
               <option value={2}>deux niveaux (classes multigrades)</option>
               <option value={3}>trois niveaux</option>
             </select>
           </Regle>
-          <Regle enonce="Un enseignant part à la retraite à" precision="Les départs connus à la rentrée sont déduits de l’effectif ; ceux de l’année suivante alimentent la projection N+2." htmlFor="r-retraite">
-            <input id="r-retraite" type="number" min={50} max={70} value={settings.besoin.ageRetraite} onChange={e => besoin('ageRetraite', nombre(e.target.value))} />
+          <Regle
+            enonce="Un enseignant part à la retraite à"
+            precision="Les départs connus à la rentrée sont déduits de l’effectif ; ceux de l’année suivante alimentent la projection N+2."
+            htmlFor="r-retraite"
+          >
+            <input
+              id="r-retraite"
+              type="number"
+              min={50}
+              max={70}
+              value={settings.besoin.ageRetraite}
+              onChange={e => besoin('ageRetraite', nombre(e.target.value))}
+            />
             <span className="regle-unite">ans</span>
           </Regle>
           <Regle
@@ -138,7 +207,15 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
             precision="Repli signalé : le référentiel calcule le besoin à partir des élèves attendus. Les écoles concernées sont listées dans la qualité des données."
             htmlFor="r-repli"
           >
-            <input id="r-repli" type="number" min={0.5} max={3} step={0.1} value={settings.besoin.enseignantsParClasseRepli} onChange={e => besoin('enseignantsParClasseRepli', nombre(e.target.value))} />
+            <input
+              id="r-repli"
+              type="number"
+              min={0.5}
+              max={3}
+              step={0.1}
+              value={settings.besoin.enseignantsParClasseRepli}
+              onChange={e => besoin('enseignantsParClasseRepli', nombre(e.target.value))}
+            />
             <span className="regle-unite">maître(s)</span>
           </Regle>
           <Regle
@@ -146,7 +223,13 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
             precision="Le besoin calculé suit la règle du référentiel. Les postes déclarés proviennent du fichier importé, quand il les contient."
             htmlFor="r-source"
           >
-            <select id="r-source" value={settings.sourceDesPostes} onChange={e => majSettings(s => ({ ...s, sourceDesPostes: e.target.value as EngineSettings['sourceDesPostes'] }))}>
+            <select
+              id="r-source"
+              value={settings.sourceDesPostes}
+              onChange={e =>
+                majSettings(s => ({ ...s, sourceDesPostes: e.target.value as EngineSettings['sourceDesPostes'] }))
+              }
+            >
               <option value="besoinCalcule">du besoin calculé (règle du référentiel)</option>
               <option value="postesDeclares">des postes déclarés dans le fichier</option>
               <option value="maximum">du plus élevé des deux</option>
@@ -175,7 +258,11 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
         </div>
       </Panel>
 
-      <Panel kicker="Gravité" title="Comment qualifier l’ampleur d’un besoin" hint="Le besoin d’une école est rapporté à sa cible K.">
+      <Panel
+        kicker="Gravité"
+        title="Comment qualifier l’ampleur d’un besoin"
+        hint="Le besoin d’une école est rapporté à sa cible K."
+      >
         <div className="regles">
           <Regle enonce="Le besoin reste qualifié de faible tant qu’il ne dépasse pas" htmlFor="r-seuil-faible">
             <input
@@ -184,18 +271,32 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
               min={5}
               max={50}
               value={Math.round(settings.seuilsSeverite.faible * 100)}
-              onChange={e => majSettings(s => ({ ...s, seuilsSeverite: { ...s.seuilsSeverite, faible: Number(e.target.value) / 100 } }))}
+              onChange={e =>
+                majSettings(s => ({
+                  ...s,
+                  seuilsSeverite: { ...s.seuilsSeverite, faible: Number(e.target.value) / 100 },
+                }))
+              }
             />
             <span className="regle-unite">% de la cible</span>
           </Regle>
-          <Regle enonce="Il devient critique au-delà de" precision="Entre les deux valeurs, il est qualifié d’important." htmlFor="r-seuil-important">
+          <Regle
+            enonce="Il devient critique au-delà de"
+            precision="Entre les deux valeurs, il est qualifié d’important."
+            htmlFor="r-seuil-important"
+          >
             <input
               id="r-seuil-important"
               type="number"
               min={10}
               max={90}
               value={Math.round(settings.seuilsSeverite.important * 100)}
-              onChange={e => majSettings(s => ({ ...s, seuilsSeverite: { ...s.seuilsSeverite, important: Number(e.target.value) / 100 } }))}
+              onChange={e =>
+                majSettings(s => ({
+                  ...s,
+                  seuilsSeverite: { ...s.seuilsSeverite, important: Number(e.target.value) / 100 },
+                }))
+              }
             />
             <span className="regle-unite">% de la cible</span>
           </Regle>
@@ -224,7 +325,12 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
                 min={0}
                 max={50}
                 value={p.pointsAccessibilite[cle]}
-                onChange={e => priorite(x => ({ ...x, pointsAccessibilite: { ...x.pointsAccessibilite, [cle]: nombre(e.target.value) } }))}
+                onChange={e =>
+                  priorite(x => ({
+                    ...x,
+                    pointsAccessibilite: { ...x.pointsAccessibilite, [cle]: nombre(e.target.value) },
+                  }))
+                }
               />
             </div>
           ))}
@@ -243,29 +349,63 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
                 min={0}
                 max={50}
                 value={p.pointsSecurite[cle]}
-                onChange={e => priorite(x => ({ ...x, pointsSecurite: { ...x.pointsSecurite, [cle]: nombre(e.target.value) } }))}
+                onChange={e =>
+                  priorite(x => ({ ...x, pointsSecurite: { ...x.pointsSecurite, [cle]: nombre(e.target.value) } }))
+                }
               />
             </div>
           ))}
           <div className="field">
             <label htmlFor="r-coef-a">Coefficient de l’accessibilité dans w</label>
-            <input id="r-coef-a" type="number" min={0} max={2} step={0.05} value={p.coefAccessibilite} onChange={e => priorite(x => ({ ...x, coefAccessibilite: nombre(e.target.value) }))} />
+            <input
+              id="r-coef-a"
+              type="number"
+              min={0}
+              max={2}
+              step={0.05}
+              value={p.coefAccessibilite}
+              onChange={e => priorite(x => ({ ...x, coefAccessibilite: nombre(e.target.value) }))}
+            />
           </div>
           <div className="field">
             <label htmlFor="r-coef-s">Coefficient de la sécurité dans w</label>
-            <input id="r-coef-s" type="number" min={0} max={2} step={0.05} value={p.coefSecurite} onChange={e => priorite(x => ({ ...x, coefSecurite: nombre(e.target.value) }))} />
+            <input
+              id="r-coef-s"
+              type="number"
+              min={0}
+              max={2}
+              step={0.05}
+              value={p.coefSecurite}
+              onChange={e => priorite(x => ({ ...x, coefSecurite: nombre(e.target.value) }))}
+            />
           </div>
           <div className="field">
             <label htmlFor="r-n1">Niveau de difficulté 1 à partir de (points)</label>
-            <input id="r-n1" type="number" min={0} max={100} value={p.seuilNiveau1} onChange={e => priorite(x => ({ ...x, seuilNiveau1: nombre(e.target.value) }))} />
+            <input
+              id="r-n1"
+              type="number"
+              min={0}
+              max={100}
+              value={p.seuilNiveau1}
+              onChange={e => priorite(x => ({ ...x, seuilNiveau1: nombre(e.target.value) }))}
+            />
           </div>
           <div className="field">
             <label htmlFor="r-n2">Niveau de difficulté 2 à partir de (points)</label>
-            <input id="r-n2" type="number" min={0} max={100} value={p.seuilNiveau2} onChange={e => priorite(x => ({ ...x, seuilNiveau2: nombre(e.target.value) }))} />
+            <input
+              id="r-n2"
+              type="number"
+              min={0}
+              max={100}
+              value={p.seuilNiveau2}
+              onChange={e => priorite(x => ({ ...x, seuilNiveau2: nombre(e.target.value) }))}
+            />
           </div>
         </div>
 
-        <p className="hint" style={{ margin: '16px 0 8px' }}>Points de besoin β selon le REM actuel (élèves par maître en poste)</p>
+        <p className="hint" style={{ margin: '16px 0 8px' }}>
+          Points de besoin β selon le REM actuel (élèves par maître en poste)
+        </p>
         <div className="param-grid">
           {p.tranchesBesoin.map((t, i) => (
             <div className="field" key={i}>
@@ -277,14 +417,26 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
                 max={50}
                 value={t.points}
                 onChange={e =>
-                  priorite(x => ({ ...x, tranchesBesoin: x.tranchesBesoin.map((y, j) => (j === i ? { ...y, points: nombre(e.target.value) } : y)) }))
+                  priorite(x => ({
+                    ...x,
+                    tranchesBesoin: x.tranchesBesoin.map((y, j) =>
+                      j === i ? { ...y, points: nombre(e.target.value) } : y,
+                    ),
+                  }))
                 }
               />
             </div>
           ))}
           <div className="field">
             <label htmlFor="r-tr-au-dela">Au-delà, ou école sans maître</label>
-            <input id="r-tr-au-dela" type="number" min={0} max={50} value={p.pointsBesoinAuDela} onChange={e => priorite(x => ({ ...x, pointsBesoinAuDela: nombre(e.target.value) }))} />
+            <input
+              id="r-tr-au-dela"
+              type="number"
+              min={0}
+              max={50}
+              value={p.pointsBesoinAuDela}
+              onChange={e => priorite(x => ({ ...x, pointsBesoinAuDela: nombre(e.target.value) }))}
+            />
           </div>
         </div>
       </Panel>
@@ -299,11 +451,25 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
             precision="Durée de stabilité au poste, à confirmer : 5 ans imposés aux nouvelles recrues par leur contrat."
             htmlFor="r-stabilite"
           >
-            <input id="r-stabilite" type="number" min={0} max={20} value={settings.mobilite.stabiliteMinimaleAns} onChange={e => mobilite('stabiliteMinimaleAns', nombre(e.target.value))} />
+            <input
+              id="r-stabilite"
+              type="number"
+              min={0}
+              max={20}
+              value={settings.mobilite.stabiliteMinimaleAns}
+              onChange={e => mobilite('stabiliteMinimaleAns', nombre(e.target.value))}
+            />
             <span className="regle-unite">ans au poste</span>
           </Regle>
           <Regle enonce="Chaque enseignant peut formuler au plus" htmlFor="r-voeux">
-            <input id="r-voeux" type="number" min={1} max={3} value={settings.mobilite.nombreMaxVoeux} onChange={e => mobilite('nombreMaxVoeux', nombre(e.target.value))} />
+            <input
+              id="r-voeux"
+              type="number"
+              min={1}
+              max={3}
+              value={settings.mobilite.nombreMaxVoeux}
+              onChange={e => mobilite('nombreMaxVoeux', nombre(e.target.value))}
+            />
             <span className="regle-unite">vœu(x)</span>
           </Regle>
           <Regle
@@ -311,7 +477,11 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
             precision="Dans l’ordre de l’enseignant, ajouter une école à sa liste ne peut jamais lui nuire. Par poids, un enseignant a intérêt à retirer une école difficile de sa liste."
             htmlFor="r-ordre"
           >
-            <select id="r-ordre" value={settings.mobilite.ordreExamen} onChange={e => mobilite('ordreExamen', e.target.value as ReglesMobilite['ordreExamen'])}>
+            <select
+              id="r-ordre"
+              value={settings.mobilite.ordreExamen}
+              onChange={e => mobilite('ordreExamen', e.target.value as ReglesMobilite['ordreExamen'])}
+            >
               <option value="voeux">dans l’ordre choisi par l’enseignant (par défaut)</option>
               <option value="poids">de l’école la plus difficile à la plus facile (variante)</option>
             </select>
@@ -321,13 +491,24 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
             precision="Le référentiel retient le score de priorité S = A + Z + B. Le score d’appariement (barème, poids du poste, proximité, ajustements) est proposé en variante ; dans les deux cas l’appariement reste l’acceptation différée."
             htmlFor="r-classement"
           >
-            <select id="r-classement" value={settings.mobilite.classementCandidats} onChange={e => mobilite('classementCandidats', e.target.value as ReglesMobilite['classementCandidats'])}>
+            <select
+              id="r-classement"
+              value={settings.mobilite.classementCandidats}
+              onChange={e => mobilite('classementCandidats', e.target.value as ReglesMobilite['classementCandidats'])}
+            >
               <option value="score_priorite">le score de priorité S = A + Z + B (référentiel)</option>
               <option value="score_appariement">le score d’appariement (variante)</option>
             </select>
           </Regle>
           <Regle enonce="Un enseignant est considéré proche de la retraite à moins de" htmlFor="r-proche">
-            <input id="r-proche" type="number" min={0} max={10} value={settings.mobilite.anneesAvantRetraite} onChange={e => mobilite('anneesAvantRetraite', nombre(e.target.value))} />
+            <input
+              id="r-proche"
+              type="number"
+              min={0}
+              max={10}
+              value={settings.mobilite.anneesAvantRetraite}
+              onChange={e => mobilite('anneesAvantRetraite', nombre(e.target.value))}
+            />
             <span className="regle-unite">ans de la retraite</span>
           </Regle>
         </div>
@@ -397,7 +578,9 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
               max={20}
               step={0.1}
               value={settings.recrutement.tauxAttritionHorsRetraite}
-              onChange={e => majSettings(s => ({ ...s, recrutement: { tauxAttritionHorsRetraite: nombre(e.target.value) } }))}
+              onChange={e =>
+                majSettings(s => ({ ...s, recrutement: { tauxAttritionHorsRetraite: nombre(e.target.value) } }))
+              }
             />
             <span className="regle-unite">% des enseignants</span>
           </Regle>
@@ -417,12 +600,24 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
           <button type="button" className="btn" onClick={() => inputRef.current?.click()}>
             <Upload size={14} aria-hidden="true" /> Charger des règles enregistrées
           </button>
-          <input ref={inputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={e => chargerConfiguration(e.target.files?.[0])} />
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={e => chargerConfiguration(e.target.files?.[0])}
+          />
           <button type="button" className="btn btn-danger" onClick={() => majSettings(() => DEFAULT_SETTINGS)}>
             <RotateCcw size={14} aria-hidden="true" /> Rétablir les valeurs du référentiel
           </button>
-          <button type="button" className="btn btn-primary" disabled={!donneesChargees || calculEnCours} onClick={calculerScenariosDeBase}>
-            <RefreshCw size={14} className={calculEnCours ? 'spin' : undefined} aria-hidden="true" /> Mettre à jour les simulations
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!donneesChargees || calculEnCours}
+            onClick={calculerScenariosDeBase}
+          >
+            <RefreshCw size={14} className={calculEnCours ? 'spin' : undefined} aria-hidden="true" /> Mettre à jour les
+            simulations
           </button>
         </div>
         <p className="hint" style={{ marginTop: 12 }}>
@@ -434,7 +629,8 @@ export function ReferentialPage({ store }: { store: PlanningStore }) {
       {mode === 'analyste' && (
         <Panel kicker="Vue analyste" title="Barèmes chiffrés du moteur">
           <p className="hint" style={{ marginBottom: 12 }}>
-            Le score de priorité des candidats et le barème individuel du redéploiement obligatoire se règlent sur une page distincte.
+            Le score de priorité des candidats et le barème individuel du redéploiement obligatoire se règlent sur une
+            page distincte.
           </p>
           <button type="button" className="btn" onClick={() => setPage('engine')}>
             <SlidersHorizontal size={14} aria-hidden="true" /> Ouvrir la configuration du moteur

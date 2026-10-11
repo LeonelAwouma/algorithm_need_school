@@ -44,10 +44,14 @@ class Compteur {
 }
 
 /** Vérifie l'éligibilité administrative d'un enseignant, indépendamment de son école. */
-export function estEligibleAdministrativement(t: Teacher, settings: EngineSettings): { ok: boolean; motif?: string; label?: string } {
+export function estEligibleAdministrativement(
+  t: Teacher,
+  settings: EngineSettings,
+): { ok: boolean; motif?: string; label?: string } {
   if (!t.id) return { ok: false, motif: 'sans_matricule', label: 'sans matricule exploitable' }
   if (STATUTS_EXCLUS.has(t.statut)) return { ok: false, motif: 'statut_exclu', label: `statut « ${t.statut} »` }
-  if (!STATUTS_ELIGIBLES.has(t.statut)) return { ok: false, motif: 'statut_non_eligible', label: `statut non éligible « ${t.statut} »` }
+  if (!STATUTS_ELIGIBLES.has(t.statut))
+    return { ok: false, motif: 'statut_non_eligible', label: `statut non éligible « ${t.statut} »` }
   if (!t.payeParEtat) return { ok: false, motif: 'non_paye_etat', label: "non payé par l'État" }
   if (partALaRetraite(t, settings)) return { ok: false, motif: 'retraite', label: 'départ à la retraite à la rentrée' }
   return { ok: true }
@@ -92,7 +96,7 @@ export function construireVivier(
     vus.add(t.id)
 
     if (!t.idEtabAttache) {
-      compteur.ajouter('sans_ecole', "sans école de rattachement")
+      compteur.ajouter('sans_ecole', 'sans école de rattachement')
       continue
     }
     const ecole = parEcole.get(t.idEtabAttache)
@@ -101,7 +105,7 @@ export function construireVivier(
       continue
     }
     if (ecole.excedentTheorique <= 0) {
-      compteur.ajouter('ecole_sans_excedent', "école sans excédent mobilisable (son départ créerait un déficit)")
+      compteur.ajouter('ecole_sans_excedent', 'école sans excédent mobilisable (son départ créerait un déficit)')
       continue
     }
     // Comme pour une demande de mutation, un départ imposé suppose la stabilité minimale au poste.
@@ -110,7 +114,10 @@ export function construireVivier(
       continue
     }
     if (settings.mobilite.protegerProchesRetraite && procheDeLaRetraite(t, settings)) {
-      compteur.ajouter('protege', `à moins de ${settings.mobilite.anneesAvantRetraite} ans de la retraite (protégé des transferts imposés)`)
+      compteur.ajouter(
+        'protege',
+        `à moins de ${settings.mobilite.anneesAvantRetraite} ans de la retraite (protégé des transferts imposés)`,
+      )
       continue
     }
 
@@ -156,7 +163,9 @@ export function construireVivier(
   }
 
   retenus.sort((a, b) => b.bareme - a.bareme || a.teacher.id.localeCompare(b.teacher.id))
-  ecolesSources.sort((a, b) => b.excedentMobilisable - a.excedentMobilisable || a.nomEtab.localeCompare(b.nomEtab, 'fr'))
+  ecolesSources.sort(
+    (a, b) => b.excedentMobilisable - a.excedentMobilisable || a.nomEtab.localeCompare(b.nomEtab, 'fr'),
+  )
 
   return {
     teachers: retenus,

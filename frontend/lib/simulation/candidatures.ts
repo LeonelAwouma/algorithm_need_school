@@ -42,14 +42,20 @@ export function pointsAnciennete(anneesAuPoste: number, procheRetraite: boolean,
   const m = settings.mobilite
   const p = Math.floor(Math.max(0, anneesAuPoste))
   if (p < m.ancienneteDebutPointsAns) return 0
-  const brut = Math.min(m.plafondAnciennete, m.pointsAncienneteBase + (p - m.ancienneteDebutPointsAns) * m.pointsParAnSupplementaire)
+  const brut = Math.min(
+    m.plafondAnciennete,
+    m.pointsAncienneteBase + (p - m.ancienneteDebutPointsAns) * m.pointsParAnSupplementaire,
+  )
   return Math.max(0, brut - (procheRetraite ? m.malusRetraite : 0))
 }
 
 /** Z : points de service en zone difficile. */
 export function pointsZoneDifficile(anneesNiveau1: number, anneesNiveau2: number, settings: EngineSettings): number {
   const m = settings.mobilite
-  return Math.min(m.plafondZoneDifficile, m.pointsAnneeNiveau1 * Math.max(0, anneesNiveau1) + m.pointsAnneeNiveau2 * Math.max(0, anneesNiveau2))
+  return Math.min(
+    m.plafondZoneDifficile,
+    m.pointsAnneeNiveau1 * Math.max(0, anneesNiveau1) + m.pointsAnneeNiveau2 * Math.max(0, anneesNiveau2),
+  )
 }
 
 /**
@@ -149,20 +155,25 @@ export function construireCandidature(t: Teacher, ctx: ContexteCandidatures): Ca
   const Z = pointsZoneDifficile(n1, n2, settings)
 
   const motifs: string[] = []
-  if (STATUTS_EXCLUS.has(t.statut) || !t.payeParEtat) motifs.push("hors de l'effectif mobilisable (statut ou rémunération)")
+  if (STATUTS_EXCLUS.has(t.statut) || !t.payeParEtat)
+    motifs.push("hors de l'effectif mobilisable (statut ou rémunération)")
   if (partALaRetraite(t, settings)) motifs.push('départ à la retraite à la rentrée')
   if (t.anciennetePosteAns < m.stabiliteMinimaleAns) {
     motifs.push(`stabilité au poste inférieure à ${m.stabiliteMinimaleAns} ans`)
   }
   if (!origine) {
-    motifs.push(origineUnite?.estStructure ? "rattaché à une structure : départ décidé par la hiérarchie" : "école d'attache absente des données")
+    motifs.push(
+      origineUnite?.estStructure
+        ? 'rattaché à une structure : départ décidé par la hiérarchie'
+        : "école d'attache absente des données",
+    )
   } else if (origine.excedentTheorique <= 0) {
     motifs.push('école sans excédent : le départ créerait un déficit')
   }
 
   const voeux: VoeuExamine[] = t.voeux.map((code, i) => {
     const unite = unites.resoudre(code, t.sousSysteme)
-    const motifCible = t.ecoleMotif ? unites.resoudre(t.ecoleMotif, t.sousSysteme)?.id ?? null : null
+    const motifCible = t.ecoleMotif ? (unites.resoudre(t.ecoleMotif, t.sousSysteme)?.id ?? null) : null
     const bonification =
       unite && motifJustifie(t) && (motifCible ? motifCible === unite.id : i === 0) ? m.bonificationMotif : 0
     const poids = unite ? (diagnostics.get(unite.id)?.priorite.poids ?? 0) : 0
@@ -233,8 +244,19 @@ export function construireCandidatures(teachers: Teacher[], ctx: ContexteCandida
 export function detaillerScore(c: Candidature, bonification: number): ScoreBreakdown {
   const components = [
     { label: 'A — ancienneté au poste', valeur: c.pointsAnciennete, poids: 1, contribution: c.pointsAnciennete },
-    { label: 'Z — service en zone difficile', valeur: c.pointsZoneDifficile, poids: 1, contribution: c.pointsZoneDifficile },
+    {
+      label: 'Z — service en zone difficile',
+      valeur: c.pointsZoneDifficile,
+      poids: 1,
+      contribution: c.pointsZoneDifficile,
+    },
   ]
-  if (bonification > 0) components.push({ label: 'B — motif justifié sur cette école', valeur: bonification, poids: 1, contribution: bonification })
+  if (bonification > 0)
+    components.push({
+      label: 'B — motif justifié sur cette école',
+      valeur: bonification,
+      poids: 1,
+      contribution: bonification,
+    })
   return { total: components.reduce((a, x) => a + x.contribution, 0), components }
 }

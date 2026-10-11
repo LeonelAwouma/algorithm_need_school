@@ -14,7 +14,19 @@ import type { SchoolDiagnostic } from '@/types/education'
 import { NIVEAUX_PRIMAIRE } from '@/types/education'
 import { exporterCSV } from '@/lib/reporting/export-csv'
 import { LIBELLE_PROXIMITE } from '@/lib/simulation/scoring'
-import { DataTable, EmptyState, Notice, Panel, Pill, SearchField, ZoneSecuritePill, fmt, fmtDec, fmtPct, type Colonne } from '../common'
+import {
+  DataTable,
+  EmptyState,
+  Notice,
+  Panel,
+  Pill,
+  SearchField,
+  ZoneSecuritePill,
+  fmt,
+  fmtDec,
+  fmtPct,
+  type Colonne,
+} from '../common'
 import { LIBELLE_SEVERITE, LIBELLE_ZONE } from '../layout'
 import { LIBELLE_CLASSEMENT, libelleZoneSecurite, rangZoneSecurite } from '@/lib/simulation/libelles'
 import { SeveritePill } from '../dashboard/OverviewPage'
@@ -28,13 +40,18 @@ export function SchoolsPage({ store }: { store: PlanningStore }) {
     const q = recherche.trim().toLowerCase()
     if (!q) return diagnosticsFiltres
     return diagnosticsFiltres.filter(d =>
-      `${d.school.id} ${d.school.nom} ${d.school.commune} ${d.school.departement} ${d.school.region}`.toLowerCase().includes(q),
+      `${d.school.id} ${d.school.nom} ${d.school.commune} ${d.school.departement} ${d.school.region}`
+        .toLowerCase()
+        .includes(q),
     )
   }, [diagnosticsFiltres, recherche])
 
   if (!diagnostic) {
     return (
-      <EmptyState titre="Aucun établissement chargé" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucun établissement chargé"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         La liste des établissements provient du fichier importé.
       </EmptyState>
     )
@@ -59,22 +76,72 @@ export function SchoolsPage({ store }: { store: PlanningStore }) {
       ),
       tri: d => d.school.nom,
     },
-    { cle: 'territoire', entete: 'Territoire', rendu: d => (<span>{d.school.departement}<small>{d.school.region}</small></span>), tri: d => d.school.region },
+    {
+      cle: 'territoire',
+      entete: 'Territoire',
+      rendu: d => (
+        <span>
+          {d.school.departement}
+          <small>{d.school.region}</small>
+        </span>
+      ),
+      tri: d => d.school.region,
+    },
     { cle: 'zone', entete: 'Milieu', rendu: d => LIBELLE_ZONE[d.school.zone], tri: d => d.school.zone },
-    { cle: 'securite', entete: 'Sécurité', rendu: d => <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} court />, tri: d => rangZoneSecurite(d.school.zoneSecurite) },
+    {
+      cle: 'securite',
+      entete: 'Sécurité',
+      rendu: d => <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} court />,
+      tri: d => rangZoneSecurite(d.school.zoneSecurite),
+    },
     { cle: 'classes', entete: 'Classes', numerique: true, rendu: d => fmt(d.nbClasses), tri: d => d.nbClasses },
-    { cle: 'eleves', entete: 'Élèves', numerique: true, rendu: d => fmt(d.school.effectifTotalEleves), tri: d => d.school.effectifTotalEleves ?? -1 },
-    { cle: 'ens', entete: 'Enseignants État', numerique: true, rendu: d => fmt(d.enseignantsEtat), tri: d => d.enseignantsEtat },
-    { cle: 'besoin', entete: 'Déficit', numerique: true, rendu: d => fmt(d.besoinTheorique), tri: d => d.besoinTheorique },
-    { cle: 'excedent', entete: 'Excédent', numerique: true, rendu: d => fmt(d.excedentTheorique), tri: d => d.excedentTheorique },
-    { cle: 'pression', entete: 'Élèves / ens. État', numerique: true, rendu: d => fmtDec(d.elevesParEnseignantEtat, 1), tri: d => d.elevesParEnseignantEtat ?? -1 },
+    {
+      cle: 'eleves',
+      entete: 'Élèves',
+      numerique: true,
+      rendu: d => fmt(d.school.effectifTotalEleves),
+      tri: d => d.school.effectifTotalEleves ?? -1,
+    },
+    {
+      cle: 'ens',
+      entete: 'Enseignants État',
+      numerique: true,
+      rendu: d => fmt(d.enseignantsEtat),
+      tri: d => d.enseignantsEtat,
+    },
+    {
+      cle: 'besoin',
+      entete: 'Déficit',
+      numerique: true,
+      rendu: d => fmt(d.besoinTheorique),
+      tri: d => d.besoinTheorique,
+    },
+    {
+      cle: 'excedent',
+      entete: 'Excédent',
+      numerique: true,
+      rendu: d => fmt(d.excedentTheorique),
+      tri: d => d.excedentTheorique,
+    },
+    {
+      cle: 'pression',
+      entete: 'Élèves / ens. État',
+      numerique: true,
+      rendu: d => fmtDec(d.elevesParEnseignantEtat, 1),
+      tri: d => d.elevesParEnseignantEtat ?? -1,
+    },
     { cle: 'situation', entete: 'Situation', rendu: d => <SeveritePill severite={d.severite} /> },
   ]
 
   return (
     <div className="stack">
       <div className="filter-bar">
-        <SearchField value={recherche} onChange={setRecherche} label="Rechercher un établissement" placeholder="Nom, code, commune, département…" />
+        <SearchField
+          value={recherche}
+          onChange={setRecherche}
+          label="Rechercher un établissement"
+          placeholder="Nom, code, commune, département…"
+        />
         <div className="filter-bar-actions">
           <button
             type="button"
@@ -82,12 +149,41 @@ export function SchoolsPage({ store }: { store: PlanningStore }) {
             onClick={() =>
               exporterCSV(
                 'etablissements.csv',
-                ['Code', 'Établissement', 'Région', 'Département', 'Commune', 'Zone', 'Zone de sécurité', 'Classes', 'Élèves', "Enseignants État", 'Dotation D', 'Déficit', 'Excédent', 'Postes déclarés', 'Élèves par enseignant État', 'Situation'],
+                [
+                  'Code',
+                  'Établissement',
+                  'Région',
+                  'Département',
+                  'Commune',
+                  'Zone',
+                  'Zone de sécurité',
+                  'Classes',
+                  'Élèves',
+                  'Enseignants État',
+                  'Dotation D',
+                  'Déficit',
+                  'Excédent',
+                  'Postes déclarés',
+                  'Élèves par enseignant État',
+                  'Situation',
+                ],
                 lignes.map(d => [
-                  d.school.id, d.school.nom, d.school.region, d.school.departement, d.school.commune, LIBELLE_ZONE[d.school.zone],
+                  d.school.id,
+                  d.school.nom,
+                  d.school.region,
+                  d.school.departement,
+                  d.school.commune,
+                  LIBELLE_ZONE[d.school.zone],
                   libelleZoneSecurite(d.school.zoneSecurite),
-                  d.nbClasses, d.school.effectifTotalEleves, d.enseignantsEtat, d.enseignantsMinimumAConserver,
-                  d.besoinTheorique, d.excedentTheorique, d.postesDeclares, d.elevesParEnseignantEtat, LIBELLE_SEVERITE[d.severite],
+                  d.nbClasses,
+                  d.school.effectifTotalEleves,
+                  d.enseignantsEtat,
+                  d.enseignantsMinimumAConserver,
+                  d.besoinTheorique,
+                  d.excedentTheorique,
+                  d.postesDeclares,
+                  d.elevesParEnseignantEtat,
+                  LIBELLE_SEVERITE[d.severite],
                 ]),
               )
             }
@@ -130,7 +226,9 @@ export function SchoolDetail({
   }, [resultatComplet, d.school.id])
 
   const niveaux = NIVEAUX_PRIMAIRE.filter(n => d.school.effectifParNiveau[n] != null)
-  const postesRestants = resultatComplet ? resultatComplet.uncoveredPosts.filter(p => p.schoolId === d.school.id).length : null
+  const postesRestants = resultatComplet
+    ? resultatComplet.uncoveredPosts.filter(p => p.schoolId === d.school.id).length
+    : null
 
   return (
     <div className="stack">
@@ -141,7 +239,9 @@ export function SchoolDetail({
       <Panel>
         <div className="detail-head">
           <div className="detail-title">
-            <p className="eyebrow">{d.school.typeEtab || 'Établissement'} · {d.school.id}</p>
+            <p className="eyebrow">
+              {d.school.typeEtab || 'Établissement'} · {d.school.id}
+            </p>
             <h2>{d.school.nom || d.school.id}</h2>
             <p className="detail-path">
               {d.school.region || '—'} › {d.school.departement || '—'} › {d.school.commune || '—'}
@@ -151,7 +251,9 @@ export function SchoolDetail({
             <SeveritePill severite={d.severite} />
             <Pill tone="neutral">{LIBELLE_ZONE[d.school.zone]}</Pill>
             <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} />
-            {d.school.classesMultigrades > 0 && <Pill tone="warn">{d.school.classesMultigrades} classe(s) multigrade(s)</Pill>}
+            {d.school.classesMultigrades > 0 && (
+              <Pill tone="warn">{d.school.classesMultigrades} classe(s) multigrade(s)</Pill>
+            )}
             {d.school.prioriteLocale > 0 && <Pill tone="info">Priorité locale {d.school.prioriteLocale}</Pill>}
           </div>
         </div>
@@ -229,10 +331,22 @@ export function SchoolDetail({
       <div className="grid-2">
         <Panel kicker="Diagnostic" title="Situation">
           <p style={{ marginBottom: 10 }}>
-            <Pill tone={d.classement === 'necessiteuse' ? 'alert' : d.classement === 'excedentaire' ? 'info' : d.classement === 'a_examiner' ? 'warn' : 'ok'}>
+            <Pill
+              tone={
+                d.classement === 'necessiteuse'
+                  ? 'alert'
+                  : d.classement === 'excedentaire'
+                    ? 'info'
+                    : d.classement === 'a_examiner'
+                      ? 'warn'
+                      : 'ok'
+              }
+            >
               {LIBELLE_CLASSEMENT[d.classement]}
             </Pill>{' '}
-            {d.school.sousSysteme && <Pill>{d.school.sousSysteme === 'francophone' ? 'Francophone' : 'Anglophone'}</Pill>}
+            {d.school.sousSysteme && (
+              <Pill>{d.school.sousSysteme === 'francophone' ? 'Francophone' : 'Anglophone'}</Pill>
+            )}
           </p>
           <div className="situation-block">
             <div className="situation-line">
@@ -240,13 +354,18 @@ export function SchoolDetail({
               <strong>{d.calcul.eleves == null ? 'Non renseigné' : fmt(d.calcul.eleves)}</strong>
             </div>
             <div className="situation-line">
-              <span>E — maîtres retenus à la rentrée ({fmt(d.calcul.enseignantsEnPoste)} en poste − {fmt(d.calcul.departsConnus)} départ(s) connu(s))</span>
+              <span>
+                E — maîtres retenus à la rentrée ({fmt(d.calcul.enseignantsEnPoste)} en poste −{' '}
+                {fmt(d.calcul.departsConnus)} départ(s) connu(s))
+              </span>
               <strong>{fmt(d.calcul.enseignantsRetenus)}</strong>
             </div>
             <div className="situation-line">
               <span>
                 P — maîtres selon la norme
-                {d.calcul.methode === 'norme_eleves' ? ` (⌈N ÷ ${settings.besoin.elevesParMaitre}⌉)` : ' (sans effectif : une classe = un maître)'}
+                {d.calcul.methode === 'norme_eleves'
+                  ? ` (⌈N ÷ ${settings.besoin.elevesParMaitre}⌉)`
+                  : ' (sans effectif : une classe = un maître)'}
               </span>
               <strong>{fmt(d.calcul.norme)}</strong>
             </div>
@@ -284,7 +403,9 @@ export function SchoolDetail({
             </div>
             <div className="situation-line">
               <span>
-                Priorité u = w + β (accessibilité {fmt(d.priorite.pointsAccessibilite)} + sécurité {fmt(d.priorite.pointsSecurite)} + besoin {fmt(d.priorite.pointsBesoin)}), niveau de difficulté {d.priorite.niveauDifficulte}
+                Priorité u = w + β (accessibilité {fmt(d.priorite.pointsAccessibilite)} + sécurité{' '}
+                {fmt(d.priorite.pointsSecurite)} + besoin {fmt(d.priorite.pointsBesoin)}), niveau de difficulté{' '}
+                {d.priorite.niveauDifficulte}
               </span>
               <strong>{fmt(d.priorite.indice)}</strong>
             </div>
@@ -299,7 +420,8 @@ export function SchoolDetail({
 
           {d.pressionPedagogique != null && (
             <p className="hint" style={{ marginTop: 10 }}>
-              REM actuel : {fmtPct(d.pressionPedagogique)} de la norme ({settings.besoin.elevesParMaitre} élèves par maître).
+              REM actuel : {fmtPct(d.pressionPedagogique)} de la norme ({settings.besoin.elevesParMaitre} élèves par
+              maître).
             </p>
           )}
         </Panel>
@@ -307,8 +429,8 @@ export function SchoolDetail({
         <Panel kicker="Explication" title="Pourquoi cette école apparaît-elle dans les priorités ?">
           {d.raisons.length === 0 ? (
             <p className="hint">
-              Cette école ne présente ni déficit, ni signal particulier au regard des données disponibles. Elle n’apparaît pas
-              dans les priorités.
+              Cette école ne présente ni déficit, ni signal particulier au regard des données disponibles. Elle
+              n’apparaît pas dans les priorités.
             </p>
           ) : (
             <ul className="reason-list">
@@ -342,7 +464,8 @@ export function SchoolDetail({
                         <strong style={{ color: 'var(--ink)' }}>
                           {a.nomEns} {a.prenomEns}
                         </strong>{' '}
-                        depuis {a.nomEtabOrigine} ({LIBELLE_PROXIMITE[a.niveauProximite].toLowerCase()}) — score {a.score}
+                        depuis {a.nomEtabOrigine} ({LIBELLE_PROXIMITE[a.niveauProximite].toLowerCase()}) — score{' '}
+                        {a.score}
                       </span>
                     </li>
                   ))}

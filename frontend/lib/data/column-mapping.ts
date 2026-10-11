@@ -34,7 +34,27 @@ interface Candidate {
 }
 
 /** Mots vides ignorés lors de la comparaison par mots d'un en-tête. */
-const MOTS_VIDES = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'l', 'd', 'en', 'par', 'au', 'aux', 'a', 'et', 'pour', 'dans', 'nombre', 'nb', 'nbre'])
+const MOTS_VIDES = new Set([
+  'de',
+  'du',
+  'des',
+  'la',
+  'le',
+  'les',
+  'l',
+  'd',
+  'en',
+  'par',
+  'au',
+  'aux',
+  'a',
+  'et',
+  'pour',
+  'dans',
+  'nombre',
+  'nb',
+  'nbre',
+])
 
 /** Mots significatifs d'un en-tête ou d'un alias, normalisés et dédoublonnés. */
 function motsSignificatifs(valeur: string): string[] {
@@ -48,7 +68,12 @@ function motsSignificatifs(valeur: string): string[] {
  * Cherche, pour un champ donné, le meilleur en-tête disponible du fichier.
  * `exactSeulement` : nom exact ou alias du dictionnaire uniquement (premier passage).
  */
-function meilleurCandidat(field: FieldDefinition, enTetes: string[], dejaPris: Set<string>, exactSeulement = false): Candidate | null {
+function meilleurCandidat(
+  field: FieldDefinition,
+  enTetes: string[],
+  dejaPris: Set<string>,
+  exactSeulement = false,
+): Candidate | null {
   const libres = enTetes.filter(h => h !== '' && !dejaPris.has(h))
   if (libres.length === 0) return null
 
@@ -184,7 +209,7 @@ export function makeAccessor(report: ColumnMappingReport): (values: Record<strin
   const enTeteParChamp = new Map(report.matches.map(m => [m.champ, m.enTete]))
   return (values, champ) => {
     const enTete = enTeteParChamp.get(champ)
-    return enTete == null ? null : values[enTete] ?? null
+    return enTete == null ? null : (values[enTete] ?? null)
   }
 }
 

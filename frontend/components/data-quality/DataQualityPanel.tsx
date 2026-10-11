@@ -49,29 +49,38 @@ export function DataQualityPanel({ rapport, compact = false }: { rapport: DataQu
         <li className="check-ok">
           <Check size={15} aria-hidden="true" />
           <span>
-            <strong>{fmt(rapport.ecolesValides)}</strong> établissements exploitables sur {fmt(rapport.ecolesLues)} lignes lues
+            <strong>{fmt(rapport.ecolesValides)}</strong> établissements exploitables sur {fmt(rapport.ecolesLues)}{' '}
+            lignes lues
           </span>
         </li>
         <li className="check-ok">
           <Check size={15} aria-hidden="true" />
           <span>
-            <strong>{fmt(rapport.enseignantsValides)}</strong> enseignants exploitables sur {fmt(rapport.enseignantsLus)} lignes
-            lues
+            <strong>{fmt(rapport.enseignantsValides)}</strong> enseignants exploitables sur{' '}
+            {fmt(rapport.enseignantsLus)} lignes lues
           </span>
         </li>
         <li className={rapport.territorialCompleteness.tauxComplet >= 0.98 ? 'check-ok' : 'check-warn'}>
-          {rapport.territorialCompleteness.tauxComplet >= 0.98 ? <Check size={15} aria-hidden="true" /> : <AlertTriangle size={15} aria-hidden="true" />}
+          {rapport.territorialCompleteness.tauxComplet >= 0.98 ? (
+            <Check size={15} aria-hidden="true" />
+          ) : (
+            <AlertTriangle size={15} aria-hidden="true" />
+          )}
           <span>
-            Complétude territoriale : <strong>{fmtPct(rapport.territorialCompleteness.tauxComplet)}</strong> des établissements
-            ont région, département et commune renseignés
+            Complétude territoriale : <strong>{fmtPct(rapport.territorialCompleteness.tauxComplet)}</strong> des
+            établissements ont région, département et commune renseignés
           </span>
         </li>
         <li className={rapport.donneesElevesDisponibles ? 'check-ok' : 'check-warn'}>
-          {rapport.donneesElevesDisponibles ? <Check size={15} aria-hidden="true" /> : <Info size={15} aria-hidden="true" />}
+          {rapport.donneesElevesDisponibles ? (
+            <Check size={15} aria-hidden="true" />
+          ) : (
+            <Info size={15} aria-hidden="true" />
+          )}
           <span>
             {rapport.donneesElevesDisponibles
-              ? "Effectifs d’élèves disponibles : les indicateurs pédagogiques sont calculés"
-              : "Données élèves indisponibles — certains indicateurs pédagogiques ne peuvent pas être calculés"}
+              ? 'Effectifs d’élèves disponibles : les indicateurs pédagogiques sont calculés'
+              : 'Données élèves indisponibles — certains indicateurs pédagogiques ne peuvent pas être calculés'}
           </span>
         </li>
         {rapport.errors.map(e => (
@@ -104,7 +113,9 @@ export function DataQualityPanel({ rapport, compact = false }: { rapport: DataQu
         <>
           {rapport.missingFields.filter(f => !f.bloquant).length > 0 && (
             <details className="advanced">
-              <summary>Informations facultatives absentes ({rapport.missingFields.filter(f => !f.bloquant).length})</summary>
+              <summary>
+                Informations facultatives absentes ({rapport.missingFields.filter(f => !f.bloquant).length})
+              </summary>
               <ul style={{ fontSize: 12.5, color: 'var(--ink-soft)', paddingLeft: 18, margin: '6px 0 0' }}>
                 {rapport.missingFields
                   .filter(f => !f.bloquant)
@@ -153,7 +164,10 @@ export function DataQualityPanel({ rapport, compact = false }: { rapport: DataQu
             <details className="advanced">
               <summary>Identifiants en double ({rapport.duplicates.length})</summary>
               <p className="hint mono" style={{ marginTop: 6 }}>
-                {rapport.duplicates.slice(0, 50).map(d => `${d.id} (${d.dataset}, ×${d.occurrences})`).join(' · ')}
+                {rapport.duplicates
+                  .slice(0, 50)
+                  .map(d => `${d.id} (${d.dataset}, ×${d.occurrences})`)
+                  .join(' · ')}
               </p>
             </details>
           )}
@@ -162,7 +176,10 @@ export function DataQualityPanel({ rapport, compact = false }: { rapport: DataQu
             <details className="advanced">
               <summary>Enseignants rattachés à une école inconnue ({rapport.unknownSchools.length})</summary>
               <p className="hint mono" style={{ marginTop: 6 }}>
-                {rapport.unknownSchools.slice(0, 50).map(u => `${u.teacherId} → ${u.schoolId}`).join(' · ')}
+                {rapport.unknownSchools
+                  .slice(0, 50)
+                  .map(u => `${u.teacherId} → ${u.schoolId}`)
+                  .join(' · ')}
               </p>
             </details>
           )}

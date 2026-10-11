@@ -10,7 +10,13 @@
 
 import { useMemo, useState } from 'react'
 import { AlertTriangle, Check, Play, RefreshCw, X } from 'lucide-react'
-import type { GeographicScope, OrdreExamenVoeux, ProposedAssignment, ProximityLevel, SimulationResult } from '@/types/simulation'
+import type {
+  GeographicScope,
+  OrdreExamenVoeux,
+  ProposedAssignment,
+  ProximityLevel,
+  SimulationResult,
+} from '@/types/simulation'
 import { cloneSettings } from '@/lib/config/settings'
 import { reductionDuDeficit } from '@/lib/analytics/narrative'
 import { LIBELLE_PROXIMITE } from '@/lib/simulation/scoring'
@@ -25,21 +31,45 @@ import {
 } from '@/lib/simulation/scenarios'
 import { AvantApres, CouvertureParScenario } from '../charts'
 import { FluxPanel } from './FluxPanel'
-import { DataTable, Delta, EmptyState, Notice, Panel, Pill, ZoneSecuritePill, fmt, fmtPct, type Colonne } from '../common'
+import {
+  DataTable,
+  Delta,
+  EmptyState,
+  Notice,
+  Panel,
+  Pill,
+  ZoneSecuritePill,
+  fmt,
+  fmtPct,
+  type Colonne,
+} from '../common'
 import type { PlanningStore } from '../usePlanningState'
 
-const NIVEAUX_PROXIMITE: ProximityLevel[] = ['meme_commune', 'meme_iaeb', 'meme_departement', 'meme_region', 'hors_region']
+const NIVEAUX_PROXIMITE: ProximityLevel[] = [
+  'meme_commune',
+  'meme_iaeb',
+  'meme_departement',
+  'meme_region',
+  'hors_region',
+]
 
 /** Nombre de propositions de chaque périmètre : « Même commune », « Même département », etc. */
 function repartitionProximite(assignments: ProposedAssignment[]): Record<ProximityLevel, number> {
-  const compte: Record<ProximityLevel, number> = { meme_commune: 0, meme_iaeb: 0, meme_departement: 0, meme_region: 0, hors_region: 0 }
+  const compte: Record<ProximityLevel, number> = {
+    meme_commune: 0,
+    meme_iaeb: 0,
+    meme_departement: 0,
+    meme_region: 0,
+    hors_region: 0,
+  }
   for (const a of assignments) compte[a.niveauProximite]++
   return compte
 }
 
 /** Explication de l'ordre des mouvements, selon le périmètre du scénario. */
 const EXPLICATION_PERIMETRE: Record<GeographicScope, string> = {
-  commune: 'Chaque enseignant reste dans sa commune : vœux, solutions proches et redéploiements obligatoires y sont limités.',
+  commune:
+    'Chaque enseignant reste dans sa commune : vœux, solutions proches et redéploiements obligatoires y sont limités.',
   departement:
     'Les vœux sont satisfaits par acceptation différée, puis les demandes non satisfaites reçoivent la solution la plus proche, puis les écoles restées non couvertes un redéploiement obligatoire, sans quitter le département.',
   etendu:
@@ -49,8 +79,10 @@ const EXPLICATION_PERIMETRE: Record<GeographicScope, string> = {
 /** Ce que signifie la proposition, selon sa nature (référentiel §3.4 à §3.10). */
 const EXPLICATION_NATURE: Record<ProposedAssignment['nature'], string> = {
   voeu: "Vœu satisfait par l'acceptation différée : l'école a retenu les candidats de plus fort score S = A + Z + B, puis, à score égal, la plus grande ancienneté générale, l'âge et le rang de tirage.",
-  hors_voeux: "Aucun vœu n'a pu être satisfait : poste ouvert le plus proche des écoles demandées, hors zone rouge, soumis à l'accord de l'enseignant ou à la décision de la commission.",
-  obligatoire: "École restée non couverte après les vœux et les solutions proches : un maître de l'école excédentaire la plus proche du même sous-système est proposé, dans l'ordre du barème individuel de son école.",
+  hors_voeux:
+    "Aucun vœu n'a pu être satisfait : poste ouvert le plus proche des écoles demandées, hors zone rouge, soumis à l'accord de l'enseignant ou à la décision de la commission.",
+  obligatoire:
+    "École restée non couverte après les vœux et les solutions proches : un maître de l'école excédentaire la plus proche du même sous-système est proposé, dans l'ordre du barème individuel de son école.",
   arbitrage: 'Affectation décidée par une commission d’arbitrage, consignée avec son motif et son instance.',
 }
 
@@ -84,7 +116,10 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
 
   if (!diagnostic) {
     return (
-      <EmptyState titre="Aucune donnée à simuler" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucune donnée à simuler"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         Les simulations s’appuient sur le diagnostic, qui se calcule dès l’import des fichiers.
       </EmptyState>
     )
@@ -127,8 +162,8 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
         hint="Un scénario n’est proposé que si les données permettent d’appliquer réellement sa règle."
         actions={
           <button type="button" className="btn btn-primary" onClick={calculerScenariosDeBase} disabled={calculEnCours}>
-            <RefreshCw size={14} className={calculEnCours ? 'spin' : undefined} aria-hidden="true" /> Recalculer les trois scénarios
-            géographiques
+            <RefreshCw size={14} className={calculEnCours ? 'spin' : undefined} aria-hidden="true" /> Recalculer les
+            trois scénarios géographiques
           </button>
         }
       >
@@ -175,7 +210,13 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
         <div className="param-grid">
           <div className="field">
             <label htmlFor="sc-nom">Nom du scénario</label>
-            <input id="sc-nom" type="text" value={nom} onChange={e => setNom(e.target.value)} placeholder="Ex. : priorité rurale, département" />
+            <input
+              id="sc-nom"
+              type="text"
+              value={nom}
+              onChange={e => setNom(e.target.value)}
+              placeholder="Ex. : priorité rurale, département"
+            />
           </div>
           <div className="field">
             <label htmlFor="sc-scope">Rayon territorial</label>
@@ -187,11 +228,25 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
           </div>
           <div className="field">
             <label htmlFor="sc-norme">Un maître pour (élèves)</label>
-            <input id="sc-norme" type="number" min={20} max={120} value={norme} onChange={e => setNorme(Number(e.target.value))} />
+            <input
+              id="sc-norme"
+              type="number"
+              min={20}
+              max={120}
+              value={norme}
+              onChange={e => setNorme(Number(e.target.value))}
+            />
           </div>
           <div className="field">
             <label htmlFor="sc-tol">Tolérance d’arrondi (élèves)</label>
-            <input id="sc-tol" type="number" min={0} max={59} value={tolerance} onChange={e => setTolerance(Number(e.target.value))} />
+            <input
+              id="sc-tol"
+              type="number"
+              min={0}
+              max={59}
+              value={tolerance}
+              onChange={e => setTolerance(Number(e.target.value))}
+            />
           </div>
           <div className="field">
             <label htmlFor="sc-niv">Niveaux tenus par un maître</label>
@@ -203,7 +258,14 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
           </div>
           <div className="field">
             <label htmlFor="sc-stab">Stabilité minimale au poste (ans)</label>
-            <input id="sc-stab" type="number" min={0} max={20} value={stabilite} onChange={e => setStabilite(Number(e.target.value))} />
+            <input
+              id="sc-stab"
+              type="number"
+              min={0}
+              max={20}
+              value={stabilite}
+              onChange={e => setStabilite(Number(e.target.value))}
+            />
           </div>
           <div className="field">
             <label htmlFor="sc-ordre">Ordre d’examen des vœux</label>
@@ -233,7 +295,9 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
             <input type="checkbox" checked={obligatoire} onChange={e => setObligatoire(e.target.checked)} />
             <span>
               <b>Redéploiement obligatoire</b>
-              <span>Les écoles restées non couvertes reçoivent un maître d’une école excédentaire du même sous-système.</span>
+              <span>
+                Les écoles restées non couvertes reçoivent un maître d’une école excédentaire du même sous-système.
+              </span>
             </span>
           </label>
           <label className="switch-row">
@@ -258,7 +322,11 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
         </div>
       </Panel>
 
-      <Panel kicker="Résultats" title={`${fmt(calcules.length)} scénario(s) calculé(s)`} hint="Sélectionnez le scénario à afficher dans tout le reste de l’application.">
+      <Panel
+        kicker="Résultats"
+        title={`${fmt(calcules.length)} scénario(s) calculé(s)`}
+        hint="Sélectionnez le scénario à afficher dans tout le reste de l’application."
+      >
         {calcules.length === 0 ? (
           <p className="hint">Aucun scénario n’a encore été exécuté.</p>
         ) : (
@@ -324,7 +392,9 @@ export function SimulationsPage({ store }: { store: PlanningStore }) {
         )}
       </Panel>
 
-      {resultatAffiche && <PropositionsPanel key={resultatAffiche.scenarioId} resultat={resultatAffiche} analyste={mode === 'analyste'} />}
+      {resultatAffiche && (
+        <PropositionsPanel key={resultatAffiche.scenarioId} resultat={resultatAffiche} analyste={mode === 'analyste'} />
+      )}
     </div>
   )
 }
@@ -358,21 +428,63 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
       ),
       tri: a => a.nomEns,
     },
-    { cle: 'origine', entete: 'Origine', rendu: a => (<span>{a.nomEtabOrigine}<small>{a.communeOrigine}</small></span>), tri: a => a.nomEtabOrigine },
-    { cle: 'destination', entete: 'Destination', rendu: a => (<span><strong>{a.nomEtabDestination}</strong><small>{a.communeDestination} · {a.departementDestination}</small></span>), tri: a => a.nomEtabDestination },
-    { cle: 'securite', entete: 'Sécurité (destination)', rendu: a => <ZoneSecuritePill zone={zoneDestination(a)} court />, tri: a => rangZoneSecurite(zoneDestination(a)) },
+    {
+      cle: 'origine',
+      entete: 'Origine',
+      rendu: a => (
+        <span>
+          {a.nomEtabOrigine}
+          <small>{a.communeOrigine}</small>
+        </span>
+      ),
+      tri: a => a.nomEtabOrigine,
+    },
+    {
+      cle: 'destination',
+      entete: 'Destination',
+      rendu: a => (
+        <span>
+          <strong>{a.nomEtabDestination}</strong>
+          <small>
+            {a.communeDestination} · {a.departementDestination}
+          </small>
+        </span>
+      ),
+      tri: a => a.nomEtabDestination,
+    },
+    {
+      cle: 'securite',
+      entete: 'Sécurité (destination)',
+      rendu: a => <ZoneSecuritePill zone={zoneDestination(a)} court />,
+      tri: a => rangZoneSecurite(zoneDestination(a)),
+    },
     {
       cle: 'nature',
       entete: 'Nature',
       rendu: a => (
         <span>
-          <Pill tone={a.nature === 'voeu' ? 'ok' : a.nature === 'obligatoire' ? 'warn' : 'info'}>{LIBELLE_NATURE[a.nature]}</Pill>
+          <Pill tone={a.nature === 'voeu' ? 'ok' : a.nature === 'obligatoire' ? 'warn' : 'info'}>
+            {LIBELLE_NATURE[a.nature]}
+          </Pill>
           {a.rangVoeu != null && <small>vœu {a.rangVoeu}</small>}
         </span>
       ),
       tri: a => a.nature,
     },
-    { cle: 'perimetre', entete: 'Périmètre', rendu: a => <Pill tone={a.niveauProximite === 'meme_commune' ? 'ok' : a.niveauProximite === 'meme_departement' ? 'info' : 'warn'}>{LIBELLE_PROXIMITE[a.niveauProximite]}</Pill>, tri: a => a.niveauProximite },
+    {
+      cle: 'perimetre',
+      entete: 'Périmètre',
+      rendu: a => (
+        <Pill
+          tone={
+            a.niveauProximite === 'meme_commune' ? 'ok' : a.niveauProximite === 'meme_departement' ? 'info' : 'warn'
+          }
+        >
+          {LIBELLE_PROXIMITE[a.niveauProximite]}
+        </Pill>
+      ),
+      tri: a => a.niveauProximite,
+    },
     { cle: 'statut', entete: 'Statut', rendu: a => LIBELLE_STATUT_PROPOSITION[a.statut], tri: a => a.statut },
     { cle: 'score', entete: 'Score', numerique: true, rendu: a => fmt(a.score), tri: a => a.score },
     {
@@ -437,8 +549,9 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
             {selection.nomEns} {selection.prenomEns}
           </p>
           <p className="hint" style={{ marginBottom: 14 }}>
-            {selection.nomEtabOrigine} ({selection.communeOrigine}) → {selection.nomEtabDestination} ({selection.communeDestination})
-            · {LIBELLE_PROXIMITE[selection.niveauProximite]} · {LIBELLE_NATURE[selection.nature]}
+            {selection.nomEtabOrigine} ({selection.communeOrigine}) → {selection.nomEtabDestination} (
+            {selection.communeDestination}) · {LIBELLE_PROXIMITE[selection.niveauProximite]} ·{' '}
+            {LIBELLE_NATURE[selection.nature]}
             {selection.rangVoeu != null ? ` (vœu ${selection.rangVoeu})` : ''}
           </p>
           <p style={{ marginBottom: 14 }}>{EXPLICATION_NATURE[selection.nature]}</p>
@@ -464,7 +577,13 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
                 </tr>
               ))}
               <tr>
-                <th scope="row">{selection.nature === 'obligatoire' ? 'Barème individuel' : selection.nature === 'arbitrage' ? 'Décision' : 'Score de priorité S'}</th>
+                <th scope="row">
+                  {selection.nature === 'obligatoire'
+                    ? 'Barème individuel'
+                    : selection.nature === 'arbitrage'
+                      ? 'Décision'
+                      : 'Score de priorité S'}
+                </th>
                 <td className="num" colSpan={3}>
                   <strong>{selection.breakdown.total.toLocaleString('fr-FR')}</strong>
                 </td>
@@ -482,19 +601,32 @@ export function PropositionsPanel({ resultat, analyste }: { resultat: Simulation
 }
 
 export function ComparisonPage({ store }: { store: PlanningStore }) {
-  const { comparaison, resultatAffiche, arbreFiltre, scenarios, resultats, scenarioActif, setPage, diagnostic, fluxTerritorial, perimetre, ouvrirEcole } = store
+  const {
+    comparaison,
+    resultatAffiche,
+    arbreFiltre,
+    scenarios,
+    resultats,
+    scenarioActif,
+    setPage,
+    diagnostic,
+    fluxTerritorial,
+    perimetre,
+    ouvrirEcole,
+  } = store
 
   const tousResultats = useMemo(() => {
     const geo = comparaison
-    const autres = scenarios
-      .filter(s => !s.id.startsWith('geo-') && resultats[s.id])
-      .map(s => resultats[s.id])
+    const autres = scenarios.filter(s => !s.id.startsWith('geo-') && resultats[s.id]).map(s => resultats[s.id])
     return [...geo, ...autres]
   }, [comparaison, scenarios, resultats])
 
   if (!diagnostic) {
     return (
-      <EmptyState titre="Aucune donnée à comparer" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucune donnée à comparer"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         La comparaison de scénarios nécessite un diagnostic calculé.
       </EmptyState>
     )
@@ -502,7 +634,10 @@ export function ComparisonPage({ store }: { store: PlanningStore }) {
 
   if (tousResultats.length === 0) {
     return (
-      <EmptyState titre="Aucun scénario calculé" action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}>
+      <EmptyState
+        titre="Aucun scénario calculé"
+        action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}
+      >
         Exécutez au moins un scénario pour comparer les conséquences de chaque jeu de règles.
       </EmptyState>
     )
@@ -517,21 +652,34 @@ export function ComparisonPage({ store }: { store: PlanningStore }) {
     { label: 'Écoles sources', actuel: '0', valeur: r => fmt(r.ecolesSources) },
     { label: 'Besoin résiduel', actuel: fmt(besoinActuel), valeur: r => fmt(r.besoinResiduel) },
     { label: 'Taux de couverture', actuel: '0 %', valeur: r => fmtPct(r.tauxCouverture) },
-    { label: 'Vœux satisfaits', actuel: '—', valeur: r => fmt(r.mouvementsParNature.find(m => m.nature === 'voeu')?.nombre ?? 0) },
-    { label: 'Redéploiements obligatoires', actuel: '—', valeur: r => fmt(r.mouvementsParNature.find(m => m.nature === 'obligatoire')?.nombre ?? 0) },
+    {
+      label: 'Vœux satisfaits',
+      actuel: '—',
+      valeur: r => fmt(r.mouvementsParNature.find(m => m.nature === 'voeu')?.nombre ?? 0),
+    },
+    {
+      label: 'Redéploiements obligatoires',
+      actuel: '—',
+      valeur: r => fmt(r.mouvementsParNature.find(m => m.nature === 'obligatoire')?.nombre ?? 0),
+    },
     {
       label: "Degré d'aléa",
-      actuel: tousResultats[0]?.syntheseAvant.degreAlea == null ? '—' : fmtPct(tousResultats[0].syntheseAvant.degreAlea),
+      actuel:
+        tousResultats[0]?.syntheseAvant.degreAlea == null ? '—' : fmtPct(tousResultats[0].syntheseAvant.degreAlea),
       valeur: r => (r.syntheseApres.degreAlea == null ? '—' : fmtPct(r.syntheseApres.degreAlea)),
     },
-    { label: 'Recrutement à prévoir', actuel: fmt(tousResultats[0]?.syntheseAvant.recrutementAPrevoir ?? 0), valeur: r => fmt(r.syntheseApres.recrutementAPrevoir) },
+    {
+      label: 'Recrutement à prévoir',
+      actuel: fmt(tousResultats[0]?.syntheseAvant.recrutementAPrevoir ?? 0),
+      valeur: r => fmt(r.syntheseApres.recrutementAPrevoir),
+    },
   ]
 
   return (
     <div className="stack">
       <Notice tone="info" title="Comparer n’est pas classer.">
-        Ce tableau présente les conséquences de chaque scénario. L’application ne désigne aucun scénario comme préférable :
-        l’arbitrage relève d’une décision humaine.
+        Ce tableau présente les conséquences de chaque scénario. L’application ne désigne aucun scénario comme
+        préférable : l’arbitrage relève d’une décision humaine.
       </Notice>
 
       <Panel kicker="Comparaison" title="Conséquences par scénario">
@@ -601,28 +749,40 @@ export function ComparisonPage({ store }: { store: PlanningStore }) {
                   label: 'Écoles en déficit',
                   avant: resultatAffiche.before.ecolesEnDeficit,
                   apres: resultatAffiche.after.ecolesEnDeficit,
-                  rendu: <Delta avant={resultatAffiche.before.ecolesEnDeficit} apres={resultatAffiche.after.ecolesEnDeficit} />,
+                  rendu: (
+                    <Delta
+                      avant={resultatAffiche.before.ecolesEnDeficit}
+                      apres={resultatAffiche.after.ecolesEnDeficit}
+                    />
+                  ),
                 },
                 {
                   label: 'Postes vacants',
                   avant: resultatAffiche.before.postesVacants,
                   apres: resultatAffiche.after.postesVacants,
-                  rendu: <Delta avant={resultatAffiche.before.postesVacants} apres={resultatAffiche.after.postesVacants} />,
+                  rendu: (
+                    <Delta avant={resultatAffiche.before.postesVacants} apres={resultatAffiche.after.postesVacants} />
+                  ),
                 },
                 {
                   label: 'Déficit total',
                   avant: resultatAffiche.before.deficitTotal,
                   apres: resultatAffiche.after.deficitTotal,
-                  rendu: <Delta avant={resultatAffiche.before.deficitTotal} apres={resultatAffiche.after.deficitTotal} />,
+                  rendu: (
+                    <Delta avant={resultatAffiche.before.deficitTotal} apres={resultatAffiche.after.deficitTotal} />
+                  ),
                 },
               ]}
             />
             {reductionDuDeficit(resultatAffiche) && (
-              <p style={{ marginTop: 14, fontSize: 15, fontWeight: 650 }}>{reductionDuDeficit(resultatAffiche)?.texte}</p>
+              <p style={{ marginTop: 14, fontSize: 15, fontWeight: 650 }}>
+                {reductionDuDeficit(resultatAffiche)?.texte}
+              </p>
             )}
             {resultatAffiche.before.pressionMoyenne != null && (
               <p className="hint" style={{ marginTop: 8 }}>
-                Pression moyenne élèves par enseignant État : {resultatAffiche.before.pressionMoyenne.toLocaleString('fr-FR')} avant,{' '}
+                Pression moyenne élèves par enseignant État :{' '}
+                {resultatAffiche.before.pressionMoyenne.toLocaleString('fr-FR')} avant,{' '}
                 {resultatAffiche.after.pressionMoyenne?.toLocaleString('fr-FR') ?? '—'} après.
               </p>
             )}
@@ -687,4 +847,3 @@ export function RappelScope({ scope }: { scope: GeographicScope }) {
     </p>
   )
 }
-

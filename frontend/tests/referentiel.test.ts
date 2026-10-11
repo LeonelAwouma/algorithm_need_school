@@ -30,7 +30,14 @@ function parametres(): EngineSettings {
 const NE_EN = (age: number) => new Date(Date.UTC(2026 - age, 0, 1))
 
 /** École de 6 niveaux en simple flux, comme les exemples commentés de la section 2.4. */
-function ecoleType(id: string, eleves: number, salles: number, maitres: number, departs = 0, extra: Partial<School> = {}): School {
+function ecoleType(
+  id: string,
+  eleves: number,
+  salles: number,
+  maitres: number,
+  departs = 0,
+  extra: Partial<School> = {},
+): School {
   return ecole({
     id,
     nbClasses: 6,
@@ -66,7 +73,18 @@ test('§2.4 — les cinq écoles commentées : E, P, D, BMAX, K, b, x, a, s et c
     const d = computeSchoolDiagnostic(s, parametres())
     const c = d.calcul
     assert.deepEqual(
-      [c.enseignantsRetenus, c.norme, c.dotation, c.bmax, c.cible, c.besoin, c.excedent, c.surnombre, c.sallesManquantes, d.classement],
+      [
+        c.enseignantsRetenus,
+        c.norme,
+        c.dotation,
+        c.bmax,
+        c.cible,
+        c.besoin,
+        c.excedent,
+        c.surnombre,
+        c.sallesManquantes,
+        d.classement,
+      ],
       attendu[s.id],
       `école ${s.id}`,
     )
@@ -115,7 +133,10 @@ test('§2.4 — le double flux transforme un besoin en salles en besoin en maît
 
   const sansDoubleFlux = parametres()
   sansDoubleFlux.besoin.doubleFluxAutorise = false
-  assert.equal(computeSchoolDiagnostic(ecoleType('D', 400, 3, 5, 0, { sallesDoubleFlux: 3 }), sansDoubleFlux).calcul.bmax, 3)
+  assert.equal(
+    computeSchoolDiagnostic(ecoleType('D', 400, 3, 5, 0, { sallesDoubleFlux: 3 }), sansDoubleFlux).calcul.bmax,
+    3,
+  )
 })
 
 test("§2.4 — les départs connus sont repérés dans le fichier des enseignants quand l'école ne les déclare pas", () => {
@@ -137,7 +158,10 @@ test('§2.4 — école bilingue : la section francophone manque d’un maître, 
   ]
   const teachers = [enseignant({ id: 'T-EN', idEtabAttache: 'BIL', sousSysteme: 'anglophone' })]
   const { schools, teachers: rattaches } = separerSectionsBilingues(lignes, teachers)
-  assert.deepEqual(schools.map(s => s.id), ['BIL-FR', 'BIL-EN'])
+  assert.deepEqual(
+    schools.map(s => s.id),
+    ['BIL-FR', 'BIL-EN'],
+  )
   assert.equal(rattaches[0].idEtabAttache, 'BIL-EN')
 
   const diagnostic = runDiagnostic(schools, parametres())
@@ -161,7 +185,13 @@ test("§2.5 — degré d'aléa : (3 + 3) ÷ 18 = 33 %, puis 0 % après le plan",
   const apres = syntheseTerritoriale(
     diagnostic.schools,
     parametres(),
-    new Map([['A', 5], ['B', 5], ['C', 3], ['D', 5], ['E', 2]]),
+    new Map([
+      ['A', 5],
+      ['B', 5],
+      ['C', 3],
+      ['D', 5],
+      ['E', 2],
+    ]),
   )
   assert.equal(apres.degreAlea, 0)
 })
@@ -169,7 +199,14 @@ test("§2.5 — degré d'aléa : (3 + 3) ÷ 18 = 33 %, puis 0 % après le plan",
 test('§2.6 — recrutement à prévoir : 120 + ⌈1,5 % × 4 000⌉ = 180', () => {
   const s = parametres()
   s.recrutement.tauxAttritionHorsRetraite = 1.5
-  const grande = ecole({ id: 'T', nbClasses: 6, niveauxOuverts: 6, effectifTotalEleves: 4120 * 60, nbSallesClasse: 5000, nbEnseignantsEtat: 4000 })
+  const grande = ecole({
+    id: 'T',
+    nbClasses: 6,
+    niveauxOuverts: 6,
+    effectifTotalEleves: 4120 * 60,
+    nbSallesClasse: 5000,
+    nbEnseignantsEtat: 4000,
+  })
   const synthese = syntheseTerritoriale(runDiagnostic([grande], s).schools, s)
   assert.equal(synthese.restant, 120)
   assert.equal(synthese.recrutementAPrevoir, 180)
@@ -188,7 +225,10 @@ test('§3.1 et §5.1 — poids, points de besoin et indice de priorité des éco
     ['A12', 230, 3, 'rural', 'jaune', 20, 2],
   ]
   for (const [id, eleves, maitres, accessibilite, zoneSecurite, u, niveau] of lignes) {
-    const d = computeSchoolDiagnostic(ecoleType(id, eleves, 8, maitres, 0, { accessibilite, zoneSecurite }), parametres())
+    const d = computeSchoolDiagnostic(
+      ecoleType(id, eleves, 8, maitres, 0, { accessibilite, zoneSecurite }),
+      parametres(),
+    )
     assert.equal(d.priorite.indice, u, `${id} : indice u`)
     assert.equal(d.priorite.niveauDifficulte, niveau, `${id} : niveau de difficulté`)
   }
@@ -218,14 +258,20 @@ test('§3.4 — exemple U et V : T1 obtient U, T2 obtient V, T3 reste sans affec
       { id: 'T2', liste: ['U', 'V'] },
       { id: 'T3', liste: ['U'] },
     ],
-    new Map([['U', 1], ['V', 1]]),
+    new Map([
+      ['U', 1],
+      ['V', 1],
+    ]),
     (ecoleId, a, b) => score[b][ecoleId] - score[a][ecoleId],
     'exemple',
   )
   assert.equal(res.affectations.get('T1'), 'U')
   assert.equal(res.affectations.get('T2'), 'V')
   assert.equal(res.affectations.has('T3'), false)
-  assert.deepEqual(res.tours.map(t => t.refuses), [['T2'], ['T1'], ['T3']])
+  assert.deepEqual(
+    res.tours.map(t => t.refuses),
+    [['T2'], ['T1'], ['T3']],
+  )
 })
 
 /** Une école nécessiteuse d'un poste : 120 élèves, 6 niveaux, 6 salles, 2 maîtres. */
@@ -233,7 +279,13 @@ const ecoleAUnPoste = (id: string, extra: Partial<School> = {}) => ecoleType(id,
 /** Une école très excédentaire : 60 élèves, dotation 3, 12 maîtres. */
 const ecoleSource = (id = 'S', extra: Partial<School> = {}) => ecoleType(id, 60, 6, 12, 0, extra)
 
-function simuler(schools: School[], teachers: Teacher[], scope: GeographicScope = 'departement', s = parametres(), extra: { arbitrages?: DecisionArbitrage[]; recrues?: Recrue[] } = {}) {
+function simuler(
+  schools: School[],
+  teachers: Teacher[],
+  scope: GeographicScope = 'departement',
+  s = parametres(),
+  extra: { arbitrages?: DecisionArbitrage[]; recrues?: Recrue[] } = {},
+) {
   const diagnostic = runDiagnostic(schools, s, teachers)
   return runSimulation({
     diagnostics: diagnostic.schools,
@@ -252,10 +304,39 @@ test('§5.4 — classement unique : T2 obtient Z, T1 obtient X, T3 obtient Y, T4
     ecoleSource(),
   ]
   const teachers = [
-    enseignant({ id: 'T1', idEtabAttache: 'S', anciennetePosteAns: 9, voeux: ['Z', 'X'], dateNaissance: NE_EN(45), age: 45 }),
-    enseignant({ id: 'T2', idEtabAttache: 'S', anciennetePosteAns: 7, anneesZoneNiveau1: 4, voeux: ['Z', 'Y'], dateNaissance: NE_EN(42), age: 42 }),
-    enseignant({ id: 'T3', idEtabAttache: 'S', anciennetePosteAns: 6, voeux: ['Y'], dateNaissance: NE_EN(57), age: 57 }),
-    enseignant({ id: 'T4', idEtabAttache: 'S', anciennetePosteAns: 5, voeux: ['Z'], dateNaissance: NE_EN(38), age: 38 }),
+    enseignant({
+      id: 'T1',
+      idEtabAttache: 'S',
+      anciennetePosteAns: 9,
+      voeux: ['Z', 'X'],
+      dateNaissance: NE_EN(45),
+      age: 45,
+    }),
+    enseignant({
+      id: 'T2',
+      idEtabAttache: 'S',
+      anciennetePosteAns: 7,
+      anneesZoneNiveau1: 4,
+      voeux: ['Z', 'Y'],
+      dateNaissance: NE_EN(42),
+      age: 42,
+    }),
+    enseignant({
+      id: 'T3',
+      idEtabAttache: 'S',
+      anciennetePosteAns: 6,
+      voeux: ['Y'],
+      dateNaissance: NE_EN(57),
+      age: 57,
+    }),
+    enseignant({
+      id: 'T4',
+      idEtabAttache: 'S',
+      anciennetePosteAns: 5,
+      voeux: ['Z'],
+      dateNaissance: NE_EN(38),
+      age: 38,
+    }),
   ]
   const s = parametres()
   s.mobilite.redeploiementObligatoire = false
@@ -277,27 +358,41 @@ test('§3.3 et §3.4 — exemple U et V de bout en bout : la bonification ne vau
   const schools = [ecoleAUnPoste('U'), ecoleAUnPoste('V'), ecoleSource()]
   const teachers = [
     enseignant({ id: 'T1', idEtabAttache: 'S', anciennetePosteAns: 16, voeux: ['V', 'U'] }),
-    enseignant({ id: 'T2', idEtabAttache: 'S', anciennetePosteAns: 11, voeux: ['U', 'V'], motifDemande: 'regroupement_familial', ecoleMotif: 'V' }),
+    enseignant({
+      id: 'T2',
+      idEtabAttache: 'S',
+      anciennetePosteAns: 11,
+      voeux: ['U', 'V'],
+      motifDemande: 'regroupement_familial',
+      ecoleMotif: 'V',
+    }),
     enseignant({ id: 'T3', idEtabAttache: 'S', anciennetePosteAns: 14, voeux: ['U'] }),
   ]
   const s = parametres()
   s.mobilite.redeploiementObligatoire = false
   const r = simuler(schools, teachers, 'departement', s)
   const t2 = r.candidatures.find(c => c.teacher.id === 'T2')
-  assert.deepEqual(t2?.voeux.map(v => v.score), [15, 25])
+  assert.deepEqual(
+    t2?.voeux.map(v => v.score),
+    [15, 25],
+  )
   assert.equal(r.assignments.find(a => a.teacherId === 'T2')?.schoolDestinationId, 'V')
   assert.equal(r.assignments.find(a => a.teacherId === 'T1')?.schoolDestinationId, 'U')
-  assert.equal(r.assignments.some(a => a.teacherId === 'T3'), false, 'U a retenu un candidat mieux classé (20 contre 18)')
+  assert.equal(
+    r.assignments.some(a => a.teacherId === 'T3'),
+    false,
+    'U a retenu un candidat mieux classé (20 contre 18)',
+  )
 
   // Variante « poids des écoles » : même résultat dans cet exemple.
   const parPoids = parametres()
   parPoids.mobilite.redeploiementObligatoire = false
   parPoids.mobilite.ordreExamen = 'poids'
   const r2 = simuler(schools, teachers, 'departement', parPoids)
-  assert.deepEqual(
-    r2.assignments.map(a => [a.teacherId, a.schoolDestinationId]).sort(),
-    [['T1', 'U'], ['T2', 'V']],
-  )
+  assert.deepEqual(r2.assignments.map(a => [a.teacherId, a.schoolDestinationId]).sort(), [
+    ['T1', 'U'],
+    ['T2', 'V'],
+  ])
 })
 
 // --- §3.2 : recevabilité et limite des départs ------------------------------------------
@@ -341,7 +436,14 @@ test('§3.5 — solution la plus proche hors vœux, jamais en zone rouge, jamais
   const teachers = [
     enseignant({ id: 'GAGNANT', idEtabAttache: 'S', anciennetePosteAns: 15, voeux: ['DEMANDEE'] }),
     enseignant({ id: 'SECOND', idEtabAttache: 'S', anciennetePosteAns: 8, voeux: ['DEMANDEE'] }),
-    enseignant({ id: 'PROCHE_RETRAITE', idEtabAttache: 'S', anciennetePosteAns: 9, voeux: ['DEMANDEE'], dateNaissance: NE_EN(57), age: 57 }),
+    enseignant({
+      id: 'PROCHE_RETRAITE',
+      idEtabAttache: 'S',
+      anciennetePosteAns: 9,
+      voeux: ['DEMANDEE'],
+      dateNaissance: NE_EN(57),
+      age: 57,
+    }),
   ]
   const s = parametres()
   s.mobilite.redeploiementObligatoire = false
@@ -349,10 +451,20 @@ test('§3.5 — solution la plus proche hors vœux, jamais en zone rouge, jamais
   const second = r.assignments.find(a => a.teacherId === 'SECOND')
   assert.equal(second?.nature, 'hors_voeux')
   assert.equal(second?.schoolDestinationId, 'VOISINE')
-  assert.equal(r.assignments.some(a => a.teacherId === 'PROCHE_RETRAITE'), false)
-  assert.equal(r.assignments.some(a => a.schoolDestinationId === 'ROUGE'), false)
+  assert.equal(
+    r.assignments.some(a => a.teacherId === 'PROCHE_RETRAITE'),
+    false,
+  )
+  assert.equal(
+    r.assignments.some(a => a.schoolDestinationId === 'ROUGE'),
+    false,
+  )
   assert.ok(r.invariants.find(i => i.code === 'zone_rouge')?.ok)
-  assert.equal(r.combinaisons.some(c => c.schoolId === 'ROUGE' && c.type !== 'permutation'), false, 'aucune combinaison imposée en zone rouge')
+  assert.equal(
+    r.combinaisons.some(c => c.schoolId === 'ROUGE' && c.type !== 'permutation'),
+    false,
+    'aucune combinaison imposée en zone rouge',
+  )
 })
 
 test('§3.7 — le redéploiement obligatoire sert les écoles par priorité, hors zone rouge, dans le sous-système', () => {
@@ -365,18 +477,29 @@ test('§3.7 — le redéploiement obligatoire sert les écoles par priorité, ho
   ]
   const teachers = enseignantsDe('S', 4, { sousSysteme: 'francophone' })
   const r = simuler(schools, teachers)
-  assert.deepEqual(r.assignments.map(a => [a.nature, a.schoolDestinationId]), [['obligatoire', 'PRIORITAIRE']])
+  assert.deepEqual(
+    r.assignments.map(a => [a.nature, a.schoolDestinationId]),
+    [['obligatoire', 'PRIORITAIRE']],
+  )
   assert.ok(r.invariants.find(i => i.code === 'sous_systeme_respecte')?.ok)
   assert.ok(tousInvariantsOk(r.invariants))
 })
 
 test('§3.10 — un vœu portant sur l’autre sous-système est transmis à la commission, pas à l’algorithme', () => {
-  const schools = [ecoleAUnPoste('ANGLO', { sousSysteme: 'anglophone' }), ecoleSource('S', { sousSysteme: 'francophone' })]
-  const teachers = [enseignant({ id: 'T', idEtabAttache: 'S', anciennetePosteAns: 10, sousSysteme: 'francophone', voeux: ['ANGLO'] })]
+  const schools = [
+    ecoleAUnPoste('ANGLO', { sousSysteme: 'anglophone' }),
+    ecoleSource('S', { sousSysteme: 'francophone' }),
+  ]
+  const teachers = [
+    enseignant({ id: 'T', idEtabAttache: 'S', anciennetePosteAns: 10, sousSysteme: 'francophone', voeux: ['ANGLO'] }),
+  ]
   const r = simuler(schools, teachers)
   assert.equal(r.assignments.length, 0)
   assert.equal(r.candidatures[0].voeux[0].statut, 'autre_sous_systeme')
-  assert.deepEqual(r.voeuxAutreSousSysteme.map(v => [v.teacherId, v.schoolId, v.posteVacant]), [['T', 'ANGLO', true]])
+  assert.deepEqual(
+    r.voeuxAutreSousSysteme.map(v => [v.teacherId, v.schoolId, v.posteVacant]),
+    [['T', 'ANGLO', true]],
+  )
 })
 
 // --- §3.6 : niveau central ----------------------------------------------------------------
@@ -403,15 +526,54 @@ test('§3.8 — nouveaux recrutés : par note, choix d’abord, puis extension a
     ecoleAUnPoste('B09', { commune: 'Commune B', departement: 'D1', sousSysteme: 'anglophone' }),
   ]
   const recrues: Recrue[] = [
-    { id: 'R1', nom: 'R1', sexe: 'F', sousSysteme: 'francophone', note: 16.5, communeResidence: 'Commune A', choix: ['A07', 'B03'], ligneSource: 2 },
-    { id: 'R3', nom: 'R3', sexe: 'M', sousSysteme: 'francophone', note: 15.2, communeResidence: 'Commune A', choix: ['A07'], ligneSource: 3 },
-    { id: 'R5', nom: 'R5', sexe: 'M', sousSysteme: 'francophone', note: 14.1, communeResidence: 'Commune A', choix: ['A07'], ligneSource: 4 },
-    { id: 'R8', nom: 'R8', sexe: 'F', sousSysteme: 'anglophone', note: 14.6, communeResidence: 'Commune B', choix: ['B09'], ligneSource: 5 },
+    {
+      id: 'R1',
+      nom: 'R1',
+      sexe: 'F',
+      sousSysteme: 'francophone',
+      note: 16.5,
+      communeResidence: 'Commune A',
+      choix: ['A07', 'B03'],
+      ligneSource: 2,
+    },
+    {
+      id: 'R3',
+      nom: 'R3',
+      sexe: 'M',
+      sousSysteme: 'francophone',
+      note: 15.2,
+      communeResidence: 'Commune A',
+      choix: ['A07'],
+      ligneSource: 3,
+    },
+    {
+      id: 'R5',
+      nom: 'R5',
+      sexe: 'M',
+      sousSysteme: 'francophone',
+      note: 14.1,
+      communeResidence: 'Commune A',
+      choix: ['A07'],
+      ligneSource: 4,
+    },
+    {
+      id: 'R8',
+      nom: 'R8',
+      sexe: 'F',
+      sousSysteme: 'anglophone',
+      note: 14.6,
+      communeResidence: 'Commune B',
+      choix: ['B09'],
+      ligneSource: 5,
+    },
   ]
   const r = simuler(schools, [], 'departement', parametres(), { recrues })
   const issue = Object.fromEntries((r.recrutes?.affectations ?? []).map(a => [a.recrueId, [a.schoolId, a.issue]]))
   assert.deepEqual(issue, { R1: ['A07', 'choix'], R8: ['B09', 'choix'], R3: ['B03', 'departement'] })
-  assert.deepEqual(r.recrutes?.vivierNational.map(v => v.recrueId), ['R5'])
+  assert.deepEqual(
+    r.recrutes?.vivierNational.map(v => v.recrueId),
+    ['R5'],
+  )
 })
 
 // --- §3.9 : projection N+2 ------------------------------------------------------------------
@@ -426,7 +588,10 @@ test('§3.9 — un enseignant resté dans le vivier est projeté sur un poste qu
   ]
   const r = simuler(schools, teachers)
   assert.equal(r.postesProjetesN2, 1)
-  assert.deepEqual(r.projectionsN2.map(p => [p.teacherId, p.schoolId]), [['DEMANDEUR', 'VISEE']])
+  assert.deepEqual(
+    r.projectionsN2.map(p => [p.teacherId, p.schoolId]),
+    [['DEMANDEUR', 'VISEE']],
+  )
   assert.equal(r.candidatures[0].issue, 'projete_n2')
 })
 
@@ -457,7 +622,13 @@ test('§3.10 — une proposition rejetée n’est plus refaite ; une correction 
   const apresRejet = simuler(schools, teachers, 'departement', s, { arbitrages: [rejet] })
   assert.equal(apresRejet.assignments[0].schoolDestinationId, 'V', 'l’algorithme est relancé sur les postes restants')
 
-  const correction: DecisionArbitrage = { ...rejet, id: 'A2', decision: 'modifier', schoolDestinationId: 'V', nomEtabDestination: 'V' }
+  const correction: DecisionArbitrage = {
+    ...rejet,
+    id: 'A2',
+    decision: 'modifier',
+    schoolDestinationId: 'V',
+    nomEtabDestination: 'V',
+  }
   const corrige = simuler(schools, teachers, 'departement', s, { arbitrages: [correction] })
   assert.equal(corrige.assignments[0].statut, 'arbitre')
   assert.equal(corrige.assignments[0].arbitrageId, 'A2')

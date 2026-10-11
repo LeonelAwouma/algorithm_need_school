@@ -16,13 +16,36 @@ import { calculerFlux } from '@/lib/simulation/filter'
 import { Colonnes, Histogramme, construireClasses } from '../charts'
 import { CameroonMap, type IndicateurCarte, type StatsTerritoire } from '../maps/CameroonMap'
 import { FluxPanel } from '../simulations/FluxPanel'
-import { DataTable, EmptyState, Notice, Panel, SearchField, ZoneSecuritePill, fmt, fmtDec, type Colonne } from '../common'
+import {
+  DataTable,
+  EmptyState,
+  Notice,
+  Panel,
+  SearchField,
+  ZoneSecuritePill,
+  fmt,
+  fmtDec,
+  type Colonne,
+} from '../common'
 import { rangZoneSecurite } from '@/lib/simulation/libelles'
 import { SeveritePill } from '../dashboard/OverviewPage'
 import type { PlanningStore } from '../usePlanningState'
 
 export function NationalDiagnosticPage({ store }: { store: PlanningStore }) {
-  const { diagnostic, diagnosticsFiltres, arbreFiltre, noeudCourant, enfantsTerritoriaux, qualite, dataset, resultatAffiche, perimetre, settings, setPage, explorerTerritoire } = store
+  const {
+    diagnostic,
+    diagnosticsFiltres,
+    arbreFiltre,
+    noeudCourant,
+    enfantsTerritoriaux,
+    qualite,
+    dataset,
+    resultatAffiche,
+    perimetre,
+    settings,
+    setPage,
+    explorerTerritoire,
+  } = store
   const niveauEnfants = libelleNiveauEnfants(noeudCourant)
 
   const enonces = useMemo(
@@ -36,7 +59,10 @@ export function NationalDiagnosticPage({ store }: { store: PlanningStore }) {
     [arbreFiltre.totals, dataset, resultatAffiche, perimetre],
   )
 
-  const attention = useMemo(() => pointsAttention(diagnosticsFiltres, noeudCourant, qualite), [diagnosticsFiltres, noeudCourant, qualite])
+  const attention = useMemo(
+    () => pointsAttention(diagnosticsFiltres, noeudCourant, qualite),
+    [diagnosticsFiltres, noeudCourant, qualite],
+  )
   const mixtes = useMemo(() => territoiresMixtes(enfantsTerritoriaux), [enfantsTerritoriaux])
 
   /**
@@ -55,7 +81,10 @@ export function NationalDiagnosticPage({ store }: { store: PlanningStore }) {
 
   if (!diagnostic) {
     return (
-      <EmptyState titre="Aucun diagnostic disponible" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucun diagnostic disponible"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         Le diagnostic est calculé automatiquement dès que les fichiers sont importés.
       </EmptyState>
     )
@@ -161,7 +190,12 @@ export function NationalDiagnosticPage({ store }: { store: PlanningStore }) {
         />
         {mixtes.length > 0 && (
           <p className="hint" style={{ marginTop: 12 }}>
-            Territoires où excédents et déficits coexistent : {mixtes.slice(0, 5).map(t => t.territory.nom).join(', ')}.
+            Territoires où excédents et déficits coexistent :{' '}
+            {mixtes
+              .slice(0, 5)
+              .map(t => t.territory.nom)
+              .join(', ')}
+            .
           </p>
         )}
       </Panel>
@@ -250,16 +284,22 @@ export function TerritoriesPage({ store }: { store: PlanningStore }) {
 
   if (!diagnostic || !arbreComplet) {
     return (
-      <EmptyState titre="Aucune donnée territoriale" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucune donnée territoriale"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         L’exploration territoriale devient disponible dès que les fichiers sont importés.
       </EmptyState>
     )
   }
 
   const descendre = (nom: string) => {
-    if (niveauCourant === 'national') setFiltres({ ...filtres, territoire: { region: nom, departement: null, commune: null } })
-    else if (niveauCourant === 'region') setFiltres({ ...filtres, territoire: { ...filtres.territoire, departement: nom, commune: null } })
-    else if (niveauCourant === 'departement') setFiltres({ ...filtres, territoire: { ...filtres.territoire, commune: nom } })
+    if (niveauCourant === 'national')
+      setFiltres({ ...filtres, territoire: { region: nom, departement: null, commune: null } })
+    else if (niveauCourant === 'region')
+      setFiltres({ ...filtres, territoire: { ...filtres.territoire, departement: nom, commune: null } })
+    else if (niveauCourant === 'departement')
+      setFiltres({ ...filtres, territoire: { ...filtres.territoire, commune: nom } })
   }
 
   const colonnes: Colonne<TerritorialSummary>[] = [
@@ -273,10 +313,34 @@ export function TerritoriesPage({ store }: { store: PlanningStore }) {
       ),
       tri: t => t.territory.nom,
     },
-    { cle: 'ecoles', entete: 'Écoles', numerique: true, rendu: t => fmt(t.totals.ecolesAnalysees), tri: t => t.totals.ecolesAnalysees },
-    { cle: 'deficit', entete: 'En déficit', numerique: true, rendu: t => fmt(t.totals.ecolesEnDeficit), tri: t => t.totals.ecolesEnDeficit },
-    { cle: 'postes', entete: 'Postes nécessaires', numerique: true, rendu: t => <strong>{fmt(t.totals.postesNecessaires)}</strong>, tri: t => t.totals.postesNecessaires },
-    { cle: 'excedent', entete: 'Redéployables', numerique: true, rendu: t => fmt(t.totals.excedentMobilisable), tri: t => t.totals.excedentMobilisable },
+    {
+      cle: 'ecoles',
+      entete: 'Écoles',
+      numerique: true,
+      rendu: t => fmt(t.totals.ecolesAnalysees),
+      tri: t => t.totals.ecolesAnalysees,
+    },
+    {
+      cle: 'deficit',
+      entete: 'En déficit',
+      numerique: true,
+      rendu: t => fmt(t.totals.ecolesEnDeficit),
+      tri: t => t.totals.ecolesEnDeficit,
+    },
+    {
+      cle: 'postes',
+      entete: 'Postes nécessaires',
+      numerique: true,
+      rendu: t => <strong>{fmt(t.totals.postesNecessaires)}</strong>,
+      tri: t => t.totals.postesNecessaires,
+    },
+    {
+      cle: 'excedent',
+      entete: 'Redéployables',
+      numerique: true,
+      rendu: t => fmt(t.totals.excedentMobilisable),
+      tri: t => t.totals.excedentMobilisable,
+    },
     {
       cle: 'ratio',
       entete: 'Élèves / ens. État',
@@ -351,7 +415,13 @@ export function TerritoriesPage({ store }: { store: PlanningStore }) {
             onIndicateurChange={setIndicateur}
             stats={statsParTerritoire}
             onExplorer={descendre}
-            selection={niveauCourant === 'national' ? filtres.territoire.region : niveauCourant === 'region' ? filtres.territoire.departement : filtres.territoire.commune}
+            selection={
+              niveauCourant === 'national'
+                ? filtres.territoire.region
+                : niveauCourant === 'region'
+                  ? filtres.territoire.departement
+                  : filtres.territoire.commune
+            }
           />
         </Panel>
       )}
@@ -392,11 +462,40 @@ export function TerritoriesPage({ store }: { store: PlanningStore }) {
                 ),
                 tri: d => d.school.nom,
               },
-              { cle: 'securite', entete: 'Sécurité', rendu: d => <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} court />, tri: d => rangZoneSecurite(d.school.zoneSecurite) },
-              { cle: 'classes', entete: 'Classes', numerique: true, rendu: d => fmt(d.nbClasses), tri: d => d.nbClasses },
-              { cle: 'ens', entete: 'Enseignants État', numerique: true, rendu: d => fmt(d.enseignantsEtat), tri: d => d.enseignantsEtat },
-              { cle: 'besoin', entete: 'Déficit', numerique: true, rendu: d => fmt(d.besoinTheorique), tri: d => d.besoinTheorique },
-              { cle: 'excedent', entete: 'Excédent', numerique: true, rendu: d => fmt(d.excedentTheorique), tri: d => d.excedentTheorique },
+              {
+                cle: 'securite',
+                entete: 'Sécurité',
+                rendu: d => <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} court />,
+                tri: d => rangZoneSecurite(d.school.zoneSecurite),
+              },
+              {
+                cle: 'classes',
+                entete: 'Classes',
+                numerique: true,
+                rendu: d => fmt(d.nbClasses),
+                tri: d => d.nbClasses,
+              },
+              {
+                cle: 'ens',
+                entete: 'Enseignants État',
+                numerique: true,
+                rendu: d => fmt(d.enseignantsEtat),
+                tri: d => d.enseignantsEtat,
+              },
+              {
+                cle: 'besoin',
+                entete: 'Déficit',
+                numerique: true,
+                rendu: d => fmt(d.besoinTheorique),
+                tri: d => d.besoinTheorique,
+              },
+              {
+                cle: 'excedent',
+                entete: 'Excédent',
+                numerique: true,
+                rendu: d => fmt(d.excedentTheorique),
+                tri: d => d.excedentTheorique,
+              },
               { cle: 'situation', entete: 'Situation', rendu: d => <SeveritePill severite={d.severite} /> },
             ]}
             cle={d => d.school.id}
@@ -416,12 +515,17 @@ export function PrioritySchoolsPage({ store }: { store: PlanningStore }) {
     const q = recherche.trim().toLowerCase()
     const base = trierParPriorite(diagnosticsFiltres.filter(d => d.besoinTheorique > 0))
     if (!q) return base
-    return base.filter(d => `${d.school.id} ${d.school.nom} ${d.school.commune} ${d.school.departement}`.toLowerCase().includes(q))
+    return base.filter(d =>
+      `${d.school.id} ${d.school.nom} ${d.school.commune} ${d.school.departement}`.toLowerCase().includes(q),
+    )
   }, [diagnosticsFiltres, recherche])
 
   if (!diagnostic) {
     return (
-      <EmptyState titre="Aucun diagnostic disponible" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucun diagnostic disponible"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         Les priorités sont déduites du diagnostic, qui se calcule dès l’import des fichiers.
       </EmptyState>
     )
@@ -441,13 +545,48 @@ export function PrioritySchoolsPage({ store }: { store: PlanningStore }) {
       ),
       tri: d => d.school.nom,
     },
-    { cle: 'securite', entete: 'Sécurité', rendu: d => <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} court />, tri: d => rangZoneSecurite(d.school.zoneSecurite) },
+    {
+      cle: 'securite',
+      entete: 'Sécurité',
+      rendu: d => <ZoneSecuritePill zone={d.school.zoneSecurite} points={d.priorite.pointsSecurite} court />,
+      tri: d => rangZoneSecurite(d.school.zoneSecurite),
+    },
     { cle: 'classes', entete: 'Classes', numerique: true, rendu: d => fmt(d.nbClasses), tri: d => d.nbClasses },
-    { cle: 'ens', entete: 'Enseignants État', numerique: true, rendu: d => fmt(d.enseignantsEtat), tri: d => d.enseignantsEtat },
-    { cle: 'besoin', entete: 'Postes manquants', numerique: true, rendu: d => <strong>{fmt(d.besoinTheorique)}</strong>, tri: d => d.besoinTheorique },
-    { cle: 'eleves', entete: 'Élèves', numerique: true, rendu: d => fmt(d.school.effectifTotalEleves), tri: d => d.school.effectifTotalEleves ?? -1 },
-    { cle: 'pression', entete: 'Élèves / ens. État', numerique: true, rendu: d => fmtDec(d.elevesParEnseignantEtat, 1), tri: d => d.elevesParEnseignantEtat ?? -1 },
-    { cle: 'multigrade', entete: 'Multigrades', numerique: true, rendu: d => fmt(d.school.classesMultigrades), tri: d => d.school.classesMultigrades },
+    {
+      cle: 'ens',
+      entete: 'Enseignants État',
+      numerique: true,
+      rendu: d => fmt(d.enseignantsEtat),
+      tri: d => d.enseignantsEtat,
+    },
+    {
+      cle: 'besoin',
+      entete: 'Postes manquants',
+      numerique: true,
+      rendu: d => <strong>{fmt(d.besoinTheorique)}</strong>,
+      tri: d => d.besoinTheorique,
+    },
+    {
+      cle: 'eleves',
+      entete: 'Élèves',
+      numerique: true,
+      rendu: d => fmt(d.school.effectifTotalEleves),
+      tri: d => d.school.effectifTotalEleves ?? -1,
+    },
+    {
+      cle: 'pression',
+      entete: 'Élèves / ens. État',
+      numerique: true,
+      rendu: d => fmtDec(d.elevesParEnseignantEtat, 1),
+      tri: d => d.elevesParEnseignantEtat ?? -1,
+    },
+    {
+      cle: 'multigrade',
+      entete: 'Multigrades',
+      numerique: true,
+      rendu: d => fmt(d.school.classesMultigrades),
+      tri: d => d.school.classesMultigrades,
+    },
     {
       cle: 'raison',
       entete: 'Pourquoi cette école ?',
@@ -468,7 +607,12 @@ export function PrioritySchoolsPage({ store }: { store: PlanningStore }) {
       </Notice>
 
       <div className="filter-bar">
-        <SearchField value={recherche} onChange={setRecherche} label="Rechercher un établissement" placeholder="Nom, code, commune…" />
+        <SearchField
+          value={recherche}
+          onChange={setRecherche}
+          label="Rechercher un établissement"
+          placeholder="Nom, code, commune…"
+        />
       </div>
 
       <Panel kicker="Priorités" title={`${fmt(lignes.length)} établissements en déficit`} flush>

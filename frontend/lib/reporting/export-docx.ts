@@ -32,7 +32,11 @@ const TEAL = '027174'
 const GRIS = '465668'
 
 /** Une cellule de tableau ; l'en-tête est grisé et en gras. */
-function cellule(texte: string, entete = false, alignement: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT): TableCell {
+function cellule(
+  texte: string,
+  entete = false,
+  alignement: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT,
+): TableCell {
   return new TableCell({
     shading: entete ? { fill: 'ECF5F5' } : undefined,
     margins: { top: 60, bottom: 60, left: 100, right: 100 },
@@ -192,7 +196,10 @@ export async function construireRapportDocx(input: DocxExportInput): Promise<Blo
       default: {
         document: { run: { font: 'Calibri', size: 22, color: '1F2D3D' } },
         title: { run: { font: 'Calibri', size: 52, bold: true, color: '1F2D3D' } },
-        heading1: { run: { font: 'Calibri', size: 26, bold: true, color: TEAL }, paragraph: { spacing: { before: 360, after: 140 } } },
+        heading1: {
+          run: { font: 'Calibri', size: 26, bold: true, color: TEAL },
+          paragraph: { spacing: { before: 360, after: 140 } },
+        },
         heading2: { run: { font: 'Calibri', size: 24, bold: true, color: '1F2D3D' } },
       },
     },

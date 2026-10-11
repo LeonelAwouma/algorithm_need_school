@@ -19,9 +19,22 @@ import type { FaitPrinceApplique } from '../../types/prince'
 import { LIBELLE_SITUATION } from '../data/situation-familiale'
 import { trierParPriorite } from '../analytics/diagnostic'
 import { LIBELLE_SOUS_SYSTEME, syntheseTerritoriale } from '../analytics/synthese'
-import { LIBELLE_CLASSEMENT, LIBELLE_NATURE, LIBELLE_STATUT_PROPOSITION, LIBELLE_ZONE_SECURITE, ZONES_SECURITE } from '../simulation/libelles'
+import {
+  LIBELLE_CLASSEMENT,
+  LIBELLE_NATURE,
+  LIBELLE_STATUT_PROPOSITION,
+  LIBELLE_ZONE_SECURITE,
+  ZONES_SECURITE,
+} from '../simulation/libelles'
 import { libelleNiveauEnfants } from '../analytics/territory'
-import { MENTION_SIMULATION, diagnosticTerritorial, n, pct, pointsAttention, reductionDuDeficit } from '../analytics/narrative'
+import {
+  MENTION_SIMULATION,
+  diagnosticTerritorial,
+  n,
+  pct,
+  pointsAttention,
+  reductionDuDeficit,
+} from '../analytics/narrative'
 import { AVERTISSEMENT_SCENARIO_ETENDU, LIBELLE_SCOPE } from '../simulation/scenarios'
 
 export interface ReportInput {
@@ -108,8 +121,8 @@ export function construireRapport(input: ReportInput): DecisionReport {
       paragraphes: [
         `Score de qualité : ${qualite.score} / 100 (${qualite.appreciation}). Ce score part de 100 et retire les points listés ci-dessous.`,
         qualite.donneesElevesDisponibles
-          ? "Les effectifs élèves sont disponibles : les indicateurs pédagogiques sont calculés."
-          : "Données élèves indisponibles — certains indicateurs pédagogiques ne peuvent pas être calculés.",
+          ? 'Les effectifs élèves sont disponibles : les indicateurs pédagogiques sont calculés.'
+          : 'Données élèves indisponibles — certains indicateurs pédagogiques ne peuvent pas être calculés.',
       ],
       points,
     })
@@ -129,7 +142,12 @@ export function construireRapport(input: ReportInput): DecisionReport {
         ['Écoles à examiner (maîtres au-delà des salles)', n(totals.ecolesAExaminer)],
         ['Postes officiellement déclarés', totals.postesDeclares == null ? 'Non renseigné' : n(totals.postesDeclares)],
         ['Enseignants potentiellement redéployables', n(totals.excedentMobilisable)],
-        ["Élèves par enseignant État", totals.elevesParEnseignantEtat == null ? 'Non renseigné' : totals.elevesParEnseignantEtat.toLocaleString('fr-FR')],
+        [
+          'Élèves par enseignant État',
+          totals.elevesParEnseignantEtat == null
+            ? 'Non renseigné'
+            : totals.elevesParEnseignantEtat.toLocaleString('fr-FR'),
+        ],
       ],
     },
   })
@@ -170,7 +188,15 @@ export function construireRapport(input: ReportInput): DecisionReport {
         : `Degré d'aléa avant le plan : ${pct(synthese.degreAlea)} de la dotation est mal répartie entre les écoles du périmètre${resultat ? `, ${pct(resultat.syntheseApres.degreAlea ?? 0)} après le scénario retenu` : ''}.`,
     ],
     tableau: {
-      entetes: ['Sous-système', 'Besoin B', 'Excédent X', 'Couvrable C', 'Restant R', 'Salles manquantes', 'Recrutement à prévoir'],
+      entetes: [
+        'Sous-système',
+        'Besoin B',
+        'Excédent X',
+        'Couvrable C',
+        'Restant R',
+        'Salles manquantes',
+        'Recrutement à prévoir',
+      ],
       lignes: [
         ...synthese.parSousSysteme.map(g => [
           LIBELLE_SOUS_SYSTEME[g.sousSysteme],
@@ -181,7 +207,15 @@ export function construireRapport(input: ReportInput): DecisionReport {
           g.sallesManquantes,
           g.recrutementAPrevoir,
         ]),
-        ['Total', synthese.besoin, synthese.excedent, synthese.couvrable, synthese.restant, synthese.sallesManquantes, synthese.recrutementAPrevoir],
+        [
+          'Total',
+          synthese.besoin,
+          synthese.excedent,
+          synthese.couvrable,
+          synthese.restant,
+          synthese.sallesManquantes,
+          synthese.recrutementAPrevoir,
+        ],
       ],
     },
   })
@@ -194,7 +228,9 @@ export function construireRapport(input: ReportInput): DecisionReport {
       ecoles: ecoles.length,
       enDeficit: ecoles.filter(d => d.besoinTheorique > 0).length,
       postesManquants: ecoles.reduce((s, d) => s + d.besoinTheorique, 0),
-      restants: resultat ? resultat.uncoveredPosts.filter(p => (p.priorite.zoneSecurite ?? 'verte') === z).length : null,
+      restants: resultat
+        ? resultat.uncoveredPosts.filter(p => (p.priorite.zoneSecurite ?? 'verte') === z).length
+        : null,
     }
   })
   const sansZone = diagnosticsFiltres.filter(d => d.school.zoneSecurite === null).length
@@ -209,7 +245,13 @@ export function construireRapport(input: ReportInput): DecisionReport {
       ...(sansZone > 0 ? [`${n(sansZone)} école(s) sans zone renseignée sont comptées en zone verte.`] : []),
     ],
     tableau: {
-      entetes: ['Zone de sécurité', 'Écoles', 'En déficit', 'Postes manquants', ...(resultat ? ['Restant après le scénario'] : [])],
+      entetes: [
+        'Zone de sécurité',
+        'Écoles',
+        'En déficit',
+        'Postes manquants',
+        ...(resultat ? ['Restant après le scénario'] : []),
+      ],
       lignes: parZone.map(p => [
         LIBELLE_ZONE_SECURITE[p.z],
         n(p.ecoles),
@@ -228,7 +270,7 @@ export function construireRapport(input: ReportInput): DecisionReport {
     titre: `Besoins territoriaux — ${niveauEnfants}s`,
     paragraphes: [
       regions.length === 0
-        ? "Aucun territoire ne peut être constitué à partir des données disponibles."
+        ? 'Aucun territoire ne peut être constitué à partir des données disponibles.'
         : `${regions.length} ${niveauEnfants}(s) apparaissent sur le périmètre analysé.`,
     ],
     tableau: {
@@ -259,7 +301,9 @@ export function construireRapport(input: ReportInput): DecisionReport {
       entetes: [majuscule(niveauPetitsEnfants), 'Rattachement', 'Écoles', 'Postes nécessaires', 'Excédent mobilisable'],
       lignes: departements.map(d => [
         d.territory.nom,
-        d.territory.departement && d.territory.level === 'commune' ? d.territory.departement : d.territory.region ?? '',
+        d.territory.departement && d.territory.level === 'commune'
+          ? d.territory.departement
+          : (d.territory.region ?? ''),
         d.totals.ecolesAnalysees,
         d.totals.postesNecessaires,
         d.totals.excedentMobilisable,
@@ -310,25 +354,40 @@ export function construireRapport(input: ReportInput): DecisionReport {
     })
 
     // 8 bis — Plan individualisé (figure 2 du référentiel)
-    const plan = [...resultat.assignments].sort((a, b) => a.nomEtabDestination.localeCompare(b.nomEtabDestination, 'fr'))
+    const plan = [...resultat.assignments].sort((a, b) =>
+      a.nomEtabDestination.localeCompare(b.nomEtabDestination, 'fr'),
+    )
     sections.push({
       titre: 'Plan individualisé de rotation et de redéploiement',
       paragraphes: [
         "Pour chaque enseignant : l'école d'origine, l'affectation proposée, la nature du mouvement, le vœu satisfait le cas échéant, le statut de validation et l'année prévue. Ce sont des propositions soumises aux commissions.",
-        plan.length > 200 ? `Les 200 premières lignes sur ${n(plan.length)} sont reproduites ; l'export Excel contient le plan complet.` : '',
+        plan.length > 200
+          ? `Les 200 premières lignes sur ${n(plan.length)} sont reproduites ; l'export Excel contient le plan complet.`
+          : '',
       ].filter(Boolean),
       tableau: {
-        entetes: ['Enseignant', 'Matricule', "École d'origine", 'Affectation proposée', 'Nature', 'Vœu', 'Statut', 'Année'],
-        lignes: plan.slice(0, 200).map(a => [
-          `${a.nomEns} ${a.prenomEns}`.trim(),
-          a.teacherId,
-          a.nomEtabOrigine,
-          a.nomEtabDestination,
-          LIBELLE_NATURE[a.nature],
-          a.rangVoeu ?? '—',
-          LIBELLE_STATUT_PROPOSITION[a.statut],
-          a.annee,
-        ]),
+        entetes: [
+          'Enseignant',
+          'Matricule',
+          "École d'origine",
+          'Affectation proposée',
+          'Nature',
+          'Vœu',
+          'Statut',
+          'Année',
+        ],
+        lignes: plan
+          .slice(0, 200)
+          .map(a => [
+            `${a.nomEns} ${a.prenomEns}`.trim(),
+            a.teacherId,
+            a.nomEtabOrigine,
+            a.nomEtabDestination,
+            LIBELLE_NATURE[a.nature],
+            a.rangVoeu ?? '—',
+            LIBELLE_STATUT_PROPOSITION[a.statut],
+            a.annee,
+          ]),
       },
     })
 
@@ -337,12 +396,14 @@ export function construireRapport(input: ReportInput): DecisionReport {
       sections.push({
         titre: "Propositions à soumettre à la commission d'arbitrage",
         paragraphes: [
-          "Écoles restées non couvertes après les vœux et les solutions proches, avec les combinaisons de redéploiement proposées (redéploiement direct, chaîne de mouvements, permutation), par ordre de priorité.",
+          'Écoles restées non couvertes après les vœux et les solutions proches, avec les combinaisons de redéploiement proposées (redéploiement direct, chaîne de mouvements, permutation), par ordre de priorité.',
           resultat.voeuxAutreSousSysteme.length > 0
             ? `${n(resultat.voeuxAutreSousSysteme.length)} vœu(x) portent sur l'autre sous-système : seule la commission peut décider un changement de sous-système.`
             : '',
         ].filter(Boolean),
-        points: resultat.combinaisons.slice(0, 40).map(c => `${c.nomEtab} (indice ${c.indicePriorite}) — ${c.description}`),
+        points: resultat.combinaisons
+          .slice(0, 40)
+          .map(c => `${c.nomEtab} (indice ${c.indicePriorite}) — ${c.description}`),
       })
     }
 
@@ -381,9 +442,25 @@ export function construireRapport(input: ReportInput): DecisionReport {
           : '',
       ].filter(Boolean),
       tableau: {
-        entetes: ['Rentrée', 'Sous-système', 'Effectif', 'Retraites', 'Attrition', 'Besoin', 'Excédent', 'Recrutement à prévoir'],
+        entetes: [
+          'Rentrée',
+          'Sous-système',
+          'Effectif',
+          'Retraites',
+          'Attrition',
+          'Besoin',
+          'Excédent',
+          'Recrutement à prévoir',
+        ],
         lignes: resultat.projectionPluriannuelle.territoire.map(t => [
-          t.annee, LIBELLE_SOUS_SYSTEME[t.sousSysteme], t.effectif, t.departsRetraite, t.attrition, t.besoin, t.excedent, t.recrutementAPrevoir,
+          t.annee,
+          LIBELLE_SOUS_SYSTEME[t.sousSysteme],
+          t.effectif,
+          t.departsRetraite,
+          t.attrition,
+          t.besoin,
+          t.excedent,
+          t.recrutementAPrevoir,
         ]),
       },
     })
@@ -392,7 +469,7 @@ export function construireRapport(input: ReportInput): DecisionReport {
     const reduction = reductionDuDeficit(resultat)
     sections.push({
       titre: 'Avant / Après simulation',
-      paragraphes: reduction ? [reduction.texte] : ["La simulation ne réduit pas le déficit total sur ce périmètre."],
+      paragraphes: reduction ? [reduction.texte] : ['La simulation ne réduit pas le déficit total sur ce périmètre.'],
       tableau: {
         entetes: ['Indicateur', 'Avant', 'Après', 'Variation'],
         lignes: [
@@ -431,11 +508,21 @@ export function construireRapport(input: ReportInput): DecisionReport {
     titre: 'Établissements nécessitant une attention particulière',
     paragraphes: [
       prioritaires.length === 0
-        ? "Aucun établissement du périmètre ne présente de déficit."
+        ? 'Aucun établissement du périmètre ne présente de déficit.'
         : `Les ${prioritaires.length} écoles nécessiteuses de plus fort indice de priorité u = w + β (poids de vulnérabilité et points de besoin), puis au REM actuel le plus élevé.`,
     ],
     tableau: {
-      entetes: ['Établissement', 'Commune', 'Élèves', 'Maîtres retenus E', 'Cible K', 'Besoin b', 'Salles manquantes', 'Indice u', 'Classement'],
+      entetes: [
+        'Établissement',
+        'Commune',
+        'Élèves',
+        'Maîtres retenus E',
+        'Cible K',
+        'Besoin b',
+        'Salles manquantes',
+        'Indice u',
+        'Classement',
+      ],
       lignes: prioritaires.map(d => [
         d.school.nom || d.school.id,
         d.school.commune,
@@ -475,14 +562,16 @@ export function construireRapport(input: ReportInput): DecisionReport {
   sections.push({
     titre: 'Méthodologie et hypothèses',
     paragraphes: [
-      "Règle du besoin (Référentiel technique, §2.4), école par école et section par section pour une école bilingue :",
+      'Règle du besoin (Référentiel technique, §2.4), école par école et section par section pour une école bilingue :',
       `E = enseignants de l'État en poste − départs connus (âge de la retraite fixé à ${settings.besoin.ageRetraite} ans) ; P = ⌈N ÷ ${settings.besoin.elevesParMaitre}⌉${settings.besoin.toleranceArrondi > 0 ? ` avec une tolérance de ${settings.besoin.toleranceArrondi} élèves` : ''} ; m = niveaux ouverts ÷ ${settings.besoin.niveauxParMaitre} ; D = max(P ; m) ; BMAX = salles en simple flux + 2 × salles en double flux${settings.besoin.doubleFluxAutorise ? '' : ' (double flux non autorisé : une salle = un maître)'} ; K = min(D ; BMAX).`,
       "Besoin b = max(0 ; K − E) ; excédent mobilisable x = max(0 ; E − D) ; surnombre a = max(0 ; min(E ; D) − BMAX) ; salles manquantes s = max(0 ; D − BMAX). Sans effectif d'élèves, P se replie sur une classe = un maître, et l'école est signalée.",
       `Les postes à couvrir sont construits à partir de : ${libelleSourcePostes(settings)}. Ils sont classés par indice de priorité u = w + β : poids de vulnérabilité (accessibilité ${settings.priorite.pointsAccessibilite.urbain}/${settings.priorite.pointsAccessibilite.rural}/${settings.priorite.pointsAccessibilite.rural_enclave}, sécurité ${settings.priorite.pointsSecurite.verte}/${settings.priorite.pointsSecurite.jaune}/${settings.priorite.pointsSecurite.rouge}) et points de besoin selon le REM actuel.`,
       `Score de priorité d'un candidat : S = A + Z + B — ancienneté au poste (${settings.mobilite.pointsAncienneteBase} points à ${settings.mobilite.ancienneteDebutPointsAns} ans, +${settings.mobilite.pointsParAnSupplementaire} par an, plafond ${settings.mobilite.plafondAnciennete}, −${settings.mobilite.malusRetraite} à moins de ${settings.mobilite.anneesAvantRetraite} ans de la retraite), service en zone difficile (plafond ${settings.mobilite.plafondZoneDifficile}) et bonification de ${settings.mobilite.bonificationMotif} points pour un motif justifié. Départage : ancienneté générale, âge, rang de tirage.`,
       `Appariement par acceptation différée (Gale et Shapley), vœux examinés ${settings.mobilite.ordreExamen === 'voeux' ? "dans l'ordre choisi par l'enseignant" : 'par poids des écoles'} ; demandes recevables à partir de ${settings.mobilite.stabiliteMinimaleAns} ans de stabilité au poste et depuis une école excédentaire ; départs limités à l'excédent x.`,
       `Seuils de sévérité : déficit faible jusqu'à ${pct(settings.seuilsSeverite.faible)} de la cible K, important jusqu'à ${pct(settings.seuilsSeverite.important)}, critique au-delà.`,
-      `Redéploiement obligatoire — ordre des départs dans une école excédentaire selon le barème individuel : ${Object.entries(settings.scoring.poidsBaremeIndividuel)
+      `Redéploiement obligatoire — ordre des départs dans une école excédentaire selon le barème individuel : ${Object.entries(
+        settings.scoring.poidsBaremeIndividuel,
+      )
         .filter(([, poids]) => poids > 0)
         .map(([cle, poids]) => `${LIBELLE_CRITERE_BAREME[cle] ?? cle} (${poids})`)
         .join(', ')}. Points par situation matrimoniale : ${Object.entries(settings.scoring.pointsSituationFamiliale)
@@ -507,7 +596,7 @@ export function construireRapport(input: ReportInput): DecisionReport {
     paragraphes: [
       "La proximité repose sur l'égalité des libellés de commune, de département et de région déclarés dans les fichiers. Aucune distance réelle n'est calculée.",
       "Le diagnostic reflète l'état des données importées : un établissement absent du fichier est absent de l'analyse.",
-      "Les propositions ne tiennent pas compte des situations individuelles non présentes dans les données (santé, contentieux, affectations en cours).",
+      'Les propositions ne tiennent pas compte des situations individuelles non présentes dans les données (santé, contentieux, affectations en cours).',
       "Les décisions de la DRH (fait de Prince) sont appliquées sans contrôle de l'algorithme : le rapport les consigne, il ne les évalue pas.",
       "Les excédents sont calculés à partir des effectifs d'élèves, des niveaux ouverts et des salles déclarés ; un changement de carte scolaire modifie mécaniquement les résultats.",
       "Les taux de stabilité, de rotation et d'intégration du référentiel (§2.5) exigent un historique des mouvements sur plusieurs années : ils ne sont pas calculés à partir d'un seul jeu de données.",
@@ -519,7 +608,7 @@ export function construireRapport(input: ReportInput): DecisionReport {
     titre: 'Statut de ce document',
     paragraphes: [
       MENTION_SIMULATION,
-      "Toute mutation, affectation ou ouverture de poste reste soumise aux procédures administratives en vigueur.",
+      'Toute mutation, affectation ou ouverture de poste reste soumise aux procédures administratives en vigueur.',
     ],
   })
 
@@ -557,6 +646,6 @@ function libelleProximite(niveau: string): string {
     case 'meme_region':
       return 'Entre départements de la même région'
     default:
-      return "Entre régions"
+      return 'Entre régions'
   }
 }

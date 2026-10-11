@@ -26,7 +26,17 @@ export const SCHOOL_FIELDS: FieldDefinition[] = [
     label: "Code de l'établissement",
     requis: true,
     consequence: 'Sans identifiant, les enseignants ne peuvent pas être rattachés à leur école.',
-    alias: ['id_etab', 'code_etab', 'code_etablissement', 'code_ecole', 'matricule_etab', 'id_ecole', 'code', 'identifiant_ecole', 'identifiant_etablissement'],
+    alias: [
+      'id_etab',
+      'code_etab',
+      'code_etablissement',
+      'code_ecole',
+      'matricule_etab',
+      'id_ecole',
+      'code',
+      'identifiant_ecole',
+      'identifiant_etablissement',
+    ],
   },
   {
     champ: 'nom',
@@ -67,14 +77,14 @@ export const SCHOOL_FIELDS: FieldDefinition[] = [
     champ: 'latitude',
     label: 'Latitude',
     requis: false,
-    consequence: "Les écoles ne sont pas placées sur la carte (la carte des territoires reste disponible).",
+    consequence: 'Les écoles ne sont pas placées sur la carte (la carte des territoires reste disponible).',
     alias: ['latitude', 'lat', 'gps_latitude', 'y'],
   },
   {
     champ: 'longitude',
     label: 'Longitude',
     requis: false,
-    consequence: "Les écoles ne sont pas placées sur la carte (la carte des territoires reste disponible).",
+    consequence: 'Les écoles ne sont pas placées sur la carte (la carte des territoires reste disponible).',
     alias: ['longitude', 'lon', 'lng', 'long', 'gps_longitude', 'x'],
   },
   {
@@ -95,7 +105,8 @@ export const SCHOOL_FIELDS: FieldDefinition[] = [
     champ: 'nbClasses',
     label: 'Nombre de classes',
     requis: false,
-    consequence: "Les niveaux ouverts sont déduits des effectifs, ou fixés à six ; sans effectif d'élèves, le besoin ne peut pas être calculé.",
+    consequence:
+      "Les niveaux ouverts sont déduits des effectifs, ou fixés à six ; sans effectif d'élèves, le besoin ne peut pas être calculé.",
     alias: ['nb_classes', 'nombre_classes', 'classes', 'total_classes', 'nbre_classes'],
   },
   {
@@ -109,8 +120,17 @@ export const SCHOOL_FIELDS: FieldDefinition[] = [
     champ: 'nbSallesClasse',
     label: 'Nombre de salles de classe',
     requis: false,
-    consequence: "BMAX ne peut pas être calculé : le besoin n'est pas plafonné par les salles et les salles manquantes ne sont pas repérées.",
-    alias: ['nb_salles_classe', 'nb_salles', 'salles_classe', 'nombre_salles', 'total_salles', 'salles_utilisables', 'salles_disponibles'],
+    consequence:
+      "BMAX ne peut pas être calculé : le besoin n'est pas plafonné par les salles et les salles manquantes ne sont pas repérées.",
+    alias: [
+      'nb_salles_classe',
+      'nb_salles',
+      'salles_classe',
+      'nombre_salles',
+      'total_salles',
+      'salles_utilisables',
+      'salles_disponibles',
+    ],
   },
   {
     champ: 'sallesDoubleFlux',
@@ -130,28 +150,40 @@ export const SCHOOL_FIELDS: FieldDefinition[] = [
     champ: 'departsConnus',
     label: 'Départs connus à la rentrée',
     requis: false,
-    consequence: "Les départs connus sont déduits du fichier des enseignants (âge de la retraite atteint à la rentrée).",
+    consequence:
+      'Les départs connus sont déduits du fichier des enseignants (âge de la retraite atteint à la rentrée).',
     alias: ['departs_connus', 'nb_departs', 'departs_retraite', 'retraites', 'nb_retraites'],
   },
   {
     champ: 'sousSysteme',
     label: "Sous-système d'enseignement",
     requis: false,
-    consequence: 'Francophones et anglophones ne peuvent pas être traités séparément : tous les postes sont considérés compatibles.',
-    alias: ['sous_systeme', 'sous_systeme_enseignement', 'langue', 'langue_enseignement', 'section', 'subsystem', 'sous_systeme_ecole'],
+    consequence:
+      'Francophones et anglophones ne peuvent pas être traités séparément : tous les postes sont considérés compatibles.',
+    alias: [
+      'sous_systeme',
+      'sous_systeme_enseignement',
+      'langue',
+      'langue_enseignement',
+      'section',
+      'subsystem',
+      'sous_systeme_ecole',
+    ],
   },
   {
     champ: 'zoneSecurite',
     label: 'Zone de sécurité',
     requis: false,
-    consequence: 'Toutes les écoles sont considérées en zone verte : aucun point de sécurité, règle de la zone rouge sans effet.',
+    consequence:
+      'Toutes les écoles sont considérées en zone verte : aucun point de sécurité, règle de la zone rouge sans effet.',
     alias: ['zone_securite', 'securite', 'cote_securite', 'niveau_securite', 'zone_de_securite', 'securite_zone'],
   },
   {
     champ: 'accessibilite',
     label: 'Accessibilité',
     requis: false,
-    consequence: "L'accessibilité est déduite de la zone (urbain ou rural) ; « rural enclavé » ne peut pas être distingué.",
+    consequence:
+      "L'accessibilité est déduite de la zone (urbain ou rural) ; « rural enclavé » ne peut pas être distingué.",
     alias: ['accessibilite', 'enclavement', 'acces', 'zone_accessibilite', 'enclave', 'accessibilite_zone'],
   },
   {
@@ -210,7 +242,16 @@ export const SCHOOL_FIELDS: FieldDefinition[] = [
     label: "Effectif total d'élèves",
     requis: false,
     consequence: 'Les indicateurs pédagogiques (élèves par enseignant, pression) ne sont pas calculés.',
-    alias: ['effectif_total_eleves', 'total_eleves', 'effectif_eleves', 'nb_eleves', 'effectif_total', 'eleves', 'effectif_eleves_attendus', 'eleves_attendus'],
+    alias: [
+      'effectif_total_eleves',
+      'total_eleves',
+      'effectif_eleves',
+      'nb_eleves',
+      'effectif_total',
+      'eleves',
+      'effectif_eleves_attendus',
+      'eleves_attendus',
+    ],
   },
   {
     champ: 'effectifFilles',
@@ -275,7 +316,7 @@ export const TEACHER_FIELDS: FieldDefinition[] = [
     champ: 'id',
     label: "Matricule de l'enseignant",
     requis: true,
-    consequence: "Sans identifiant, les doublons et les affectations ne peuvent pas être contrôlés.",
+    consequence: 'Sans identifiant, les doublons et les affectations ne peuvent pas être contrôlés.',
     alias: ['id_ens', 'matricule', 'code_ens', 'id_enseignant', 'matricule_ens', 'matricule_enseignant'],
   },
   {
@@ -303,15 +344,25 @@ export const TEACHER_FIELDS: FieldDefinition[] = [
     champ: 'age',
     label: 'Âge',
     requis: false,
-    consequence: "L'âge est calculé à partir de la date de naissance ; sans l'un ni l'autre, les règles liées à l'âge et à la retraite sont neutralisées.",
+    consequence:
+      "L'âge est calculé à partir de la date de naissance ; sans l'un ni l'autre, les règles liées à l'âge et à la retraite sont neutralisées.",
     alias: ['age', 'age_ans', 'age_enseignant'],
   },
   {
     champ: 'idEtabAttache',
-    label: "École de rattachement",
+    label: 'École de rattachement',
     requis: true,
     consequence: "Sans école d'attache, l'excédent mobilisable ne peut pas être respecté.",
-    alias: ['id_etab_attache', 'id_etab', 'code_etab', 'etablissement_attache', 'ecole_attache', 'code_ecole', 'ecole_attache_actuelle', 'identifiant_ecole'],
+    alias: [
+      'id_etab_attache',
+      'id_etab',
+      'code_etab',
+      'etablissement_attache',
+      'ecole_attache',
+      'code_ecole',
+      'ecole_attache_actuelle',
+      'identifiant_ecole',
+    ],
   },
   {
     champ: 'communeAttache',
@@ -353,7 +404,13 @@ export const TEACHER_FIELDS: FieldDefinition[] = [
     label: 'Ancienneté au poste (ans)',
     requis: false,
     consequence: 'Ce critère du barème individuel vaut 0 pour les enseignants concernés.',
-    alias: ['anciennete_poste_ans', 'anciennete_poste', 'annees_poste', 'anciennete_dans_le_poste', 'anciennete_poste_actuel'],
+    alias: [
+      'anciennete_poste_ans',
+      'anciennete_poste',
+      'annees_poste',
+      'anciennete_dans_le_poste',
+      'anciennete_poste_actuel',
+    ],
   },
   {
     champ: 'situationFamiliale',
@@ -380,7 +437,7 @@ export const TEACHER_FIELDS: FieldDefinition[] = [
     champ: 'statut',
     label: 'Statut',
     requis: false,
-    consequence: "Tous les enseignants sont alors considérés comme en activité.",
+    consequence: 'Tous les enseignants sont alors considérés comme en activité.',
     alias: ['statut', 'statut_ens', 'position', 'situation_administrative'],
   },
   {
@@ -415,14 +472,24 @@ export const TEACHER_FIELDS: FieldDefinition[] = [
     champ: 'sousSystemeEns',
     label: "Sous-système de l'enseignant",
     requis: false,
-    consequence: "Le sous-système de l'école d'attache est retenu ; à défaut, l'enseignant est compatible avec tous les postes.",
-    alias: ['sous_systeme', 'sous_systeme_enseignant', 'langue', 'formation_initiale', 'langue_formation', 'subsystem', 'sous_systeme_formation'],
+    consequence:
+      "Le sous-système de l'école d'attache est retenu ; à défaut, l'enseignant est compatible avec tous les postes.",
+    alias: [
+      'sous_systeme',
+      'sous_systeme_enseignant',
+      'langue',
+      'formation_initiale',
+      'langue_formation',
+      'subsystem',
+      'sous_systeme_formation',
+    ],
   },
   {
     champ: 'voeu1',
     label: 'Vœu 1 (école sollicitée)',
     requis: false,
-    consequence: "Sans vœu, l'enseignant n'a pas demandé de mutation : seul le redéploiement obligatoire peut le concerner.",
+    consequence:
+      "Sans vœu, l'enseignant n'a pas demandé de mutation : seul le redéploiement obligatoire peut le concerner.",
     alias: ['voeu_1', 'voeu1', 'choix_1', 'ecole_voeu_1', 'ecole_sollicitee_1', 'premier_voeu'],
   },
   {
@@ -458,20 +525,35 @@ export const TEACHER_FIELDS: FieldDefinition[] = [
     label: 'Années en école de niveau 1',
     requis: false,
     consequence: 'Aucun point de service en zone difficile (niveau 1).',
-    alias: ['annees_zone_niveau_1', 'annees_niveau_1', 'service_zone_niveau_1', 'annees_zone_difficile_1', 'annees_n1', 'annees_zone_difficulte_1'],
+    alias: [
+      'annees_zone_niveau_1',
+      'annees_niveau_1',
+      'service_zone_niveau_1',
+      'annees_zone_difficile_1',
+      'annees_n1',
+      'annees_zone_difficulte_1',
+    ],
   },
   {
     champ: 'anneesZoneNiveau2',
     label: 'Années en école de niveau 2',
     requis: false,
     consequence: 'Aucun point de service en zone difficile (niveau 2).',
-    alias: ['annees_zone_niveau_2', 'annees_niveau_2', 'service_zone_niveau_2', 'annees_zone_difficile_2', 'annees_n2', 'annees_zone_difficulte_2'],
+    alias: [
+      'annees_zone_niveau_2',
+      'annees_niveau_2',
+      'service_zone_niveau_2',
+      'annees_zone_difficile_2',
+      'annees_n2',
+      'annees_zone_difficulte_2',
+    ],
   },
   {
     champ: 'rangTirage',
     label: 'Rang de tirage au sort',
     requis: false,
-    consequence: "À ancienneté et âge égaux, le départage se fait par matricule : le tirage doit être consigné au procès-verbal.",
+    consequence:
+      'À ancienneté et âge égaux, le départage se fait par matricule : le tirage doit être consigné au procès-verbal.',
     alias: ['rang_tirage', 'tirage', 'tirage_au_sort', 'rang_tirage_sort'],
   },
 ]

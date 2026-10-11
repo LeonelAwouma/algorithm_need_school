@@ -45,7 +45,7 @@ export function syntheseTableauDeBord(
   const enonces: Enonce[] = []
 
   if (totals.ecolesAnalysees === 0) {
-    return [{ texte: "Aucun établissement ne correspond aux filtres sélectionnés.", regle: 'ecolesAnalysees = 0' }]
+    return [{ texte: 'Aucun établissement ne correspond aux filtres sélectionnés.', regle: 'ecolesAnalysees = 0' }]
   }
 
   const partDeficit = totals.ecolesEnDeficit / totals.ecolesAnalysees
@@ -61,7 +61,8 @@ export function syntheseTableauDeBord(
     })
   } else if (totals.postesNecessaires > 0) {
     enonces.push({
-      texte: "Aucun excédent mobilisable n'a été identifié sur ce périmètre : le besoin ne peut pas être couvert par redistribution interne.",
+      texte:
+        "Aucun excédent mobilisable n'a été identifié sur ce périmètre : le besoin ne peut pas être couvert par redistribution interne.",
       regle: 'excedentMobilisable = 0 et postesNecessaires > 0',
     })
   }
@@ -117,7 +118,7 @@ export function diagnosticTerritorial(
     })
   } else {
     enonces.push({
-      texte: "Aucun établissement du périmètre ne présente de déficit au regard de la norme paramétrée.",
+      texte: 'Aucun établissement du périmètre ne présente de déficit au regard de la norme paramétrée.',
       regle: 'ecolesEnDeficit = 0',
     })
   }
@@ -136,7 +137,8 @@ export function diagnosticTerritorial(
     })
     if (resultat.scope === 'etendu') {
       enonces.push({
-        texte: "Ce scénario ne pose aucune contrainte géographique : il décrit un plafond théorique de redistribution, pas un plan de mouvement applicable en l'état.",
+        texte:
+          "Ce scénario ne pose aucune contrainte géographique : il décrit un plafond théorique de redistribution, pas un plan de mouvement applicable en l'état.",
         regle: "scope = 'etendu'",
       })
     }
@@ -172,7 +174,9 @@ export function pointsAttention(
     points.push({
       code: 'deficits_absolus',
       titre: 'Établissements aux déficits les plus élevés',
-      texte: top.map(d => `${d.school.nom || d.school.id} (${d.besoinTheorique} poste${s(d.besoinTheorique)})`).join(' · '),
+      texte: top
+        .map(d => `${d.school.nom || d.school.id} (${d.besoinTheorique} poste${s(d.besoinTheorique)})`)
+        .join(' · '),
       valeur: top[0].besoinTheorique,
     })
   }
@@ -186,7 +190,10 @@ export function pointsAttention(
     points.push({
       code: 'concentration_territoriale',
       titre: 'Territoires concentrant les besoins',
-      texte: `${regionsParBesoin.slice(0, 3).map(r => r.territory.nom).join(', ')} regroupent ${pct(total > 0 ? cumul / total : 0)} des postes nécessaires.`,
+      texte: `${regionsParBesoin
+        .slice(0, 3)
+        .map(r => r.territory.nom)
+        .join(', ')} regroupent ${pct(total > 0 ? cumul / total : 0)} des postes nécessaires.`,
       valeur: cumul,
     })
   }
@@ -196,7 +203,10 @@ export function pointsAttention(
     points.push({
       code: 'territoires_mixtes',
       titre: 'Territoires où excédents et déficits coexistent',
-      texte: `${mixtes.slice(0, 3).map(t => t.territory.nom).join(', ')} : une redistribution interne y est arithmétiquement possible.`,
+      texte: `${mixtes
+        .slice(0, 3)
+        .map(t => t.territory.nom)
+        .join(', ')} : une redistribution interne y est arithmétiquement possible.`,
       valeur: mixtes.length,
     })
   }
@@ -260,12 +270,17 @@ export function reductionDuDeficit(resultat: SimulationResult): Enonce | null {
 }
 
 /** Explication d'une proposition d'affectation, construite à partir du score réel (§15). */
-export function expliquerProposition(resultat: SimulationResult, postId: string): { titre: string; lignes: string[] } | null {
+export function expliquerProposition(
+  resultat: SimulationResult,
+  postId: string,
+): { titre: string; lignes: string[] } | null {
   const a = resultat.assignments.find(x => x.postId === postId)
   if (!a) return null
   const lignes = a.breakdown.components
     .filter(c => c.contribution !== 0)
-    .map(c => `${c.label} : ${c.valeur.toLocaleString('fr-FR')} × ${c.poids} = ${c.contribution.toLocaleString('fr-FR')}`)
+    .map(
+      c => `${c.label} : ${c.valeur.toLocaleString('fr-FR')} × ${c.poids} = ${c.contribution.toLocaleString('fr-FR')}`,
+    )
   lignes.push(`Score total de compatibilité : ${a.score.toLocaleString('fr-FR')}`)
   return { titre: `${a.nomEns} ${a.prenomEns} — ${a.nomEtabOrigine} → ${a.nomEtabDestination}`, lignes }
 }

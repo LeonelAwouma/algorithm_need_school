@@ -11,7 +11,7 @@
 
 import { useMemo, useState } from 'react'
 import { construireClasses, type ClasseHistogramme } from '@/lib/analytics/echelles'
-import { fmt, fmtDec, fmtPct } from '../common'
+import { fmt, fmtPct } from '../common'
 
 export { construireClasses, type ClasseHistogramme }
 import {
@@ -100,9 +100,16 @@ export function Colonnes({
   const survoler = (i: number, position: { clientX: number; clientY: number }) => {
     setActif(i)
     const d = donnees[i]
-    const lignes: LigneInfobulle[] = series.map(s => ({ label: s.label, valeur: avecUnite(d.valeurs[s.cle] ?? 0), serie: s }))
+    const lignes: LigneInfobulle[] = series.map(s => ({
+      label: s.label,
+      valeur: avecUnite(d.valeurs[s.cle] ?? 0),
+      serie: s,
+    }))
     if (empile) {
-      lignes.push({ label: 'Total', valeur: avecUnite(series.reduce((a, s) => a + Math.max(0, d.valeurs[s.cle] ?? 0), 0)) })
+      lignes.push({
+        label: 'Total',
+        valeur: avecUnite(series.reduce((a, s) => a + Math.max(0, d.valeurs[s.cle] ?? 0), 0)),
+      })
     }
     info.montrer(position, { titre: d.label, lignes })
   }
@@ -132,7 +139,14 @@ export function Colonnes({
                 if (valeur === 0) return null
                 return (
                   <g key={s.cle}>
-                    <rect x={x} y={y} width={Math.max(2, largeurBarre - (empile ? 0 : 2))} height={Math.max(1, h)} fill={remplissageSvg(s, j)} rx={2} />
+                    <rect
+                      x={x}
+                      y={y}
+                      width={Math.max(2, largeurBarre - (empile ? 0 : 2))}
+                      height={Math.max(1, h)}
+                      fill={remplissageSvg(s, j)}
+                      rx={2}
+                    />
                     {afficherValeurs && !empile && largeurBarre > 22 && (
                       <text x={x + largeurBarre / 2} y={y - 5} textAnchor="middle" className="chart-valeur">
                         {fmt(valeur)}
@@ -142,12 +156,7 @@ export function Colonnes({
                 )
               })}
               {afficherValeurs && empile && (
-                <text
-                  x={debut + largeurGroupe / 2}
-                  y={base - cumul - 5}
-                  textAnchor="middle"
-                  className="chart-valeur"
-                >
+                <text x={debut + largeurGroupe / 2} y={base - cumul - 5} textAnchor="middle" className="chart-valeur">
                   {fmt(series.reduce((a, s) => a + Math.max(0, d.valeurs[s.cle] ?? 0), 0))}
                 </text>
               )}
@@ -213,7 +222,10 @@ export function Combo({
   const [actif, setActif] = useState<number | null>(null)
 
   const maxColonnes = useMemo(
-    () => (donnees.length === 0 ? 0 : Math.max(...donnees.map(d => Math.max(...series.map(s => Math.max(0, d.valeurs[s.cle] ?? 0)))))),
+    () =>
+      donnees.length === 0
+        ? 0
+        : Math.max(...donnees.map(d => Math.max(...series.map(s => Math.max(0, d.valeurs[s.cle] ?? 0))))),
     [donnees, series],
   )
 
@@ -336,7 +348,11 @@ export function Combo({
       <TableauAlternatif
         titre={titre}
         entetes={['Catégorie', ...series.map(s => s.label), courbe.label]}
-        lignes={donnees.map((d, i) => [d.label, ...series.map(s => d.valeurs[s.cle] ?? 0), formatCourbe(points[i].valeur)])}
+        lignes={donnees.map((d, i) => [
+          d.label,
+          ...series.map(s => d.valeurs[s.cle] ?? 0),
+          formatCourbe(points[i].valeur),
+        ])}
       />
     </figure>
   )
@@ -395,7 +411,11 @@ export function Histogramme({
     info.montrer(position, {
       titre: c.label,
       lignes: [
-        { label: libelleEffectif.charAt(0).toUpperCase() + libelleEffectif.slice(1), valeur: fmt(c.effectif), serie: { couleur } },
+        {
+          label: libelleEffectif.charAt(0).toUpperCase() + libelleEffectif.slice(1),
+          valeur: fmt(c.effectif),
+          serie: { couleur },
+        },
         { label: 'Part du total', valeur: fmtPct(total > 0 ? c.effectif / total : 0) },
       ],
     })
@@ -413,9 +433,21 @@ export function Histogramme({
           const h = (c.effectif / plafond) * geo.aireH
           return (
             <g key={c.label}>
-              <rect x={geo.gauche + i * bande + 1} y={base - h} width={Math.max(2, bande - 2)} height={Math.max(1, h)} fill={couleur} rx={2} />
+              <rect
+                x={geo.gauche + i * bande + 1}
+                y={base - h}
+                width={Math.max(2, bande - 2)}
+                height={Math.max(1, h)}
+                fill={couleur}
+                rx={2}
+              />
               {c.effectif > 0 && bande > 26 && (
-                <text x={geo.gauche + i * bande + bande / 2} y={base - h - 5} textAnchor="middle" className="chart-valeur">
+                <text
+                  x={geo.gauche + i * bande + bande / 2}
+                  y={base - h - 5}
+                  textAnchor="middle"
+                  className="chart-valeur"
+                >
                   {fmt(c.effectif)}
                 </text>
               )}
@@ -432,7 +464,14 @@ export function Histogramme({
           </g>
         )}
 
-        <ZonesSurvol geo={geo} nombre={classes.length} largeur={bande} actif={actif} onSurvol={survoler} onSortie={quitter} />
+        <ZonesSurvol
+          geo={geo}
+          nombre={classes.length}
+          largeur={bande}
+          actif={actif}
+          onSurvol={survoler}
+          onSortie={quitter}
+        />
 
         <AxeCategories geo={geo} categories={classes.map(c => c.label)} bande={bande} />
       </svg>
@@ -470,7 +509,8 @@ export interface CategorieNuage {
 
 function marqueur(forme: CategorieNuage['forme'], x: number, y: number, r: number): string {
   if (forme === 'carre') return `M${x - r},${y - r} h${r * 2} v${r * 2} h${-r * 2} Z`
-  if (forme === 'triangle') return `M${x},${y - r * 1.15} L${x + r * 1.1},${y + r * 0.85} L${x - r * 1.1},${y + r * 0.85} Z`
+  if (forme === 'triangle')
+    return `M${x},${y - r * 1.15} L${x + r * 1.1},${y + r * 0.85} L${x - r * 1.1},${y + r * 0.85} Z`
   return `M${x},${y - r} a${r},${r} 0 1,0 0.01,0 Z`
 }
 
@@ -575,7 +615,10 @@ export function Nuage({
             onPointerMove: (e: { clientX: number; clientY: number }) => survoler(p, e),
             onPointerLeave: info.masquer,
           }
-          if (!p.onSelect) return <path key={p.cle} d={forme} fill={c.couleur} fillOpacity={0.75} className="chart-point" {...survol} />
+          if (!p.onSelect)
+            return (
+              <path key={p.cle} d={forme} fill={c.couleur} fillOpacity={0.75} className="chart-point" {...survol} />
+            )
           return (
             <path
               key={p.cle}
@@ -705,14 +748,36 @@ export function Aires({
         <GrilleY geo={geo} ticks={ticks} max={plafond} format={formatValeur} />
         {series.map(s => (
           <g key={s.cle}>
-            {remplir && <path d={`${chemin(s.cle)} L${px(donnees.length - 1)},${base} L${px(0)},${base} Z`} fill={s.couleur} fillOpacity={0.18} />}
+            {remplir && (
+              <path
+                d={`${chemin(s.cle)} L${px(donnees.length - 1)},${base} L${px(0)},${base} Z`}
+                fill={s.couleur}
+                fillOpacity={0.18}
+              />
+            )}
             <path d={chemin(s.cle)} fill="none" stroke={s.couleur} strokeWidth={2.5} strokeLinejoin="round" />
             {donnees.map((d, i) => (
-              <circle key={d.cle} cx={px(i)} cy={py(d.valeurs[s.cle] ?? 0)} r={3} fill="#fff" stroke={s.couleur} strokeWidth={2} />
+              <circle
+                key={d.cle}
+                cx={px(i)}
+                cy={py(d.valeurs[s.cle] ?? 0)}
+                r={3}
+                fill="#fff"
+                stroke={s.couleur}
+                strokeWidth={2}
+              />
             ))}
           </g>
         ))}
-        <ZonesSurvol geo={geo} nombre={donnees.length} largeur={pas} decalage={pas / 2} actif={actif} onSurvol={survoler} onSortie={quitter} />
+        <ZonesSurvol
+          geo={geo}
+          nombre={donnees.length}
+          largeur={pas}
+          decalage={pas / 2}
+          actif={actif}
+          onSurvol={survoler}
+          onSortie={quitter}
+        />
 
         <AxeCategories geo={geo} categories={donnees.map(d => d.label)} bande={pas} ancrage="point" />
       </svg>

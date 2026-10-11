@@ -66,7 +66,13 @@ test('Le libellé exact l’emporte sur une correspondance partielle', () => {
     { id: 'E1', nom: 'EP Douala V' },
     { id: 'E2', nom: 'EP Douala V Centre' },
   ]
-  const trouver = (s: string) => rapprocherSaisie(s, ecoles, e => e.id, e => [e.nom]).trouve
+  const trouver = (s: string) =>
+    rapprocherSaisie(
+      s,
+      ecoles,
+      e => e.id,
+      e => [e.nom],
+    ).trouve
 
   assert.equal(trouver('EP Douala V')?.id, 'E1', 'le nom exact désigne la première école')
   assert.equal(trouver('EP Douala V Centre')?.id, 'E2')
@@ -81,11 +87,7 @@ test('Les homonymes sont proposés au choix plutôt que départagés au hasard',
     p => [`${p.nom} ${p.prenom}`, `${p.prenom} ${p.nom}`, p.nom],
   )
   assert.equal(resultat.trouve, null, 'aucun choix n’est fait à la place de l’utilisateur')
-  assert.deepEqual(
-    resultat.candidats.map(c => c.id).sort(),
-    ['T-002', 'T-003'],
-    'les deux Mbarga sont proposés',
-  )
+  assert.deepEqual(resultat.candidats.map(c => c.id).sort(), ['T-002', 'T-003'], 'les deux Mbarga sont proposés')
 })
 
 test('Une saisie sans ambiguïté ne propose aucun candidat à départager', () => {

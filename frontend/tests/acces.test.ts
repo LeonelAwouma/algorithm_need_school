@@ -39,7 +39,11 @@ test('Le DRH choisit son mot de passe à la première utilisation, une seule foi
   assert.ok(!(await verifierDrh(registre, 'yaounde-2026!')), 'le mot de passe est sensible à la casse')
   assert.ok(!(await verifierDrh(REGISTRE_VIDE, 'Yaounde-2026!')), 'aucun accès tant que le compte n’existe pas')
 
-  await assert.rejects(initialiserDrh(registre, 'AutreMotDePasse'), /existe déjà/, 'un second DRH ne peut pas s’installer par-dessus')
+  await assert.rejects(
+    initialiserDrh(registre, 'AutreMotDePasse'),
+    /existe déjà/,
+    'un second DRH ne peut pas s’installer par-dessus',
+  )
 })
 
 test('Aucun secret n’est conservé en clair', async () => {
@@ -171,19 +175,32 @@ test('Un délégué ne reçoit que les écoles et les enseignants de sa région'
       ecole({ id: 'E1', region: 'Est' }),
       ecole({ id: 'N1', region: 'Far North' }),
     ],
-    teachers: [...enseignantsDe('C1', 2), ...enseignantsDe('E1', 3), ...enseignantsDe('N1', 1), ...enseignantsDe('INCONNUE', 1)],
+    teachers: [
+      ...enseignantsDe('C1', 2),
+      ...enseignantsDe('E1', 3),
+      ...enseignantsDe('N1', 1),
+      ...enseignantsDe('INCONNUE', 1),
+    ],
     demonstration: false,
     importedAt: T0.toISOString(),
     sourceFiles: { etablissements: null, enseignants: null },
   }
 
   const centre = restreindreARegion(dataset, 'Centre')
-  assert.deepEqual(centre.schools.map(s => s.id), ['C1', 'C2'], 'la casse du fichier n’exclut pas une école')
+  assert.deepEqual(
+    centre.schools.map(s => s.id),
+    ['C1', 'C2'],
+    'la casse du fichier n’exclut pas une école',
+  )
   assert.equal(centre.teachers.length, 2)
   assert.ok(centre.teachers.every(t => t.idEtabAttache === 'C1'))
 
   const nord = restreindreARegion(dataset, 'Extrême-Nord')
-  assert.deepEqual(nord.schools.map(s => s.id), ['N1'], 'un libellé anglais est rattaché à sa région')
+  assert.deepEqual(
+    nord.schools.map(s => s.id),
+    ['N1'],
+    'un libellé anglais est rattaché à sa région',
+  )
 
   assert.equal(dataset.schools.length, 4, 'le jeu d’origine n’est pas modifié')
   assert.ok(!estDansRegion('Nord-Ouest', 'Nord'), 'deux régions voisines par le nom ne sont pas confondues')

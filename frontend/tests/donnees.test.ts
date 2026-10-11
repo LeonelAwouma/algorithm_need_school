@@ -19,14 +19,40 @@ import { ecole } from './fixtures'
 
 /** Fichier « ancienne génération » : colonnes historiques, sans effectifs élèves. */
 const ANCIEN_FICHIER: unknown[][] = [
-  ['id_etab', 'nom_etab', 'commune', 'departement', 'region', 'zone', 'nb_classes', 'nb_enseignants_etat', 'nb_postes_ouverts', 'classes_multigrades', 'priorite_locale', 'type_etab'],
+  [
+    'id_etab',
+    'nom_etab',
+    'commune',
+    'departement',
+    'region',
+    'zone',
+    'nb_classes',
+    'nb_enseignants_etat',
+    'nb_postes_ouverts',
+    'classes_multigrades',
+    'priorite_locale',
+    'type_etab',
+  ],
   ['E001', 'EP Mvog-Betsi', 'Yaoundé VII', 'Mfoundi', 'Centre', 'urbaine', 8, 5, 3, 0, 1, 'EP'],
   ['E002', 'EP Obala Centre', 'Obala', 'Lekié', 'Centre', 'rurale', 6, 9, 0, 2, 0, 'EP'],
 ]
 
 /** Fichier « nouvelle génération » : en-têtes libres, avec effectifs élèves. */
 const NOUVEAU_FICHIER: unknown[][] = [
-  ['Code établissement', 'Nom de l’école', 'Commune', 'Département', 'Région', 'Milieu', 'Nombre de classes', 'Enseignants État', 'TOTAL_ELEVES', 'Total filles', 'CI', 'CP'],
+  [
+    'Code établissement',
+    'Nom de l’école',
+    'Commune',
+    'Département',
+    'Région',
+    'Milieu',
+    'Nombre de classes',
+    'Enseignants État',
+    'TOTAL_ELEVES',
+    'Total filles',
+    'CI',
+    'CP',
+  ],
   ['E010', 'EP Douala Nord', 'Douala III', 'Wouri', 'Littoral', 'urbaine', 10, 7, 620, 300, 110, 105],
 ]
 
@@ -121,22 +147,52 @@ test('Le contrôle qualité signale les enseignants rattachés à une école inc
   assert.ok(rapport.detailScore.length > 0, 'le score est explicable ligne par ligne')
 })
 
-test("Le score de qualité atteint 100 sur un jeu de données sans défaut", () => {
+test('Le score de qualité atteint 100 sur un jeu de données sans défaut', () => {
   const demo = construireJeuDemonstration()
   const { headers: hE } = recordsFromRows([['id_etab']])
   void hE
   const mappingEcoles = detectColumns('etablissements', [
-    'id_etab', 'nom_etab', 'region', 'departement', 'commune', 'zone', 'type_etab',
-    'nb_classes', 'nb_salles_classe', 'nb_enseignants_etat', 'nb_autres_enseignants',
-    'nb_postes_ouverts', 'classes_multigrades', 'priorite_locale',
-    'effectif_total_eleves', 'effectif_filles', 'effectif_garcons',
-    'effectif_ci', 'effectif_cp', 'effectif_ce1', 'effectif_ce2', 'effectif_cm1', 'effectif_cm2',
+    'id_etab',
+    'nom_etab',
+    'region',
+    'departement',
+    'commune',
+    'zone',
+    'type_etab',
+    'nb_classes',
+    'nb_salles_classe',
+    'nb_enseignants_etat',
+    'nb_autres_enseignants',
+    'nb_postes_ouverts',
+    'classes_multigrades',
+    'priorite_locale',
+    'effectif_total_eleves',
+    'effectif_filles',
+    'effectif_garcons',
+    'effectif_ci',
+    'effectif_cp',
+    'effectif_ce1',
+    'effectif_ce2',
+    'effectif_cm1',
+    'effectif_cm2',
   ])
   const mappingEns = detectColumns('enseignants', [
-    'id_ens', 'nom', 'prenom', 'date_naissance', 'id_etab_attache',
-    'commune_attache', 'departement_attache', 'region_attache', 'zone_attache',
-    'anciennete_carriere_ans', 'anciennete_poste_ans', 'situation_familiale',
-    'nb_enfants', 'formation_continue', 'statut', 'paye_par_etat',
+    'id_ens',
+    'nom',
+    'prenom',
+    'date_naissance',
+    'id_etab_attache',
+    'commune_attache',
+    'departement_attache',
+    'region_attache',
+    'zone_attache',
+    'anciennete_carriere_ans',
+    'anciennete_poste_ans',
+    'situation_familiale',
+    'nb_enfants',
+    'formation_continue',
+    'statut',
+    'paye_par_etat',
   ])
 
   const rapport = buildDataQualityReport({
@@ -156,10 +212,31 @@ test("Le score de qualité atteint 100 sur un jeu de données sans défaut", () 
 
 test("L'arbre territorial agrège correctement les quatre niveaux", () => {
   const schools = [
-    ecole({ id: 'A', region: 'Centre', departement: 'Mfoundi', commune: 'Yaoundé I', nbClasses: 6, nbEnseignantsEtat: 4 }),
-    ecole({ id: 'B', region: 'Centre', departement: 'Mfoundi', commune: 'Yaoundé VII', nbClasses: 6, nbEnseignantsEtat: 9 }),
+    ecole({
+      id: 'A',
+      region: 'Centre',
+      departement: 'Mfoundi',
+      commune: 'Yaoundé I',
+      nbClasses: 6,
+      nbEnseignantsEtat: 4,
+    }),
+    ecole({
+      id: 'B',
+      region: 'Centre',
+      departement: 'Mfoundi',
+      commune: 'Yaoundé VII',
+      nbClasses: 6,
+      nbEnseignantsEtat: 9,
+    }),
     ecole({ id: 'C', region: 'Centre', departement: 'Lekié', commune: 'Obala', nbClasses: 4, nbEnseignantsEtat: 2 }),
-    ecole({ id: 'D', region: 'Littoral', departement: 'Wouri', commune: 'Douala III', nbClasses: 10, nbEnseignantsEtat: 10 }),
+    ecole({
+      id: 'D',
+      region: 'Littoral',
+      departement: 'Wouri',
+      commune: 'Douala III',
+      nbClasses: 10,
+      nbEnseignantsEtat: 10,
+    }),
   ]
   const diagnostic = runDiagnostic(schools, DEFAULT_SETTINGS)
   const arbre = construireArbreTerritorial(diagnostic.schools)
@@ -190,14 +267,26 @@ test('Les filtres globaux restreignent bien le périmètre analysé', () => {
   ]
   const diagnostic = runDiagnostic(schools, DEFAULT_SETTINGS)
 
-  const parRegion = appliquerFiltres(diagnostic.schools, { ...FILTRES_VIDES, territoire: { region: 'Centre', departement: null, commune: null } })
-  assert.deepEqual(parRegion.map(d => d.school.id), ['A'])
+  const parRegion = appliquerFiltres(diagnostic.schools, {
+    ...FILTRES_VIDES,
+    territoire: { region: 'Centre', departement: null, commune: null },
+  })
+  assert.deepEqual(
+    parRegion.map(d => d.school.id),
+    ['A'],
+  )
 
   const parZone = appliquerFiltres(diagnostic.schools, { ...FILTRES_VIDES, zones: ['rurale'] })
-  assert.deepEqual(parZone.map(d => d.school.id), ['B'])
+  assert.deepEqual(
+    parZone.map(d => d.school.id),
+    ['B'],
+  )
 
   const parMultigrade = appliquerFiltres(diagnostic.schools, { ...FILTRES_VIDES, multigradesUniquement: true })
-  assert.deepEqual(parMultigrade.map(d => d.school.id), ['B'])
+  assert.deepEqual(
+    parMultigrade.map(d => d.school.id),
+    ['B'],
+  )
 })
 
 test('La synthèse textuelle décrit les résultats sans formuler de recommandation', () => {
@@ -221,7 +310,10 @@ test('Le jeu de démonstration est déterministe et complet', () => {
   const a = construireJeuDemonstration()
   const b = construireJeuDemonstration()
   assert.equal(a.schools.length, b.schools.length)
-  assert.deepEqual(a.schools.map(s => s.nbEnseignantsEtat), b.schools.map(s => s.nbEnseignantsEtat))
+  assert.deepEqual(
+    a.schools.map(s => s.nbEnseignantsEtat),
+    b.schools.map(s => s.nbEnseignantsEtat),
+  )
   assert.equal(a.demonstration, true)
   assert.ok(a.schools.length >= 40)
   assert.ok(a.teachers.every(t => a.schools.some(s => s.id === t.idEtabAttache)))

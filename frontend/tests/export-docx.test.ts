@@ -95,7 +95,10 @@ test('La mention de simulation est toujours présente, celle de démonstration s
   const reel = await construireRapportDocx({ rapport, scenarioNom: 'Situation actuelle', donneesDemonstration: false })
   const xmlReel = lireDocumentXml(Buffer.from(await reel.arrayBuffer()))
   assert.ok(/simulation/i.test(xmlReel), 'la mention de simulation est obligatoire')
-  assert.ok(!/valeurs de ce document sont fictives/i.test(xmlReel), 'pas de mention de démonstration sur des données réelles')
+  assert.ok(
+    !/valeurs de ce document sont fictives/i.test(xmlReel),
+    'pas de mention de démonstration sur des données réelles',
+  )
 
   const demo = await construireRapportDocx({ rapport, scenarioNom: 'Situation actuelle', donneesDemonstration: true })
   const xmlDemo = lireDocumentXml(Buffer.from(await demo.arrayBuffer()))
@@ -105,6 +108,10 @@ test('La mention de simulation est toujours présente, celle de démonstration s
 test('Deux exports du même rapport produisent le même contenu', async () => {
   const rapport = rapportDeTest()
   const lire = async () =>
-    lireDocumentXml(Buffer.from(await (await construireRapportDocx({ rapport, scenarioNom: 'S', donneesDemonstration: false })).arrayBuffer()))
+    lireDocumentXml(
+      Buffer.from(
+        await (await construireRapportDocx({ rapport, scenarioNom: 'S', donneesDemonstration: false })).arrayBuffer(),
+      ),
+    )
   assert.equal(await lire(), await lire())
 })

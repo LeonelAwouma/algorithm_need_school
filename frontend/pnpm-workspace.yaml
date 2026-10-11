@@ -1,3 +1,8 @@
+# Scripts d'installation des dépendances : refusés par défaut (pnpm 11).
+# unrs-resolver (résolveur d'imports d'ESLint) : son script ne fait que vérifier
+# le binaire natif, déjà fourni par une dépendance optionnelle.
+allowBuilds:
+  unrs-resolver: false
 minimumReleaseAgeExclude:
   - '@next/*'
   - next

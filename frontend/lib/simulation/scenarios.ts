@@ -19,14 +19,16 @@ export const LIBELLE_SCOPE: Record<GeographicScope, string> = {
 }
 
 export const DESCRIPTION_SCOPE: Record<GeographicScope, string> = {
-  commune: "Les mouvements restent dans la commune de l'enseignant : vœux, solutions proches et redéploiement obligatoire.",
+  commune:
+    "Les mouvements restent dans la commune de l'enseignant : vœux, solutions proches et redéploiement obligatoire.",
   departement: "Les mouvements restent à l'intérieur du département de rattachement.",
-  etendu: "Niveau régional, puis niveau central : les vœux interrégionaux et les besoins qu'aucune école de la région ne peut couvrir sont traités entre régions.",
+  etendu:
+    "Niveau régional, puis niveau central : les vœux interrégionaux et les besoins qu'aucune école de la région ne peut couvrir sont traités entre régions.",
 }
 
 /** Message obligatoire accompagnant le scénario sans contrainte géographique (§29). */
 export const AVERTISSEMENT_SCENARIO_ETENDU =
-  "Au niveau central, des mouvements entre régions sont proposés : ils supposent l’accord des deux régions et peuvent impliquer des déplacements longs."
+  'Au niveau central, des mouvements entre régions sont proposés : ils supposent l’accord des deux régions et peuvent impliquer des déplacements longs.'
 
 export interface ScenarioPreset {
   cle: string
@@ -86,13 +88,16 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     verifierDisponibilite: diagnostics =>
       diagnostics.some(d => d.priorite.poids !== diagnostics[0]?.priorite.poids)
         ? { disponible: true, motif: '' }
-        : { disponible: false, motif: "Toutes les écoles ont le même poids de vulnérabilité : l'ordre par poids n'aurait aucun effet." },
+        : {
+            disponible: false,
+            motif: "Toutes les écoles ont le même poids de vulnérabilité : l'ordre par poids n'aurait aucun effet.",
+          },
   },
   {
     cle: 'volontaire',
     nom: 'Scénario E — Mobilité volontaire seulement',
     description:
-      "Vœux et solutions proches uniquement, sans redéploiement obligatoire : mesure ce que la seule mobilité volontaire permet de couvrir. Mêmes règles que le scénario départemental par ailleurs.",
+      'Vœux et solutions proches uniquement, sans redéploiement obligatoire : mesure ce que la seule mobilité volontaire permet de couvrir. Mêmes règles que le scénario départemental par ailleurs.',
     scope: 'departement',
     ajusterParametres: s => {
       const ajuste = cloneSettings(s)
@@ -115,7 +120,10 @@ export const SCENARIO_PRESETS: ScenarioPreset[] = [
     verifierDisponibilite: diagnostics =>
       diagnostics.some(d => (d.school.sallesDoubleFlux ?? 0) > 0)
         ? { disponible: true, motif: '' }
-        : { disponible: false, motif: "Aucune salle en double flux n'est déclarée : ce scénario n'aurait aucun effet." },
+        : {
+            disponible: false,
+            motif: "Aucune salle en double flux n'est déclarée : ce scénario n'aurait aucun effet.",
+          },
   },
 ]
 

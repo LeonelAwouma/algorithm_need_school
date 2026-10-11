@@ -60,21 +60,44 @@ function composantesBareme(t: Teacher, settings: EngineSettings, niveauEcole: 1 
   const formation = Math.min(cfg.plafondFormation, cfg.pointsParFormation * Math.max(0, t.formationContinue))
   const c = cohorte(t, cfg)
   return [
-    { label: `C1 — carrière (${round4(t.ancienneteCarriereAns)} ans) et zone difficile (Z = ${Z})`, valeur: round4(t.ancienneteCarriereAns + Z), poids: w.carriereZone, contribution: 0 },
+    {
+      label: `C1 — carrière (${round4(t.ancienneteCarriereAns)} ans) et zone difficile (Z = ${Z})`,
+      valeur: round4(t.ancienneteCarriereAns + Z),
+      poids: w.carriereZone,
+      contribution: 0,
+    },
     { label: 'C2 — ancienneté au poste (points A)', valeur: A, poids: w.anciennetePoste, contribution: 0 },
-    { label: `C3 — charges familiales (situation − ${cfg.pointsParEnfant} par enfant)`, valeur: charges, poids: w.chargesFamiliales, contribution: 0 },
+    {
+      label: `C3 — charges familiales (situation − ${cfg.pointsParEnfant} par enfant)`,
+      valeur: charges,
+      poids: w.chargesFamiliales,
+      contribution: 0,
+    },
     { label: 'C4 — formation continue', valeur: formation, poids: w.formationContinue, contribution: 0 },
-    { label: `C5 — cohorte d'âge (${c === 'jeune' ? 'jeune' : c === 'senior' ? 'senior' : 'médiane'})`, valeur: cfg.pointsCohorte[c], poids: w.cohorteAge, contribution: 0 },
+    {
+      label: `C5 — cohorte d'âge (${c === 'jeune' ? 'jeune' : c === 'senior' ? 'senior' : 'médiane'})`,
+      valeur: cfg.pointsCohorte[c],
+      poids: w.cohorteAge,
+      contribution: 0,
+    },
   ].map(x => ({ ...x, contribution: round4(x.valeur * x.poids) }))
 }
 
 /** Barème individuel (étage 1). `niveauEcole` : niveau de difficulté de l'école d'attache. */
-export function calculerBaremeIndividuel(t: Teacher, settings: EngineSettings, niveauEcole: 1 | 2 | 3 | null = null): number {
+export function calculerBaremeIndividuel(
+  t: Teacher,
+  settings: EngineSettings,
+  niveauEcole: 1 | 2 | 3 | null = null,
+): number {
   return round4(composantesBareme(t, settings, niveauEcole).reduce((a, c) => a + c.contribution, 0))
 }
 
 /** Détail du barème individuel, pour l'explication et la Vue analyste. */
-export function detaillerBareme(t: Teacher, settings: EngineSettings, niveauEcole: 1 | 2 | 3 | null = null): ScoreBreakdown {
+export function detaillerBareme(
+  t: Teacher,
+  settings: EngineSettings,
+  niveauEcole: 1 | 2 | 3 | null = null,
+): ScoreBreakdown {
   const components = composantesBareme(t, settings, niveauEcole)
   return { total: round4(components.reduce((a, c) => a + c.contribution, 0)), components }
 }
@@ -132,19 +155,32 @@ export function pointsProximite(niveau: ProximityLevel, cfg: ScoringConfig): num
  * ciblée ne vaut que pour l'école visée par un motif justifié (et non pour tous les
  * vœux, ce qui la rendait sans effet sur le choix entre eux).
  */
-export function ajustementsContextuels(t: Teacher, poste: TeachingPost, cfg: ScoringConfig, ecoleVisee: string | null): ScoreComponent[] {
+export function ajustementsContextuels(
+  t: Teacher,
+  poste: TeachingPost,
+  cfg: ScoringConfig,
+  ecoleVisee: string | null,
+): ScoreComponent[] {
   const a = cfg.ajustements
   const age = t.age
   const jeune = age != null && age <= cfg.seuils.ageJeuneAns
   const senior = age != null && age >= cfg.seuils.ageSeniorAns
   const lignes: { label: string; valeur: number }[] = []
-  if (jeune && poste.classesMultigrades > 0) lignes.push({ label: 'Jeune enseignant vers une école à classes multigrades', valeur: a.jeuneVersMultigrades })
-  if (senior && poste.estStructure) lignes.push({ label: "Senior vers une structure d'encadrement", valeur: a.seniorVersEncadrement })
-  if (senior && !poste.estStructure && poste.classesMultigrades === 0) lignes.push({ label: 'Senior vers une école sans classe multigrade', valeur: a.allegementSenior })
-  if (t.zoneAttache === 'rurale' && (poste.zone === 'urbaine' || poste.zone === 'semi_urbaine') && t.anciennetePosteAns >= 5) {
+  if (jeune && poste.classesMultigrades > 0)
+    lignes.push({ label: 'Jeune enseignant vers une école à classes multigrades', valeur: a.jeuneVersMultigrades })
+  if (senior && poste.estStructure)
+    lignes.push({ label: "Senior vers une structure d'encadrement", valeur: a.seniorVersEncadrement })
+  if (senior && !poste.estStructure && poste.classesMultigrades === 0)
+    lignes.push({ label: 'Senior vers une école sans classe multigrade', valeur: a.allegementSenior })
+  if (
+    t.zoneAttache === 'rurale' &&
+    (poste.zone === 'urbaine' || poste.zone === 'semi_urbaine') &&
+    t.anciennetePosteAns >= 5
+  ) {
     lignes.push({ label: 'Transition du rural vers l’urbain après 5 ans au poste', valeur: a.transitionRuralUrbain })
   }
-  if (ecoleVisee && ecoleVisee === poste.schoolId) lignes.push({ label: 'Bonification ciblée : école visée par un motif justifié', valeur: a.bonificationCiblee })
+  if (ecoleVisee && ecoleVisee === poste.schoolId)
+    lignes.push({ label: 'Bonification ciblée : école visée par un motif justifié', valeur: a.bonificationCiblee })
   return lignes.filter(l => l.valeur !== 0).map(l => ({ ...l, poids: 1, contribution: l.valeur }))
 }
 
@@ -168,8 +204,18 @@ export function scoreAppariement(
   const components: ScoreComponent[] = [
     { label: 'Z1 — barème individuel', valeur: bareme, poids: w.bareme, contribution: 0 },
     { label: 'Z2 — poids du poste (indice u)', valeur: poste.priorite.indice, poids: w.poidsPoste, contribution: 0 },
-    { label: `Z3 — proximité (${LIBELLE_PROXIMITE[proximite].toLowerCase()})`, valeur: pointsProximite(proximite, cfg), poids: w.proximite, contribution: 0 },
-    { label: `Z4 — ajustements${ajustements.length ? ` : ${ajustements.map(x => x.label.toLowerCase()).join(' ; ')}` : ' (aucun)'}`, valeur: totalAjustements, poids: w.ajustements, contribution: 0 },
+    {
+      label: `Z3 — proximité (${LIBELLE_PROXIMITE[proximite].toLowerCase()})`,
+      valeur: pointsProximite(proximite, cfg),
+      poids: w.proximite,
+      contribution: 0,
+    },
+    {
+      label: `Z4 — ajustements${ajustements.length ? ` : ${ajustements.map(x => x.label.toLowerCase()).join(' ; ')}` : ' (aucun)'}`,
+      valeur: totalAjustements,
+      poids: w.ajustements,
+      contribution: 0,
+    },
   ].map(x => ({ ...x, contribution: round4(x.valeur * x.poids) }))
   return { total: round4(components.reduce((s, x) => s + x.contribution, 0)), components }
 }

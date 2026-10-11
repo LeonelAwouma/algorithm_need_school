@@ -12,16 +12,61 @@ import { normalizeKey, numOrNull, recordsFromRows, text } from './normalize'
 import { parseSousSysteme } from './parse'
 
 /** Colonnes attendues et noms acceptés (comparés sans accents, casse ni ponctuation). */
-export const COLONNES_RECRUES: { champ: keyof Omit<Recrue, 'choix' | 'ligneSource'> | 'choix1' | 'choix2' | 'choix3'; label: string; requis: boolean; alias: string[] }[] = [
-  { champ: 'id', label: 'Matricule ou numéro de candidat', requis: true, alias: ['matricule', 'id', 'numero', 'numero_candidat', 'num_candidat', 'code'] },
-  { champ: 'nom', label: 'Nom et prénoms', requis: true, alias: ['nom', 'noms', 'nom_prenoms', 'noms_et_prenoms', 'candidat', 'nom_complet'] },
-  { champ: 'note', label: "Note d'admission", requis: true, alias: ['note', 'note_obtenue', 'note_admission', 'moyenne', 'score'] },
-  { champ: 'sousSysteme', label: 'Sous-système du concours', requis: false, alias: ['sous_systeme', 'langue', 'concours', 'sous_systeme_concours'] },
+export const COLONNES_RECRUES: {
+  champ: keyof Omit<Recrue, 'choix' | 'ligneSource'> | 'choix1' | 'choix2' | 'choix3'
+  label: string
+  requis: boolean
+  alias: string[]
+}[] = [
+  {
+    champ: 'id',
+    label: 'Matricule ou numéro de candidat',
+    requis: true,
+    alias: ['matricule', 'id', 'numero', 'numero_candidat', 'num_candidat', 'code'],
+  },
+  {
+    champ: 'nom',
+    label: 'Nom et prénoms',
+    requis: true,
+    alias: ['nom', 'noms', 'nom_prenoms', 'noms_et_prenoms', 'candidat', 'nom_complet'],
+  },
+  {
+    champ: 'note',
+    label: "Note d'admission",
+    requis: true,
+    alias: ['note', 'note_obtenue', 'note_admission', 'moyenne', 'score'],
+  },
+  {
+    champ: 'sousSysteme',
+    label: 'Sous-système du concours',
+    requis: false,
+    alias: ['sous_systeme', 'langue', 'concours', 'sous_systeme_concours'],
+  },
   { champ: 'sexe', label: 'Sexe', requis: false, alias: ['sexe', 'genre'] },
-  { champ: 'communeResidence', label: 'Commune de résidence', requis: false, alias: ['commune', 'commune_residence', 'commune_choisie', 'residence'] },
-  { champ: 'choix1', label: 'Choix 1 (code école)', requis: false, alias: ['choix_1', 'choix1', 'ecole_prioritaire', 'voeu_1', 'premier_choix'] },
-  { champ: 'choix2', label: 'Choix 2', requis: false, alias: ['choix_2', 'choix2', '2e_ecole', 'deuxieme_ecole', 'voeu_2', 'deuxieme_choix'] },
-  { champ: 'choix3', label: 'Choix 3', requis: false, alias: ['choix_3', 'choix3', '3e_ecole', 'troisieme_ecole', 'voeu_3', 'troisieme_choix'] },
+  {
+    champ: 'communeResidence',
+    label: 'Commune de résidence',
+    requis: false,
+    alias: ['commune', 'commune_residence', 'commune_choisie', 'residence'],
+  },
+  {
+    champ: 'choix1',
+    label: 'Choix 1 (code école)',
+    requis: false,
+    alias: ['choix_1', 'choix1', 'ecole_prioritaire', 'voeu_1', 'premier_choix'],
+  },
+  {
+    champ: 'choix2',
+    label: 'Choix 2',
+    requis: false,
+    alias: ['choix_2', 'choix2', '2e_ecole', 'deuxieme_ecole', 'voeu_2', 'deuxieme_choix'],
+  },
+  {
+    champ: 'choix3',
+    label: 'Choix 3',
+    requis: false,
+    alias: ['choix_3', 'choix3', '3e_ecole', 'troisieme_ecole', 'voeu_3', 'troisieme_choix'],
+  },
 ]
 
 export interface LectureRecrues {

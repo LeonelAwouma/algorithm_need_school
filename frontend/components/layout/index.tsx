@@ -296,7 +296,13 @@ export interface OptionsFiltres {
   zones: Zone[]
 }
 
-const SEVERITES: SchoolSeverity[] = ['excedent', 'satisfaisant', 'deficit_faible', 'deficit_important', 'deficit_critique']
+const SEVERITES: SchoolSeverity[] = [
+  'excedent',
+  'satisfaisant',
+  'deficit_faible',
+  'deficit_important',
+  'deficit_critique',
+]
 
 export function FilterBar({
   filtres,
@@ -320,7 +326,11 @@ export function FilterBar({
 
   const [plusOuvert, setPlusOuvert] = useState(false)
   const nbSecondaires =
-    filtres.zones.length + filtres.zonesSecurite.length + filtres.typesEtab.length + filtres.severites.length + (filtres.multigradesUniquement !== null ? 1 : 0)
+    filtres.zones.length +
+    filtres.zonesSecurite.length +
+    filtres.typesEtab.length +
+    filtres.severites.length +
+    (filtres.multigradesUniquement !== null ? 1 : 0)
 
   const chips: { cle: string; label: string; retirer: () => void }[] = []
   if (filtres.territoire.region) {
@@ -338,7 +348,11 @@ export function FilterBar({
     })
   }
   if (filtres.territoire.commune) {
-    chips.push({ cle: 'commune', label: `Commune : ${filtres.territoire.commune}`, retirer: () => majTerritoire({ commune: null }) })
+    chips.push({
+      cle: 'commune',
+      label: `Commune : ${filtres.territoire.commune}`,
+      retirer: () => majTerritoire({ commune: null }),
+    })
   }
   for (const zone of filtres.zones) {
     chips.push({
@@ -449,7 +463,8 @@ export function FilterBar({
             aria-controls="filtres-secondaires"
             onClick={() => setPlusOuvert(o => !o)}
           >
-            <ChevronDown size={13} aria-hidden="true" className={plusOuvert ? 'chevron-open' : undefined} /> Plus de filtres
+            <ChevronDown size={13} aria-hidden="true" className={plusOuvert ? 'chevron-open' : undefined} /> Plus de
+            filtres
             {nbSecondaires > 0 && <span className="btn-count">{nbSecondaires}</span>}
           </button>
           <button type="button" className="btn btn-sm" onClick={onReset} disabled={chips.length === 0}>
@@ -514,7 +529,9 @@ export function FilterBar({
               <select
                 id="f-severite"
                 value={filtres.severites[0] ?? ''}
-                onChange={e => onChange({ ...filtres, severites: e.target.value ? [e.target.value as SchoolSeverity] : [] })}
+                onChange={e =>
+                  onChange({ ...filtres, severites: e.target.value ? [e.target.value as SchoolSeverity] : [] })
+                }
               >
                 <option value="">Tous les niveaux</option>
                 {SEVERITES.map(s => (
@@ -531,7 +548,10 @@ export function FilterBar({
                 id="f-multigrade"
                 value={filtres.multigradesUniquement === null ? '' : filtres.multigradesUniquement ? 'oui' : 'non'}
                 onChange={e =>
-                  onChange({ ...filtres, multigradesUniquement: e.target.value === '' ? null : e.target.value === 'oui' })
+                  onChange({
+                    ...filtres,
+                    multigradesUniquement: e.target.value === '' ? null : e.target.value === 'oui',
+                  })
                 }
               >
                 <option value="">Indifférent</option>

@@ -48,7 +48,7 @@ export function TeachersPage({ store }: { store: PlanningStore }) {
       } else if (!eligibilite.ok) {
         motif = `Non éligible : ${eligibilite.label}`
       } else if (!ecole) {
-        motif = "École de rattachement absente du fichier établissements"
+        motif = 'École de rattachement absente du fichier établissements'
       } else if (ecole.excedentTheorique <= 0) {
         motif = `Son école n’a pas d’excédent (${ecole.enseignantsEtat} enseignants pour un minimum de ${ecole.enseignantsMinimumAConserver})`
       } else if (resultatComplet && !dansVivier.has(t.id)) {
@@ -74,13 +74,18 @@ export function TeachersPage({ store }: { store: PlanningStore }) {
       if (filtreMobilisable === 'oui' && !l.mobilisable) return false
       if (filtreMobilisable === 'non' && l.mobilisable) return false
       if (!q) return true
-      return `${l.teacher.id} ${l.teacher.nom} ${l.teacher.prenom} ${l.ecoleNom} ${l.teacher.communeAttache}`.toLowerCase().includes(q)
+      return `${l.teacher.id} ${l.teacher.nom} ${l.teacher.prenom} ${l.ecoleNom} ${l.teacher.communeAttache}`
+        .toLowerCase()
+        .includes(q)
     })
   }, [lignes, recherche, filtreMobilisable])
 
   if (!dataset || !diagnostic) {
     return (
-      <EmptyState titre="Aucun enseignant chargé" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucun enseignant chargé"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         La liste du personnel provient du fichier des enseignants.
       </EmptyState>
     )
@@ -114,9 +119,27 @@ export function TeachersPage({ store }: { store: PlanningStore }) {
       ),
       tri: l => l.ecoleNom,
     },
-    { cle: 'age', entete: 'Âge', numerique: true, rendu: l => (l.teacher.age == null ? '—' : fmt(Math.floor(l.teacher.age))), tri: l => l.teacher.age ?? -1 },
-    { cle: 'carriere', entete: 'Ancienneté carrière', numerique: true, rendu: l => fmtDec(l.teacher.ancienneteCarriereAns, 0), tri: l => l.teacher.ancienneteCarriereAns },
-    { cle: 'poste', entete: 'Ancienneté poste', numerique: true, rendu: l => fmtDec(l.teacher.anciennetePosteAns, 0), tri: l => l.teacher.anciennetePosteAns },
+    {
+      cle: 'age',
+      entete: 'Âge',
+      numerique: true,
+      rendu: l => (l.teacher.age == null ? '—' : fmt(Math.floor(l.teacher.age))),
+      tri: l => l.teacher.age ?? -1,
+    },
+    {
+      cle: 'carriere',
+      entete: 'Ancienneté carrière',
+      numerique: true,
+      rendu: l => fmtDec(l.teacher.ancienneteCarriereAns, 0),
+      tri: l => l.teacher.ancienneteCarriereAns,
+    },
+    {
+      cle: 'poste',
+      entete: 'Ancienneté poste',
+      numerique: true,
+      rendu: l => fmtDec(l.teacher.anciennetePosteAns, 0),
+      tri: l => l.teacher.anciennetePosteAns,
+    },
     {
       cle: 'situation',
       entete: 'Situation familiale',
@@ -140,8 +163,20 @@ export function TeachersPage({ store }: { store: PlanningStore }) {
       },
       tri: l => libelleSituation(l.teacher.situationFamiliale),
     },
-    { cle: 'enfants', entete: 'Enfants', numerique: true, rendu: l => fmt(l.teacher.nbEnfants), tri: l => l.teacher.nbEnfants },
-    { cle: 'formation', entete: 'Formations', numerique: true, rendu: l => fmt(l.teacher.formationContinue), tri: l => l.teacher.formationContinue },
+    {
+      cle: 'enfants',
+      entete: 'Enfants',
+      numerique: true,
+      rendu: l => fmt(l.teacher.nbEnfants),
+      tri: l => l.teacher.nbEnfants,
+    },
+    {
+      cle: 'formation',
+      entete: 'Formations',
+      numerique: true,
+      rendu: l => fmt(l.teacher.formationContinue),
+      tri: l => l.teacher.formationContinue,
+    },
     {
       cle: 'bareme',
       entete: 'Barème',
@@ -174,10 +209,19 @@ export function TeachersPage({ store }: { store: PlanningStore }) {
       </Notice>
 
       <div className="filter-bar">
-        <SearchField value={recherche} onChange={setRecherche} label="Rechercher un enseignant" placeholder="Nom, matricule, école, commune…" />
+        <SearchField
+          value={recherche}
+          onChange={setRecherche}
+          label="Rechercher un enseignant"
+          placeholder="Nom, matricule, école, commune…"
+        />
         <div className="field">
           <label htmlFor="f-mobilisable">Mobilisable</label>
-          <select id="f-mobilisable" value={filtreMobilisable} onChange={e => setFiltreMobilisable(e.target.value as 'tous' | 'oui' | 'non')}>
+          <select
+            id="f-mobilisable"
+            value={filtreMobilisable}
+            onChange={e => setFiltreMobilisable(e.target.value as 'tous' | 'oui' | 'non')}
+          >
             <option value="tous">Tous les enseignants</option>
             <option value="oui">Uniquement les mobilisables</option>
             <option value="non">Uniquement les non mobilisables</option>
@@ -190,16 +234,45 @@ export function TeachersPage({ store }: { store: PlanningStore }) {
             onClick={() =>
               exporterCSV(
                 'enseignants.csv',
-                ['Matricule', 'Nom', 'Prénom', 'École', 'Commune', 'Département', 'Âge', 'Ancienneté carrière', 'Ancienneté poste', 'Situation familiale (déclarée)', 'Situation familiale (retenue)', 'Points situation', 'Nombre d’enfants', 'Formations continues', 'Statut', 'Barème', 'Mobilisable', 'Motif'],
+                [
+                  'Matricule',
+                  'Nom',
+                  'Prénom',
+                  'École',
+                  'Commune',
+                  'Département',
+                  'Âge',
+                  'Ancienneté carrière',
+                  'Ancienneté poste',
+                  'Situation familiale (déclarée)',
+                  'Situation familiale (retenue)',
+                  'Points situation',
+                  'Nombre d’enfants',
+                  'Formations continues',
+                  'Statut',
+                  'Barème',
+                  'Mobilisable',
+                  'Motif',
+                ],
                 filtrees.map(l => [
-                  l.teacher.id, l.teacher.nom, l.teacher.prenom, l.ecoleNom, l.teacher.communeAttache, l.teacher.departementAttache,
+                  l.teacher.id,
+                  l.teacher.nom,
+                  l.teacher.prenom,
+                  l.ecoleNom,
+                  l.teacher.communeAttache,
+                  l.teacher.departementAttache,
                   l.teacher.age == null ? null : Math.floor(l.teacher.age),
-                  l.teacher.ancienneteCarriereAns, l.teacher.anciennetePosteAns,
+                  l.teacher.ancienneteCarriereAns,
+                  l.teacher.anciennetePosteAns,
                   l.teacher.situationFamiliale,
                   libelleSituation(l.teacher.situationFamiliale),
                   pointsSituation(l.teacher.situationFamiliale, settings.scoring),
-                  l.teacher.nbEnfants, l.teacher.formationContinue, l.teacher.statut,
-                  l.bareme, l.mobilisable ? 'Oui' : 'Non', l.motif,
+                  l.teacher.nbEnfants,
+                  l.teacher.formationContinue,
+                  l.teacher.statut,
+                  l.bareme,
+                  l.mobilisable ? 'Oui' : 'Non',
+                  l.motif,
                 ]),
               )
             }
@@ -230,7 +303,11 @@ export function TeachersPage({ store }: { store: PlanningStore }) {
               </tr>
             </thead>
             <tbody>
-              {detaillerBareme(detail.teacher, settings, diagnostic?.bySchoolId[detail.teacher.idEtabAttache]?.priorite.niveauDifficulte ?? null).components.map(c => (
+              {detaillerBareme(
+                detail.teacher,
+                settings,
+                diagnostic?.bySchoolId[detail.teacher.idEtabAttache]?.priorite.niveauDifficulte ?? null,
+              ).components.map(c => (
                 <tr key={c.label}>
                   <th scope="row" style={{ fontWeight: 500 }}>
                     {c.label}

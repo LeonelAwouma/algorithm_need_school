@@ -133,10 +133,7 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
     return runDiagnostic(datasetImporte.schools, settings, datasetImporte.teachers)
   }, [datasetImporte, nbFaitsPrinceActifs, diagnostic, settings])
 
-  const arbreComplet = useMemo(
-    () => (diagnostic ? construireArbreTerritorial(diagnostic.schools) : null),
-    [diagnostic],
-  )
+  const arbreComplet = useMemo(() => (diagnostic ? construireArbreTerritorial(diagnostic.schools) : null), [diagnostic])
 
   const diagnosticsFiltres = useMemo<SchoolDiagnostic[]>(
     () => (diagnostic ? appliquerFiltres(diagnostic.schools, filtres) : []),
@@ -222,7 +219,9 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
     // Laisse le navigateur peindre l'indicateur d'activité avant le calcul.
     window.setTimeout(() => {
       try {
-        const nouveaux: SimulationScenario[] = SCENARIOS_GEOGRAPHIQUES.map(scope => scenarioGeographique(scope, settings))
+        const nouveaux: SimulationScenario[] = SCENARIOS_GEOGRAPHIQUES.map(scope =>
+          scenarioGeographique(scope, settings),
+        )
         const calcules: Record<string, SimulationResult> = {}
         for (const scenario of nouveaux) {
           calcules[scenario.id] = runSimulation({
@@ -337,7 +336,11 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
     return ordre
       .map(scope => resultats[`geo-${scope}`])
       .filter((r): r is SimulationResult => !!r)
-      .map(r => (idsDuPerimetre.size && diagnostic && idsDuPerimetre.size !== diagnostic.schools.length ? restreindreResultat(r, idsDuPerimetre) : r))
+      .map(r =>
+        idsDuPerimetre.size && diagnostic && idsDuPerimetre.size !== diagnostic.schools.length
+          ? restreindreResultat(r, idsDuPerimetre)
+          : r,
+      )
   }, [resultats, idsDuPerimetre, diagnostic])
 
   // --- Chargement des données ------------------------------------------------
@@ -409,7 +412,11 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
    * enseignant déjà redéployé) sont refusées.
    */
   const ajouterFaitPrince = useCallback(
-    (enseignant: Teacher | null, destination: SchoolDiagnostic | null, reference: string): { ok: true } | { ok: false; motif: string } => {
+    (
+      enseignant: Teacher | null,
+      destination: SchoolDiagnostic | null,
+      reference: string,
+    ): { ok: true } | { ok: false; motif: string } => {
       const verdict = verifierFaitPrince(enseignant, destination, faitsPrince)
       if (!verdict.ok || !enseignant || !destination) return verdict
       const origine: School | null = datasetImporte?.schools.find(e => e.id === enseignant.idEtabAttache) ?? null
@@ -425,13 +432,17 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
    * dans le lot : un enseignant ne peut être redéployé qu'une fois.
    */
   const ajouterFaitsPrinceEnLot = useCallback(
-    (lignes: { enseignant: Teacher | null; destination: SchoolDiagnostic | null; reference: string }[]): { acceptees: number; refus: string[] } => {
+    (
+      lignes: { enseignant: Teacher | null; destination: SchoolDiagnostic | null; reference: string }[],
+    ): { acceptees: number; refus: string[] } => {
       const ajoutes: FaitPrince[] = []
       const refus: string[] = []
       for (const l of lignes) {
         const verdict = verifierFaitPrince(l.enseignant, l.destination, [...faitsPrince, ...ajoutes])
         if (!verdict.ok || !l.enseignant || !l.destination) {
-          refus.push(`${l.enseignant?.id ?? '?'} → ${l.destination?.school.id ?? '?'} : ${verdict.ok ? 'données incomplètes' : verdict.motif}`)
+          refus.push(
+            `${l.enseignant?.id ?? '?'} → ${l.destination?.school.id ?? '?'} : ${verdict.ok ? 'données incomplètes' : verdict.motif}`,
+          )
           continue
         }
         const origine: School | null = datasetImporte?.schools.find(e => e.id === l.enseignant?.idEtabAttache) ?? null
@@ -466,13 +477,10 @@ export function usePlanningState(regionImposee: RegionCameroun | null = null) {
     setPage('schools')
   }, [])
 
-  const explorerTerritoire = useCallback(
-    (region: string) => {
-      setFiltres(f => ({ ...f, territoire: { region, departement: null, commune: null } }))
-      setPage('territoires')
-    },
-    [],
-  )
+  const explorerTerritoire = useCallback((region: string) => {
+    setFiltres(f => ({ ...f, territoire: { region, departement: null, commune: null } }))
+    setPage('territoires')
+  }, [])
 
   /** Diagnostics d'un territoire donné, indépendamment des filtres non territoriaux. */
   const diagnosticsDuTerritoire = useCallback(

@@ -19,7 +19,9 @@ const CLE_NAVIGATEUR = 'algobaba.acces'
 export async function chargerRegistre(): Promise<RegistreAcces> {
   try {
     const bureau = typeof window !== 'undefined' ? window.algobaba?.stockage : undefined
-    const brut: unknown = bureau ? await bureau.lire(CLE) : JSON.parse(window.localStorage.getItem(CLE_NAVIGATEUR) ?? 'null')
+    const brut: unknown = bureau
+      ? await bureau.lire(CLE)
+      : JSON.parse(window.localStorage.getItem(CLE_NAVIGATEUR) ?? 'null')
     return estRegistre(brut) ? brut : REGISTRE_VIDE
   } catch {
     return REGISTRE_VIDE
@@ -30,7 +32,8 @@ export async function enregistrerRegistre(registre: RegistreAcces): Promise<void
   const bureau = typeof window !== 'undefined' ? window.algobaba?.stockage : undefined
   if (bureau) {
     // Une décision qui n'a pas pu être écrite ne doit pas paraître acquise à l'écran.
-    if (!(await bureau.ecrire(CLE, registre))) throw new Error("Le registre des accès n'a pas pu être enregistré sur ce poste.")
+    if (!(await bureau.ecrire(CLE, registre)))
+      throw new Error("Le registre des accès n'a pas pu être enregistré sur ce poste.")
     return
   }
   window.localStorage.setItem(CLE_NAVIGATEUR, JSON.stringify(registre))

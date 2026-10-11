@@ -34,12 +34,7 @@ import { fmt, fmtDec, Pill } from '../common'
 import { Infobulle, useInfobulle } from '../charts/core'
 
 export type IndicateurCarte =
-  | 'ecolesEnDeficit'
-  | 'postesNecessaires'
-  | 'tauxCouverture'
-  | 'besoinResiduel'
-  | 'soldeMouvements'
-  | 'pressionEleves'
+  'ecolesEnDeficit' | 'postesNecessaires' | 'tauxCouverture' | 'besoinResiduel' | 'soldeMouvements' | 'pressionEleves'
 
 export const INDICATEURS_CARTE: { cle: IndicateurCarte; label: string; unite: string; sensFort: 'haut' | 'bas' }[] = [
   { cle: 'postesNecessaires', label: 'Nombre de postes nécessaires', unite: 'postes', sensFort: 'haut' },
@@ -73,12 +68,25 @@ const FICHIERS_GEO: Record<NiveauCarte, string> = {
   commune: 'cameroun-arrondissements.geojson',
 }
 const PLURIEL: Record<NiveauCarte, string> = { region: 'régions', departement: 'départements', commune: 'communes' }
-const DEFINI: Record<NiveauCarte, string> = { region: 'la région', departement: 'le département', commune: 'la commune' }
+const DEFINI: Record<NiveauCarte, string> = {
+  region: 'la région',
+  departement: 'le département',
+  commune: 'la commune',
+}
 
 const PALETTE = ['#dcefee', '#9fd0cf', '#3f9ea1', '#0b5559']
-const LIBELLES_CLASSES = ['Situation la plus favorable', 'Attention', 'Situation préoccupante', 'Situation la plus critique']
+const LIBELLES_CLASSES = [
+  'Situation la plus favorable',
+  'Attention',
+  'Situation préoccupante',
+  'Situation la plus critique',
+]
 
-function valeurDe(noeud: TerritorialSummary, indicateur: IndicateurCarte, stats: Map<string, StatsTerritoire>): number | null {
+function valeurDe(
+  noeud: TerritorialSummary,
+  indicateur: IndicateurCarte,
+  stats: Map<string, StatsTerritoire>,
+): number | null {
   const s = stats.get(noeud.territory.nom)
   switch (indicateur) {
     case 'ecolesEnDeficit':
@@ -195,7 +203,11 @@ export function CameroonMap({
     <div className="stack">
       <div className="field" style={{ maxWidth: 400 }}>
         <label htmlFor="carte-indicateur">Indicateur représenté sur la carte</label>
-        <select id="carte-indicateur" value={indicateur} onChange={e => onIndicateurChange(e.target.value as IndicateurCarte)}>
+        <select
+          id="carte-indicateur"
+          value={indicateur}
+          onChange={e => onIndicateurChange(e.target.value as IndicateurCarte)}
+        >
           {INDICATEURS_CARTE.map(i => (
             <option key={i.cle} value={i.cle}>
               {i.label}
@@ -222,8 +234,8 @@ export function CameroonMap({
               />
               {nonApparies.length > 0 && (
                 <p className="hint">
-                  {nonApparies.length} territoire(s) des données ne correspondent à aucune entité du fond de carte et ne sont
-                  donc pas dessinés : {nonApparies.slice(0, 6).join(', ')}
+                  {nonApparies.length} territoire(s) des données ne correspondent à aucune entité du fond de carte et ne
+                  sont donc pas dessinés : {nonApparies.slice(0, 6).join(', ')}
                   {nonApparies.length > 6 ? '…' : ''}. Leurs valeurs restent comptées dans tous les indicateurs.
                 </p>
               )}
@@ -274,7 +286,14 @@ export function CameroonMap({
             </div>
           </div>
 
-          {detail && <DetailTerritoire noeud={detail} stats={stats.get(detail.territory.nom)} onExplorer={onExplorer} niveau={niveau} />}
+          {detail && (
+            <DetailTerritoire
+              noeud={detail}
+              stats={stats.get(detail.territory.nom)}
+              onExplorer={onExplorer}
+              niveau={niveau}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -338,7 +357,12 @@ function DetailTerritoire({
           </Pill>
         </p>
       )}
-      <button type="button" className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => onExplorer(noeud.territory.nom)}>
+      <button
+        type="button"
+        className="btn btn-primary"
+        style={{ marginTop: 12 }}
+        onClick={() => onExplorer(noeud.territory.nom)}
+      >
         Explorer {DEFINI[niveau]} <ArrowRight size={14} aria-hidden="true" />
       </button>
     </div>
@@ -394,7 +418,16 @@ function FondCarte({
             .join(' ')
 
           if (!nom) {
-            return <path key={`hors-${index}`} d={chemin} className="map-shape" fill="#eef1f5" aria-hidden="true" style={{ cursor: 'default' }} />
+            return (
+              <path
+                key={`hors-${index}`}
+                d={chemin}
+                className="map-shape"
+                fill="#eef1f5"
+                aria-hidden="true"
+                style={{ cursor: 'default' }}
+              />
+            )
           }
 
           return (
@@ -411,7 +444,9 @@ function FondCarte({
                 onSurvol(nom)
                 info.montrer(e, { titre: nom, lignes: [{ label: libelleIndicateur, valeur: formate(nom) }] })
               }}
-              onPointerMove={e => info.montrer(e, { titre: nom, lignes: [{ label: libelleIndicateur, valeur: formate(nom) }] })}
+              onPointerMove={e =>
+                info.montrer(e, { titre: nom, lignes: [{ label: libelleIndicateur, valeur: formate(nom) }] })
+              }
               onPointerLeave={() => {
                 onSurvol(null)
                 info.masquer()
@@ -430,11 +465,8 @@ function FondCarte({
       </svg>
       <Infobulle poignee={info.poignee} />
       <figcaption className="hint" style={{ padding: '8px 4px 2px' }}>
-        Fond de carte chargé depuis le fichier local{' '}
-        <span className="mono">
-          public/geo/{FICHIERS_GEO[niveau]}
-        </span>
-        . Survolez ou tabulez sur un territoire pour en voir le détail, cliquez pour l’explorer.
+        Fond de carte chargé depuis le fichier local <span className="mono">public/geo/{FICHIERS_GEO[niveau]}</span>.
+        Survolez ou tabulez sur un territoire pour en voir le détail, cliquez pour l’explorer.
       </figcaption>
     </figure>
   )
@@ -469,9 +501,9 @@ function GrilleTerritoires({
         <p>
           {fichierAbsent ? (
             <>
-              <strong>Fond de carte non installé.</strong> Aucun contour géographique n’a été trouvé pour ce niveau ; les
-              territoires sont présentés en grille, avec les mêmes valeurs et la même échelle. Pour afficher une carte,
-              déposez un fichier GeoJSON dans <span className="mono">public/geo/{fichier}</span>.
+              <strong>Fond de carte non installé.</strong> Aucun contour géographique n’a été trouvé pour ce niveau ;
+              les territoires sont présentés en grille, avec les mêmes valeurs et la même échelle. Pour afficher une
+              carte, déposez un fichier GeoJSON dans <span className="mono">public/geo/{fichier}</span>.
             </>
           ) : (
             <>

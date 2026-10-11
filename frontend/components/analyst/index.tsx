@@ -16,7 +16,18 @@ import { exporterCSV } from '@/lib/reporting/export-csv'
 import { LIBELLE_PROXIMITE } from '@/lib/simulation/scoring'
 import { DataQualityPanel } from '../data-quality/DataQualityPanel'
 import { PropositionsPanel } from '../simulations'
-import { DataTable, EmptyState, Notice, Panel, Pill, SearchField, ZoneSecuritePill, fmt, fmtDec, type Colonne } from '../common'
+import {
+  DataTable,
+  EmptyState,
+  Notice,
+  Panel,
+  Pill,
+  SearchField,
+  ZoneSecuritePill,
+  fmt,
+  fmtDec,
+  type Colonne,
+} from '../common'
 import { rangZoneSecurite } from '@/lib/simulation/libelles'
 import type { PlanningStore } from '../usePlanningState'
 
@@ -25,7 +36,10 @@ export function DataPage({ store }: { store: PlanningStore }) {
 
   if (!dataset || !diagnostic) {
     return (
-      <EmptyState titre="Aucune donnée chargée" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucune donnée chargée"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         Cette page décrit les fichiers importés, leurs colonnes et leur qualité.
       </EmptyState>
     )
@@ -81,16 +95,36 @@ export function DataPage({ store }: { store: PlanningStore }) {
         const fichier = fichiers[kind]
         if (!fichier) return null
         return (
-          <Panel key={kind} kicker={kind === 'etablissements' ? 'Établissements' : 'Enseignants'} title={`Colonnes reconnues — ${fichier.nomFichier}`} flush>
+          <Panel
+            key={kind}
+            kicker={kind === 'etablissements' ? 'Établissements' : 'Enseignants'}
+            title={`Colonnes reconnues — ${fichier.nomFichier}`}
+            flush
+          >
             <DataTable
               lignes={fichier.mapping.matches}
               colonnes={[
-                { cle: 'champ', entete: 'Champ interne', rendu: m => <span className="mono">{m.champ}</span>, tri: m => m.champ },
+                {
+                  cle: 'champ',
+                  entete: 'Champ interne',
+                  rendu: m => <span className="mono">{m.champ}</span>,
+                  tri: m => m.champ,
+                },
                 { cle: 'label', entete: 'Information métier', rendu: m => m.label, tri: m => m.label },
                 { cle: 'entete', entete: 'Colonne du fichier', rendu: m => m.enTete ?? '—', tri: m => m.enTete ?? '' },
                 { cle: 'methode', entete: 'Reconnaissance', rendu: m => m.methode, tri: m => m.methode },
-                { cle: 'confiance', entete: 'Confiance', numerique: true, rendu: m => (m.confiance === 0 ? '—' : m.confiance.toFixed(2)), tri: m => m.confiance },
-                { cle: 'requis', entete: 'Requis', rendu: m => (m.requis ? <Pill tone={m.enTete ? 'ok' : 'alert'}>Requis</Pill> : '—') },
+                {
+                  cle: 'confiance',
+                  entete: 'Confiance',
+                  numerique: true,
+                  rendu: m => (m.confiance === 0 ? '—' : m.confiance.toFixed(2)),
+                  tri: m => m.confiance,
+                },
+                {
+                  cle: 'requis',
+                  entete: 'Requis',
+                  rendu: m => (m.requis ? <Pill tone={m.enTete ? 'ok' : 'alert'}>Requis</Pill> : '—'),
+                },
               ]}
               cle={m => `${kind}-${m.champ}`}
               taillePage={30}
@@ -118,20 +152,55 @@ export function PoolPage({ store }: { store: PlanningStore }) {
 
   if (!resultatComplet) {
     return (
-      <EmptyState titre="Aucune simulation exécutée" action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}>
+      <EmptyState
+        titre="Aucune simulation exécutée"
+        action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}
+      >
         Le vivier est constitué lors de l’exécution d’un scénario.
       </EmptyState>
     )
   }
 
   const colonnes: Colonne<PoolTeacher>[] = [
-    { cle: 'id', entete: 'Matricule', rendu: p => <span className="mono">{p.teacher.id}</span>, tri: p => p.teacher.id },
+    {
+      cle: 'id',
+      entete: 'Matricule',
+      rendu: p => <span className="mono">{p.teacher.id}</span>,
+      tri: p => p.teacher.id,
+    },
     { cle: 'nom', entete: 'Enseignant', rendu: p => `${p.teacher.nom} ${p.teacher.prenom}`, tri: p => p.teacher.nom },
-    { cle: 'ecole', entete: 'École d’origine', rendu: p => (<span>{p.ecoleOrigine.nom}<small>{p.teacher.communeAttache}</small></span>), tri: p => p.ecoleOrigine.nom },
-    { cle: 'excedent', entete: 'Excédent de l’école', numerique: true, rendu: p => fmt(p.ecoleOrigine.excedentMobilisable), tri: p => p.ecoleOrigine.excedentMobilisable },
-    { cle: 'rang', entete: 'Rang dans l’école', numerique: true, rendu: p => fmt(p.rangDansEcole), tri: p => p.rangDansEcole },
+    {
+      cle: 'ecole',
+      entete: 'École d’origine',
+      rendu: p => (
+        <span>
+          {p.ecoleOrigine.nom}
+          <small>{p.teacher.communeAttache}</small>
+        </span>
+      ),
+      tri: p => p.ecoleOrigine.nom,
+    },
+    {
+      cle: 'excedent',
+      entete: 'Excédent de l’école',
+      numerique: true,
+      rendu: p => fmt(p.ecoleOrigine.excedentMobilisable),
+      tri: p => p.ecoleOrigine.excedentMobilisable,
+    },
+    {
+      cle: 'rang',
+      entete: 'Rang dans l’école',
+      numerique: true,
+      rendu: p => fmt(p.rangDansEcole),
+      tri: p => p.rangDansEcole,
+    },
     { cle: 'bareme', entete: 'Barème', numerique: true, rendu: p => fmtDec(p.bareme, 2), tri: p => p.bareme },
-    { cle: 'affecte', entete: 'Affecté', rendu: p => <Pill tone={p.affecte ? 'ok' : 'neutral'}>{p.affecte ? 'Oui' : 'Non'}</Pill>, tri: p => (p.affecte ? 1 : 0) },
+    {
+      cle: 'affecte',
+      entete: 'Affecté',
+      rendu: p => <Pill tone={p.affecte ? 'ok' : 'neutral'}>{p.affecte ? 'Oui' : 'Non'}</Pill>,
+      tri: p => (p.affecte ? 1 : 0),
+    },
   ]
 
   return (
@@ -182,7 +251,12 @@ export function PoolPage({ store }: { store: PlanningStore }) {
       </Panel>
 
       <div className="filter-bar">
-        <SearchField value={recherche} onChange={setRecherche} label="Rechercher dans le vivier" placeholder="Matricule, nom, école…" />
+        <SearchField
+          value={recherche}
+          onChange={setRecherche}
+          label="Rechercher dans le vivier"
+          placeholder="Matricule, nom, école…"
+        />
         <div className="filter-bar-actions">
           <button
             type="button"
@@ -190,10 +264,27 @@ export function PoolPage({ store }: { store: PlanningStore }) {
             onClick={() =>
               exporterCSV(
                 'vivier.csv',
-                ['Matricule', 'Nom', 'Prénom', 'École origine', 'Commune', 'Excédent école', 'Rang', 'Barème', 'Affecté'],
+                [
+                  'Matricule',
+                  'Nom',
+                  'Prénom',
+                  'École origine',
+                  'Commune',
+                  'Excédent école',
+                  'Rang',
+                  'Barème',
+                  'Affecté',
+                ],
                 lignes.map(p => [
-                  p.teacher.id, p.teacher.nom, p.teacher.prenom, p.ecoleOrigine.nom, p.teacher.communeAttache,
-                  p.ecoleOrigine.excedentMobilisable, p.rangDansEcole, p.bareme, p.affecte ? 'Oui' : 'Non',
+                  p.teacher.id,
+                  p.teacher.nom,
+                  p.teacher.prenom,
+                  p.ecoleOrigine.nom,
+                  p.teacher.communeAttache,
+                  p.ecoleOrigine.excedentMobilisable,
+                  p.rangDansEcole,
+                  p.bareme,
+                  p.affecte ? 'Oui' : 'Non',
                 ]),
               )
             }
@@ -204,7 +295,12 @@ export function PoolPage({ store }: { store: PlanningStore }) {
       </div>
 
       <Panel kicker="Vivier" title={`${fmt(lignes.length)} enseignants mobilisables`} flush>
-        <DataTable lignes={lignes} colonnes={colonnes} cle={p => p.teacher.id} legende="Vivier réellement redéployable" />
+        <DataTable
+          lignes={lignes}
+          colonnes={colonnes}
+          cle={p => p.teacher.id}
+          legende="Vivier réellement redéployable"
+        />
       </Panel>
     </div>
   )
@@ -214,7 +310,10 @@ export function PostsPage({ store }: { store: PlanningStore }) {
   const { resultatComplet, setPage } = store
   if (!resultatComplet) {
     return (
-      <EmptyState titre="Aucune simulation exécutée" action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}>
+      <EmptyState
+        titre="Aucune simulation exécutée"
+        action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}
+      >
         Les postes à couvrir sont construits lors de l’exécution d’un scénario.
       </EmptyState>
     )
@@ -226,23 +325,78 @@ export function PostsPage({ store }: { store: PlanningStore }) {
   const colonnes: Colonne<TeachingPost>[] = [
     { cle: 'rang', entete: 'Rang', numerique: true, rendu: p => fmt(p.rang), tri: p => p.rang },
     { cle: 'id', entete: 'Poste', rendu: p => <span className="mono">{p.id}</span>, tri: p => p.id },
-    { cle: 'etab', entete: 'Établissement', rendu: p => (<span><strong>{p.nomEtab || p.schoolId}</strong><small>{p.commune} · {p.departement}</small></span>), tri: p => p.nomEtab },
+    {
+      cle: 'etab',
+      entete: 'Établissement',
+      rendu: p => (
+        <span>
+          <strong>{p.nomEtab || p.schoolId}</strong>
+          <small>
+            {p.commune} · {p.departement}
+          </small>
+        </span>
+      ),
+      tri: p => p.nomEtab,
+    },
     { cle: 'region', entete: 'Région', rendu: p => p.region, tri: p => p.region },
-    { cle: 'securite', entete: 'Sécurité', rendu: p => <ZoneSecuritePill zone={p.priorite.zoneSecurite} points={p.priorite.pointsSecurite} court />, tri: p => rangZoneSecurite(p.priorite.zoneSecurite) },
-    { cle: 'ss', entete: 'Sous-système', rendu: p => (p.sousSysteme === 'anglophone' ? 'Anglophone' : p.sousSysteme === 'francophone' ? 'Francophone' : '—'), tri: p => p.sousSysteme ?? '' },
+    {
+      cle: 'securite',
+      entete: 'Sécurité',
+      rendu: p => <ZoneSecuritePill zone={p.priorite.zoneSecurite} points={p.priorite.pointsSecurite} court />,
+      tri: p => rangZoneSecurite(p.priorite.zoneSecurite),
+    },
+    {
+      cle: 'ss',
+      entete: 'Sous-système',
+      rendu: p =>
+        p.sousSysteme === 'anglophone' ? 'Anglophone' : p.sousSysteme === 'francophone' ? 'Francophone' : '—',
+      tri: p => p.sousSysteme ?? '',
+    },
     { cle: 'w', entete: 'Poids w', numerique: true, rendu: p => fmt(p.priorite.poids), tri: p => p.priorite.poids },
-    { cle: 'niveau', entete: 'Niveau', numerique: true, rendu: p => fmt(p.priorite.niveauDifficulte), tri: p => p.priorite.niveauDifficulte },
-    { cle: 'beta', entete: 'β', numerique: true, rendu: p => fmt(p.priorite.pointsBesoin), tri: p => p.priorite.pointsBesoin },
-    { cle: 'u', entete: 'Indice u', numerique: true, rendu: p => (<span>{fmt(p.priorite.indice)}{p.estStructure && <small>structure</small>}</span>), tri: p => p.priorite.indice },
-    { cle: 'etat', entete: 'État', rendu: p => <Pill tone={pourvus.has(p.id) ? 'ok' : 'warn'}>{pourvus.has(p.id) ? 'Pourvu (proposition)' : 'Non pourvu'}</Pill>, tri: p => (pourvus.has(p.id) ? 1 : 0) },
+    {
+      cle: 'niveau',
+      entete: 'Niveau',
+      numerique: true,
+      rendu: p => fmt(p.priorite.niveauDifficulte),
+      tri: p => p.priorite.niveauDifficulte,
+    },
+    {
+      cle: 'beta',
+      entete: 'β',
+      numerique: true,
+      rendu: p => fmt(p.priorite.pointsBesoin),
+      tri: p => p.priorite.pointsBesoin,
+    },
+    {
+      cle: 'u',
+      entete: 'Indice u',
+      numerique: true,
+      rendu: p => (
+        <span>
+          {fmt(p.priorite.indice)}
+          {p.estStructure && <small>structure</small>}
+        </span>
+      ),
+      tri: p => p.priorite.indice,
+    },
+    {
+      cle: 'etat',
+      entete: 'État',
+      rendu: p => (
+        <Pill tone={pourvus.has(p.id) ? 'ok' : 'warn'}>
+          {pourvus.has(p.id) ? 'Pourvu (proposition)' : 'Non pourvu'}
+        </Pill>
+      ),
+      tri: p => (pourvus.has(p.id) ? 1 : 0),
+    },
   ]
 
   return (
     <div className="stack">
       <Notice tone="neutral" title="Référentiel des écoles nécessiteuses et des structures d’accueil (§3.1).">
-        Un poste = une unité de besoin b d’une école nécessiteuse, ou une place d’une structure fixée par la hiérarchie. Les postes
-        sont classés par indice de priorité u = w + β décroissant ; à indice égal, les écoles passent avant les structures, puis
-        l’école au REM actuel le plus élevé.
+        Un poste = une unité de besoin b d’une école nécessiteuse, ou une place d’une structure fixée par la hiérarchie.
+        Les postes sont classés par indice de priorité u = w + β décroissant ; à indice égal, les écoles passent avant
+        les structures, puis l’école au REM actuel le plus élevé.
       </Notice>
       <Panel kicker="Postes" title={`${fmt(tous.length)} postes à couvrir`} flush>
         <DataTable lignes={tous} colonnes={colonnes} cle={p => p.id} legende="Postes à couvrir et leur état" />
@@ -255,7 +409,10 @@ export function AssignmentsPage({ store }: { store: PlanningStore }) {
   const { resultatComplet, setPage } = store
   if (!resultatComplet) {
     return (
-      <EmptyState titre="Aucune simulation exécutée" action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}>
+      <EmptyState
+        titre="Aucune simulation exécutée"
+        action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}
+      >
         Les propositions d’affectation sont produites par l’exécution d’un scénario.
       </EmptyState>
     )
@@ -271,10 +428,33 @@ export function AssignmentsPage({ store }: { store: PlanningStore }) {
             onClick={() =>
               exporterCSV(
                 'affectations.csv',
-                ['Phase', 'Poste', 'Matricule', 'Nom', 'Prénom', 'École origine', 'Commune origine', 'École destination', 'Commune destination', 'Périmètre', 'Barème', 'Score'],
+                [
+                  'Phase',
+                  'Poste',
+                  'Matricule',
+                  'Nom',
+                  'Prénom',
+                  'École origine',
+                  'Commune origine',
+                  'École destination',
+                  'Commune destination',
+                  'Périmètre',
+                  'Barème',
+                  'Score',
+                ],
                 resultatComplet.assignments.map(a => [
-                  a.phase, a.postId, a.teacherId, a.nomEns, a.prenomEns, a.nomEtabOrigine, a.communeOrigine,
-                  a.nomEtabDestination, a.communeDestination, LIBELLE_PROXIMITE[a.niveauProximite], a.bareme, a.score,
+                  a.phase,
+                  a.postId,
+                  a.teacherId,
+                  a.nomEns,
+                  a.prenomEns,
+                  a.nomEtabOrigine,
+                  a.communeOrigine,
+                  a.nomEtabDestination,
+                  a.communeDestination,
+                  LIBELLE_PROXIMITE[a.niveauProximite],
+                  a.bareme,
+                  a.score,
                 ]),
               )
             }
@@ -292,26 +472,39 @@ export function UnassignedPage({ store }: { store: PlanningStore }) {
   const { resultatComplet, setPage } = store
   if (!resultatComplet) {
     return (
-      <EmptyState titre="Aucune simulation exécutée" action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}>
+      <EmptyState
+        titre="Aucune simulation exécutée"
+        action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}
+      >
         Cette page liste les enseignants du vivier pour lesquels aucun poste compatible n’a été trouvé.
       </EmptyState>
     )
   }
 
   const colonnes: Colonne<PoolTeacher>[] = [
-    { cle: 'id', entete: 'Matricule', rendu: p => <span className="mono">{p.teacher.id}</span>, tri: p => p.teacher.id },
+    {
+      cle: 'id',
+      entete: 'Matricule',
+      rendu: p => <span className="mono">{p.teacher.id}</span>,
+      tri: p => p.teacher.id,
+    },
     { cle: 'nom', entete: 'Enseignant', rendu: p => `${p.teacher.nom} ${p.teacher.prenom}`, tri: p => p.teacher.nom },
     { cle: 'ecole', entete: 'École d’origine', rendu: p => p.ecoleOrigine.nom, tri: p => p.ecoleOrigine.nom },
     { cle: 'commune', entete: 'Commune', rendu: p => p.teacher.communeAttache, tri: p => p.teacher.communeAttache },
-    { cle: 'departement', entete: 'Département', rendu: p => p.teacher.departementAttache, tri: p => p.teacher.departementAttache },
+    {
+      cle: 'departement',
+      entete: 'Département',
+      rendu: p => p.teacher.departementAttache,
+      tri: p => p.teacher.departementAttache,
+    },
     { cle: 'bareme', entete: 'Barème', numerique: true, rendu: p => fmtDec(p.bareme, 2), tri: p => p.bareme },
   ]
 
   return (
     <div className="stack">
       <Notice tone="neutral" title="Pourquoi un enseignant reste non affecté.">
-        Aucun poste ouvert ne se trouvait dans son périmètre autorisé, ou tous les postes de ce périmètre avaient déjà été
-        pourvus par des enseignants mieux classés.
+        Aucun poste ouvert ne se trouvait dans son périmètre autorisé, ou tous les postes de ce périmètre avaient déjà
+        été pourvus par des enseignants mieux classés.
       </Notice>
       <Panel kicker="Vivier" title={`${fmt(resultatComplet.unmatchedTeachers.length)} enseignants non affectés`} flush>
         <DataTable
@@ -330,7 +523,10 @@ export function LogsPage({ store }: { store: PlanningStore }) {
   const { resultatComplet, setPage } = store
   if (!resultatComplet) {
     return (
-      <EmptyState titre="Aucune simulation exécutée" action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}>
+      <EmptyState
+        titre="Aucune simulation exécutée"
+        action={{ label: 'Créer un scénario', onClick: () => setPage('simulations') }}
+      >
         Le journal retrace chaque étape de la dernière simulation.
       </EmptyState>
     )
@@ -338,7 +534,11 @@ export function LogsPage({ store }: { store: PlanningStore }) {
 
   return (
     <div className="stack">
-      <Panel kicker="Exécution" title={`Journal — ${resultatComplet.scenarioNom}`} hint={`Calculé le ${new Date(resultatComplet.computedAt).toLocaleString('fr-FR')}.`}>
+      <Panel
+        kicker="Exécution"
+        title={`Journal — ${resultatComplet.scenarioNom}`}
+        hint={`Calculé le ${new Date(resultatComplet.computedAt).toLocaleString('fr-FR')}.`}
+      >
         <table className="compare-table">
           <thead>
             <tr>
@@ -391,7 +591,11 @@ export function LogsPage({ store }: { store: PlanningStore }) {
                         .join(' · ')}
                       {t.gardes.length > 12 ? ' …' : ''}
                     </td>
-                    <td>{t.refuses.length === 0 ? '—' : `${t.refuses.slice(0, 12).join(', ')}${t.refuses.length > 12 ? ' …' : ''}`}</td>
+                    <td>
+                      {t.refuses.length === 0
+                        ? '—'
+                        : `${t.refuses.slice(0, 12).join(', ')}${t.refuses.length > 12 ? ' …' : ''}`}
+                    </td>
                   </tr>
                 ))}
               </tbody>

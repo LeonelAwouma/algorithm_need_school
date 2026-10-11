@@ -38,7 +38,7 @@ export function extensionAcceptee(nom: string): boolean {
  */
 export async function lireClasseur(kind: DatasetKind, file: File, feuille?: string): Promise<FichierLu> {
   if (!extensionAcceptee(file.name)) {
-    throw new Error("Le fichier doit être un classeur Excel (.xlsx, .xls, .xlsm) ou un fichier CSV.")
+    throw new Error('Le fichier doit être un classeur Excel (.xlsx, .xls, .xlsm) ou un fichier CSV.')
   }
 
   const XLSX = await import('xlsx')

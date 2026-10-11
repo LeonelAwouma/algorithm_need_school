@@ -36,25 +36,107 @@ interface ModeleCommune {
 const COMMUNES: ModeleCommune[] = [
   { region: 'Centre', departement: 'Mfoundi', commune: 'Yaoundé I', zone: 'urbaine', nbEcoles: 5, securite: 'verte' },
   { region: 'Centre', departement: 'Mfoundi', commune: 'Yaoundé VII', zone: 'urbaine', nbEcoles: 5, securite: 'verte' },
-  { region: 'Centre', departement: 'Lekié', commune: 'Monatélé', zone: 'rurale', nbEcoles: 4, securite: 'verte', enclavee: true },
+  {
+    region: 'Centre',
+    departement: 'Lekié',
+    commune: 'Monatélé',
+    zone: 'rurale',
+    nbEcoles: 4,
+    securite: 'verte',
+    enclavee: true,
+  },
   { region: 'Centre', departement: 'Lekié', commune: 'Obala', zone: 'semi_urbaine', nbEcoles: 4, securite: 'verte' },
   { region: 'Littoral', departement: 'Wouri', commune: 'Douala III', zone: 'urbaine', nbEcoles: 5, securite: 'verte' },
   { region: 'Littoral', departement: 'Wouri', commune: 'Douala V', zone: 'urbaine', nbEcoles: 4, securite: 'verte' },
-  { region: 'Littoral', departement: 'Sanaga-Maritime', commune: 'Édéa I', zone: 'semi_urbaine', nbEcoles: 3, securite: 'verte' },
-  { region: 'Adamaoua', departement: 'Vina', commune: 'Ngaoundéré II', zone: 'semi_urbaine', nbEcoles: 4, securite: 'jaune' },
+  {
+    region: 'Littoral',
+    departement: 'Sanaga-Maritime',
+    commune: 'Édéa I',
+    zone: 'semi_urbaine',
+    nbEcoles: 3,
+    securite: 'verte',
+  },
+  {
+    region: 'Adamaoua',
+    departement: 'Vina',
+    commune: 'Ngaoundéré II',
+    zone: 'semi_urbaine',
+    nbEcoles: 4,
+    securite: 'jaune',
+  },
   { region: 'Adamaoua', departement: 'Mbéré', commune: 'Meiganga', zone: 'rurale', nbEcoles: 4, securite: 'jaune' },
-  { region: 'Adamaoua', departement: 'Mbéré', commune: 'Dir', zone: 'rurale', nbEcoles: 3, securite: 'rouge', enclavee: true },
+  {
+    region: 'Adamaoua',
+    departement: 'Mbéré',
+    commune: 'Dir',
+    zone: 'rurale',
+    nbEcoles: 3,
+    securite: 'rouge',
+    enclavee: true,
+  },
 ]
 
 const MOTIFS: MotifDemande[] = ['convenance', 'convenance', 'regroupement_familial', 'sante', 'rotation_zone_difficile']
 
 const QUARTIERS = [
-  'Centre', 'Nord', 'Sud', 'Est', 'Ouest', 'Marché', 'Mission', 'Plateau',
-  'Rivière', 'Gare', 'Camp', 'Carrefour',
+  'Centre',
+  'Nord',
+  'Sud',
+  'Est',
+  'Ouest',
+  'Marché',
+  'Mission',
+  'Plateau',
+  'Rivière',
+  'Gare',
+  'Camp',
+  'Carrefour',
 ]
 
-const NOMS = ['Abena', 'Bello', 'Choupo', 'Djomo', 'Eyenga', 'Fouda', 'Gwet', 'Hamadou', 'Ivo', 'Jiofack', 'Kamdem', 'Lobe', 'Mbarga', 'Ndongo', 'Onana', 'Pouth', 'Roger', 'Sadjo', 'Tchoua', 'Voundi']
-const PRENOMS = ['Alice', 'Bernard', 'Clarisse', 'Daniel', 'Estelle', 'François', 'Georgette', 'Hervé', 'Irène', 'Joseph', 'Karine', 'Ludovic', 'Marthe', 'Norbert', 'Odile', 'Patrick', 'Rachel', 'Samuel', 'Thérèse', 'Victor']
+const NOMS = [
+  'Abena',
+  'Bello',
+  'Choupo',
+  'Djomo',
+  'Eyenga',
+  'Fouda',
+  'Gwet',
+  'Hamadou',
+  'Ivo',
+  'Jiofack',
+  'Kamdem',
+  'Lobe',
+  'Mbarga',
+  'Ndongo',
+  'Onana',
+  'Pouth',
+  'Roger',
+  'Sadjo',
+  'Tchoua',
+  'Voundi',
+]
+const PRENOMS = [
+  'Alice',
+  'Bernard',
+  'Clarisse',
+  'Daniel',
+  'Estelle',
+  'François',
+  'Georgette',
+  'Hervé',
+  'Irène',
+  'Joseph',
+  'Karine',
+  'Ludovic',
+  'Marthe',
+  'Norbert',
+  'Odile',
+  'Patrick',
+  'Rachel',
+  'Samuel',
+  'Thérèse',
+  'Victor',
+]
 const SITUATIONS = ['celibataire', 'marie', 'marie', 'divorce', 'veuf']
 const NIVEAUX: NiveauPrimaire[] = ['CI', 'CP', 'CE1', 'CE2', 'CM1', 'CM2']
 
@@ -113,13 +195,17 @@ export function construireJeuDemonstration(reference: Date = new Date()): Datase
         departsConnusDeclares: null,
         sousSysteme: 'francophone',
         zoneSecurite: modele.securite,
-        accessibilite: modele.zone === 'rurale' ? (modele.enclavee && rnd() < 0.7 ? 'rural_enclave' : 'rural') : 'urbain',
+        accessibilite:
+          modele.zone === 'rurale' ? (modele.enclavee && rnd() < 0.7 ? 'rural_enclave' : 'rural') : 'urbain',
         estStructure: false,
         nbEnseignantsEtat,
         nbAutresEnseignants: Math.floor(rnd() * 3),
         nbPostesOuvertsDeclares: Math.max(0, nbClasses - nbEnseignantsEtat + (rnd() < 0.2 ? 1 : 0)),
         // Une école de moins de 6 classes regroupe forcément des niveaux ; les écoles rurales en regroupent parfois davantage.
-        classesMultigrades: Math.min(6, Math.max(0, 6 - nbClasses) + (modele.zone === 'rurale' && rnd() < 0.5 ? 1 + Math.floor(rnd() * 2) : 0)),
+        classesMultigrades: Math.min(
+          6,
+          Math.max(0, 6 - nbClasses) + (modele.zone === 'rurale' && rnd() < 0.5 ? 1 + Math.floor(rnd() * 2) : 0),
+        ),
         classesMultigradesRenseignees: true,
         prioriteLocale: rnd() < 0.2 ? 1 + Math.floor(rnd() * 3) : 0,
         effectifTotalEleves,
@@ -163,7 +249,8 @@ export function construireJeuDemonstration(reference: Date = new Date()): Datase
           motifDemande: null,
           ecoleMotif: null,
           anneesZoneNiveau1: modele.securite === 'rouge' ? Math.floor(rnd() * 5) : 0,
-          anneesZoneNiveau2: modele.zone === 'rurale' || modele.securite === 'jaune' ? Math.floor(rnd() * 6) : Math.floor(rnd() * 2),
+          anneesZoneNiveau2:
+            modele.zone === 'rurale' || modele.securite === 'jaune' ? Math.floor(rnd() * 6) : Math.floor(rnd() * 2),
           rangTirage: indexEnseignant,
           ligneSource: indexEnseignant + 1,
         })
@@ -263,7 +350,9 @@ export function construireJeuDemonstration(reference: Date = new Date()): Datase
   const ecoles = schools.filter(s => !s.estStructure)
   for (const t of teachers) {
     if (rnd() >= 0.2) continue
-    const proches = ecoles.filter(s => s.departement === t.departementAttache && s.id !== t.idEtabAttache && s.sousSysteme === t.sousSysteme)
+    const proches = ecoles.filter(
+      s => s.departement === t.departementAttache && s.id !== t.idEtabAttache && s.sousSysteme === t.sousSysteme,
+    )
     if (proches.length === 0) continue
     const nb = 1 + Math.floor(rnd() * 3)
     const voeux: string[] = []
@@ -278,7 +367,8 @@ export function construireJeuDemonstration(reference: Date = new Date()): Datase
     }
     t.voeux = voeux.slice(0, 3)
     t.motifDemande = MOTIFS[Math.floor(rnd() * MOTIFS.length)]
-    t.ecoleMotif = t.motifDemande === 'sante' || t.motifDemande === 'regroupement_familial' ? t.voeux[0] ?? null : null
+    t.ecoleMotif =
+      t.motifDemande === 'sante' || t.motifDemande === 'regroupement_familial' ? (t.voeux[0] ?? null) : null
   }
 
   return {

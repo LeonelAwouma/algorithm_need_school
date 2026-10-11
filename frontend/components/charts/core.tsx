@@ -77,7 +77,14 @@ export function DefsMotifs({ series }: { series: Serie[] }) {
     <defs>
       {series.map((s, i) =>
         s.motif === 'hachures' ? (
-          <pattern key={s.cle} id={`motif-hachures-${i}`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <pattern
+            key={s.cle}
+            id={`motif-hachures-${i}`}
+            width="6"
+            height="6"
+            patternUnits="userSpaceOnUse"
+            patternTransform="rotate(45)"
+          >
             <rect width="6" height="6" fill={s.couleur} />
             <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(255,255,255,.6)" strokeWidth="3" />
           </pattern>
@@ -289,7 +296,13 @@ export function GrilleY({
         const y = geo.haut + geo.aireH - (t / max) * geo.aireH
         return (
           <g key={t}>
-            <line x1={geo.gauche} x2={geo.gauche + geo.aireL} y1={y} y2={y} className={t === 0 ? 'chart-axe' : 'chart-grille'} />
+            <line
+              x1={geo.gauche}
+              x2={geo.gauche + geo.aireL}
+              y1={y}
+              y2={y}
+              className={t === 0 ? 'chart-axe' : 'chart-grille'}
+            />
             <text x={geo.gauche - 8} y={y + 4} textAnchor="end" className="chart-tick">
               {format(t)}
             </text>
@@ -364,8 +377,12 @@ export function AxeCategories({
           >
             {ligne2 ? (
               <>
-                <tspan x={x} dy={0}>{ligne1}</tspan>
-                <tspan x={x} dy={14}>{ligne2}</tspan>
+                <tspan x={x} dy={0}>
+                  {ligne1}
+                </tspan>
+                <tspan x={x} dy={14}>
+                  {ligne2}
+                </tspan>
               </>
             ) : (
               ligne1
@@ -428,7 +445,11 @@ export function TableauAlternatif({
               <tr key={i}>
                 {l.map((c, j) =>
                   j === 0 ? (
-                    <th key={j} scope="row" style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12.5, fontWeight: 600 }}>
+                    <th
+                      key={j}
+                      scope="row"
+                      style={{ textAlign: 'left', padding: '10px 12px', fontSize: 12.5, fontWeight: 600 }}
+                    >
                       {c}
                     </th>
                   ) : (

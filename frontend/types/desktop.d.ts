@@ -6,13 +6,7 @@
  * simplement masqué.
  */
 
-export type PhaseMiseAJour =
-  | 'inactive'
-  | 'verification'
-  | 'a-jour'
-  | 'telechargement'
-  | 'prete'
-  | 'indisponible'
+export type PhaseMiseAJour = 'inactive' | 'verification' | 'a-jour' | 'telechargement' | 'prete' | 'indisponible'
 
 export interface EtatMiseAJour {
   phase: PhaseMiseAJour

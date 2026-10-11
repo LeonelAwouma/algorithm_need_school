@@ -32,7 +32,11 @@ export function territoryCode(parts: (string | null)[]): string {
 }
 
 /** Découpe un code de territoire en ses composantes. */
-export function parseTerritoryCode(code: string): { region: string | null; departement: string | null; commune: string | null } {
+export function parseTerritoryCode(code: string): {
+  region: string | null
+  departement: string | null
+  commune: string | null
+} {
   if (!code) return { region: null, departement: null, commune: null }
   const parts = code.split(SEPARATEUR)
   return { region: parts[0] ?? null, departement: parts[1] ?? null, commune: parts[2] ?? null }
@@ -142,7 +146,8 @@ export function aucunFiltreActif(f: GlobalFilters): boolean {
 export function appliquerFiltres(diagnostics: SchoolDiagnostic[], f: GlobalFilters): SchoolDiagnostic[] {
   let resultat = filtrerParTerritoire(diagnostics, f.territoire)
   if (f.zones.length > 0) resultat = resultat.filter(d => f.zones.includes(d.school.zone))
-  if (f.zonesSecurite.length > 0) resultat = resultat.filter(d => f.zonesSecurite.includes(d.school.zoneSecurite ?? 'verte'))
+  if (f.zonesSecurite.length > 0)
+    resultat = resultat.filter(d => f.zonesSecurite.includes(d.school.zoneSecurite ?? 'verte'))
   if (f.typesEtab.length > 0) resultat = resultat.filter(d => f.typesEtab.includes(d.school.typeEtab))
   if (f.severites.length > 0) resultat = resultat.filter(d => f.severites.includes(d.severite))
   if (f.multigradesUniquement === true) resultat = resultat.filter(d => d.school.classesMultigrades > 0)
@@ -257,7 +262,11 @@ export function resumesParRegion(arbre: TerritorialSummary): TerritorialSummary[
 export function territoiresMixtes(noeuds: TerritorialSummary[]): TerritorialSummary[] {
   return noeuds
     .filter(n => n.totals.postesNecessaires > 0 && n.totals.excedentMobilisable > 0)
-    .sort((a, b) => Math.min(b.totals.postesNecessaires, b.totals.excedentMobilisable) - Math.min(a.totals.postesNecessaires, a.totals.excedentMobilisable))
+    .sort(
+      (a, b) =>
+        Math.min(b.totals.postesNecessaires, b.totals.excedentMobilisable) -
+        Math.min(a.totals.postesNecessaires, a.totals.excedentMobilisable),
+    )
 }
 
 /** Libellé du niveau immédiatement sous un nœud, au pluriel. */

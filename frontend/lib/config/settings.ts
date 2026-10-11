@@ -9,7 +9,13 @@
  * tous modifiables, et chaque changement relance le calcul (§6.3).
  */
 
-import type { EngineSettings, ReglesBesoin, ReglesMobilite, ReglesPriorite, ScoringConfig } from '../../types/simulation'
+import type {
+  EngineSettings,
+  ReglesBesoin,
+  ReglesMobilite,
+  ReglesPriorite,
+  ScoringConfig,
+} from '../../types/simulation'
 
 /**
  * Barème individuel (étage 1) et score d'appariement (étage 2), repris du moteur
@@ -143,7 +149,9 @@ export function cloneSettings(settings: EngineSettings): EngineSettings {
   }
 }
 
-type DeepPartial<T> = { [K in keyof T]?: T[K] extends (infer U)[] ? U[] : T[K] extends object ? DeepPartial<T[K]> : T[K] }
+type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends (infer U)[] ? U[] : T[K] extends object ? DeepPartial<T[K]> : T[K]
+}
 
 /** Ne recopie que les clés connues de la cible, avec une valeur du même type. */
 function fusionner<T extends object>(cible: T, patch: unknown): void {
@@ -151,7 +159,11 @@ function fusionner<T extends object>(cible: T, patch: unknown): void {
   for (const [cle, valeur] of Object.entries(patch)) {
     if (!(cle in cible)) continue
     const courant = (cible as Record<string, unknown>)[cle]
-    if (typeof courant === typeof valeur && !Array.isArray(courant) && (typeof valeur !== 'object' || valeur === null)) {
+    if (
+      typeof courant === typeof valeur &&
+      !Array.isArray(courant) &&
+      (typeof valeur !== 'object' || valeur === null)
+    ) {
       ;(cible as Record<string, unknown>)[cle] = valeur
     }
   }
@@ -166,7 +178,11 @@ function fusionner<T extends object>(cible: T, patch: unknown): void {
 export function mergeSettings(base: EngineSettings, patch: DeepPartial<EngineSettings>): EngineSettings {
   const merged = cloneSettings(base)
   if (typeof patch.anneeScolaire === 'string') merged.anneeScolaire = patch.anneeScolaire
-  if (patch.sourceDesPostes === 'besoinCalcule' || patch.sourceDesPostes === 'postesDeclares' || patch.sourceDesPostes === 'maximum') {
+  if (
+    patch.sourceDesPostes === 'besoinCalcule' ||
+    patch.sourceDesPostes === 'postesDeclares' ||
+    patch.sourceDesPostes === 'maximum'
+  ) {
     merged.sourceDesPostes = patch.sourceDesPostes
   }
   fusionner(merged.besoin, patch.besoin)

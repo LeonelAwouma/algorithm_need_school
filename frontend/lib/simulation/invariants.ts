@@ -50,7 +50,7 @@ export function verifierInvariants(
   checks.push(
     check(
       'un_poste_un_enseignant',
-      "Aucun poste ne reçoit deux enseignants",
+      'Aucun poste ne reçoit deux enseignants',
       postesDoubles.length === 0,
       postesDoubles.length === 0
         ? `${postes.size.toLocaleString('fr-FR')} postes distincts pourvus.`
@@ -65,7 +65,8 @@ export function verifierInvariants(
   const depassements: string[] = []
   for (const [schoolId, nb] of departs) {
     const d = parEcole.get(schoolId)
-    if (!d || nb > d.excedentTheorique) depassements.push(`${schoolId} (${nb} départs pour ${d?.excedentTheorique ?? 0} autorisés)`)
+    if (!d || nb > d.excedentTheorique)
+      depassements.push(`${schoolId} (${nb} départs pour ${d?.excedentTheorique ?? 0} autorisés)`)
   }
   checks.push(
     check(
@@ -160,7 +161,9 @@ export function verifierInvariants(
       'pas_de_mouvement_interne',
       "Aucun enseignant n'est proposé sur un poste de sa propre école",
       internes.length === 0,
-      internes.length === 0 ? 'Chaque proposition correspond à un mouvement réel.' : `${internes.length} mouvements internes détectés.`,
+      internes.length === 0
+        ? 'Chaque proposition correspond à un mouvement réel.'
+        : `${internes.length} mouvements internes détectés.`,
     ),
   )
 
@@ -200,7 +203,11 @@ export function verifierInvariants(
 
   // 11 — Règle de la zone rouge : ni proposition hors vœux ni transfert imposé (§3.5).
   const imposesZoneRouge = settings.mobilite.regleZoneRouge
-    ? assignments.filter(a => (a.nature === 'hors_voeux' || a.nature === 'obligatoire') && postesParEcole.get(a.schoolDestinationId)?.priorite.zoneRouge)
+    ? assignments.filter(
+        a =>
+          (a.nature === 'hors_voeux' || a.nature === 'obligatoire') &&
+          postesParEcole.get(a.schoolDestinationId)?.priorite.zoneRouge,
+      )
     : []
   checks.push(
     check(

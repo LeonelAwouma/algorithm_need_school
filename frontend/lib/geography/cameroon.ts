@@ -89,13 +89,48 @@ export interface GeoFeatureCollection {
 }
 
 /** Noms de propriétés couramment utilisés pour porter le libellé d'un territoire. */
-const CLES_NOM = ['nom', 'name', 'NAME', 'NAME_1', 'NAME_2', 'shapeName', 'region', 'REGION', 'departement', 'admin1Name']
+const CLES_NOM = [
+  'nom',
+  'name',
+  'NAME',
+  'NAME_1',
+  'NAME_2',
+  'shapeName',
+  'region',
+  'REGION',
+  'departement',
+  'admin1Name',
+]
 
 /** Caractères Windows-1252 situés dans la plage 0x80–0x9F, absents de l'ISO 8859-1. */
 const OCTET_CP1252: Record<string, number> = {
-  '€': 0x80, '‚': 0x82, 'ƒ': 0x83, '„': 0x84, '…': 0x85, '†': 0x86, '‡': 0x87, 'ˆ': 0x88, '‰': 0x89, 'Š': 0x8a,
-  '‹': 0x8b, 'Œ': 0x8c, 'Ž': 0x8e, '‘': 0x91, '’': 0x92, '“': 0x93, '”': 0x94, '•': 0x95, '–': 0x96, '—': 0x97,
-  '˜': 0x98, '™': 0x99, 'š': 0x9a, '›': 0x9b, 'œ': 0x9c, 'ž': 0x9e, 'Ÿ': 0x9f,
+  '€': 0x80,
+  '‚': 0x82,
+  ƒ: 0x83,
+  '„': 0x84,
+  '…': 0x85,
+  '†': 0x86,
+  '‡': 0x87,
+  ˆ: 0x88,
+  '‰': 0x89,
+  Š: 0x8a,
+  '‹': 0x8b,
+  Œ: 0x8c,
+  Ž: 0x8e,
+  '‘': 0x91,
+  '’': 0x92,
+  '“': 0x93,
+  '”': 0x94,
+  '•': 0x95,
+  '–': 0x96,
+  '—': 0x97,
+  '˜': 0x98,
+  '™': 0x99,
+  š: 0x9a,
+  '›': 0x9b,
+  œ: 0x9c,
+  ž: 0x9e,
+  Ÿ: 0x9f,
 }
 
 /**
@@ -199,7 +234,9 @@ export function memeTerritoire(a: string, b: string): boolean {
 }
 
 /** Enveloppe englobante d'une collection, pour calculer la projection d'affichage. */
-export function boiteEnglobante(features: GeoFeature[]): { minX: number; minY: number; maxX: number; maxY: number } | null {
+export function boiteEnglobante(
+  features: GeoFeature[],
+): { minX: number; minY: number; maxX: number; maxY: number } | null {
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity
@@ -237,14 +274,19 @@ export function anneaux(geometry: GeoGeometry): number[][][] {
  * données. Renvoie, pour chaque entité, le nom du territoire correspondant —
  * `null` quand l'entité n'existe pas dans le jeu de données analysé.
  */
-export function apparierFeatures(features: GeoFeature[], nomsDesDonnees: string[]): { feature: GeoFeature; nomGeo: string; territoire: string | null }[] {
+export function apparierFeatures(
+  features: GeoFeature[],
+  nomsDesDonnees: string[],
+): { feature: GeoFeature; nomGeo: string; territoire: string | null }[] {
   return features.map(feature => {
     const nomGeo = nomDeFeature(feature) ?? ''
     // L'égalité stricte prime sur la tolérance : sans cela, une variante proche
     // listée plus tôt pourrait capter l'entité avant son véritable homonyme.
     const cle = cleTerritoire(nomGeo)
     const territoire =
-      nomsDesDonnees.find(nom => cleTerritoire(nom) === cle) ?? nomsDesDonnees.find(nom => memeTerritoire(nom, nomGeo)) ?? null
+      nomsDesDonnees.find(nom => cleTerritoire(nom) === cle) ??
+      nomsDesDonnees.find(nom => memeTerritoire(nom, nomGeo)) ??
+      null
     return { feature, nomGeo, territoire }
   })
 }

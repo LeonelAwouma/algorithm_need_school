@@ -25,7 +25,11 @@ export interface LignePrince {
   erreur: string | null
 }
 
-export function analyserFichierPrince(rows: unknown[][], teachers: Teacher[], ecoles: SchoolDiagnostic[]): { lignes: LignePrince[]; manquantes: string[] } {
+export function analyserFichierPrince(
+  rows: unknown[][],
+  teachers: Teacher[],
+  ecoles: SchoolDiagnostic[],
+): { lignes: LignePrince[]; manquantes: string[] } {
   const { headers, records } = recordsFromRows(rows)
   const cles = headers.map(h => normalizeKey(h))
   const colonne = (alias: string[]) => {
@@ -35,7 +39,9 @@ export function analyserFichierPrince(rows: unknown[][], teachers: Teacher[], ec
   const colEns = colonne(ALIAS.enseignant)
   const colEcole = colonne(ALIAS.ecole)
   const colRef = colonne(ALIAS.reference)
-  const manquantes = [!colEns ? "matricule de l'enseignant" : null, !colEcole ? "école de destination" : null].filter((x): x is string => !!x)
+  const manquantes = [!colEns ? "matricule de l'enseignant" : null, !colEcole ? 'école de destination' : null].filter(
+    (x): x is string => !!x,
+  )
   if (manquantes.length > 0) return { lignes: [], manquantes }
 
   const parMatricule = new Map(teachers.map(t => [lower(t.id), t]))
@@ -44,9 +50,18 @@ export function analyserFichierPrince(rows: unknown[][], teachers: Teacher[], ec
     const code = text(r.values[colEcole as string])
     const enseignant = parMatricule.get(lower(matricule)) ?? null
     // École bilingue : la section du sous-système de l'enseignant.
-    const candidates = ecoles.filter(d => lower(d.school.id) === lower(code) || lower(d.school.codeEcole) === lower(code))
-    const destination = candidates.find(d => !enseignant?.sousSysteme || d.school.sousSysteme === enseignant.sousSysteme) ?? candidates[0] ?? null
-    const erreur = !enseignant ? `enseignant « ${matricule} » introuvable` : !destination ? `école « ${code} » introuvable` : null
+    const candidates = ecoles.filter(
+      d => lower(d.school.id) === lower(code) || lower(d.school.codeEcole) === lower(code),
+    )
+    const destination =
+      candidates.find(d => !enseignant?.sousSysteme || d.school.sousSysteme === enseignant.sousSysteme) ??
+      candidates[0] ??
+      null
+    const erreur = !enseignant
+      ? `enseignant « ${matricule} » introuvable`
+      : !destination
+        ? `école « ${code} » introuvable`
+        : null
     return { ligne: r.ligne, enseignant, destination, reference: colRef ? text(r.values[colRef]) : '', erreur }
   })
   return { lignes, manquantes }

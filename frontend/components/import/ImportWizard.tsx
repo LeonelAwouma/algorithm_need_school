@@ -16,7 +16,17 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, Check, FileSpreadsheet, FlaskConical, Play, RefreshCw, ShieldCheck, Upload, X } from 'lucide-react'
+import {
+  AlertTriangle,
+  Check,
+  FileSpreadsheet,
+  FlaskConical,
+  Play,
+  RefreshCw,
+  ShieldCheck,
+  Upload,
+  X,
+} from 'lucide-react'
 import type { DataQualityReport } from '@/types/data-quality'
 import { applyManualMapping, fieldsFor, SEUIL_CONFIRMATION, type DatasetKind } from '@/lib/data/column-mapping'
 import { construireDataset, lireClasseur, type FichierLu } from '@/lib/data/import'
@@ -57,12 +67,12 @@ const DESCRIPTIONS: Record<DatasetKind, { titre: string; texte: string }> = {
   etablissements: {
     titre: 'Établissements',
     texte:
-      "La liste des écoles, avec leur territoire, leur nombre de classes et leurs enseignants. Les effectifs d’élèves sont facultatifs : sans eux, les indicateurs pédagogiques ne sont simplement pas calculés.",
+      'La liste des écoles, avec leur territoire, leur nombre de classes et leurs enseignants. Les effectifs d’élèves sont facultatifs : sans eux, les indicateurs pédagogiques ne sont simplement pas calculés.',
   },
   enseignants: {
     titre: 'Enseignants',
     texte:
-      "La liste du personnel, avec son école de rattachement et les éléments du barème (ancienneté, situation familiale, formation continue).",
+      'La liste du personnel, avec son école de rattachement et les éléments du barème (ancienneté, situation familiale, formation continue).',
   },
 }
 
@@ -77,7 +87,15 @@ export function ImportWizard({ store }: { store: PlanningStore }) {
   /** Vrai entre le chargement du jeu de données et la fin des simulations. */
   const attenteScenarios = useRef(false)
 
-  const { fichiers, setFichiers, chargerDataset, chargerDemonstration, setPage, simulationPrete, erreur: erreurMoteur } = store
+  const {
+    fichiers,
+    setFichiers,
+    chargerDataset,
+    chargerDemonstration,
+    setPage,
+    simulationPrete,
+    erreur: erreurMoteur,
+  } = store
   const complet = !!fichiers.etablissements && !!fichiers.enseignants
 
   async function choisirFichier(kind: DatasetKind, file?: File) {
@@ -140,7 +158,9 @@ export function ImportWizard({ store }: { store: PlanningStore }) {
 
       marquer('colonnes', 'encours')
       await respirer()
-      const manquants = [...etablissements.mapping.matches, ...enseignants.mapping.matches].filter(m => m.requis && !m.enTete)
+      const manquants = [...etablissements.mapping.matches, ...enseignants.mapping.matches].filter(
+        m => m.requis && !m.enTete,
+      )
       if (manquants.length > 0) {
         marquer('colonnes', 'bloquee', `${manquants.length} information(s) indispensable(s) introuvable(s).`)
         setBlocage(
@@ -202,20 +222,23 @@ export function ImportWizard({ store }: { store: PlanningStore }) {
           <div>
             <h2>Bienvenue dans AlgoPlanR</h2>
             <p>
-              Ajoutez la liste des établissements et celle des enseignants : la plateforme contrôle les données, mesure les
-              besoins de chaque école et simule des scénarios de redéploiement.
+              Ajoutez la liste des établissements et celle des enseignants : la plateforme contrôle les données, mesure
+              les besoins de chaque école et simule des scénarios de redéploiement.
             </p>
           </div>
         </section>
       )}
 
       <Notice tone="info" title="Traitement entièrement local.">
-        Les classeurs sont lus dans votre navigateur. Aucun fichier établissement, enseignant ou élève n’est envoyé vers un
-        service externe, et aucune connexion Internet n’est nécessaire.
+        Les classeurs sont lus dans votre navigateur. Aucun fichier établissement, enseignant ou élève n’est envoyé vers
+        un service externe, et aucune connexion Internet n’est nécessaire.
       </Notice>
 
       {(enCours || Object.keys(avancement).length > 0) && (
-        <Panel kicker="Traitement" title={enCours ? 'Analyse en cours' : blocage ? 'Analyse interrompue' : 'Analyse terminée'}>
+        <Panel
+          kicker="Traitement"
+          title={enCours ? 'Analyse en cours' : blocage ? 'Analyse interrompue' : 'Analyse terminée'}
+        >
           <ol className="avancement">
             {ETAPES.map(e => {
               const etat = avancement[e.cle]?.etat ?? 'attente'
@@ -237,7 +260,13 @@ export function ImportWizard({ store }: { store: PlanningStore }) {
                     {avancement[e.cle]?.detail && <small>{avancement[e.cle]?.detail}</small>}
                   </span>
                   <span className="sr-only">
-                    {etat === 'faite' ? 'terminé' : etat === 'encours' ? 'en cours' : etat === 'bloquee' ? 'interrompu' : 'à venir'}
+                    {etat === 'faite'
+                      ? 'terminé'
+                      : etat === 'encours'
+                        ? 'en cours'
+                        : etat === 'bloquee'
+                          ? 'interrompu'
+                          : 'à venir'}
                   </span>
                 </li>
               )
@@ -271,7 +300,13 @@ export function ImportWizard({ store }: { store: PlanningStore }) {
           {(['etablissements', 'enseignants'] as DatasetKind[]).map(kind => {
             const fichier = fichiers[kind]
             if (!fichier) return null
-            return <TableCorrespondance key={kind} fichier={fichier} onChange={(champ, enTete) => corrigerMapping(kind, champ, enTete)} />
+            return (
+              <TableCorrespondance
+                key={kind}
+                fichier={fichier}
+                onChange={(champ, enTete) => corrigerMapping(kind, champ, enTete)}
+              />
+            )
           })}
           <div className="topbar-actions">
             <button type="button" className="btn btn-primary" disabled={bloquant || enCours} onClick={lancerAnalyse}>
@@ -290,7 +325,6 @@ export function ImportWizard({ store }: { store: PlanningStore }) {
           <DataQualityPanel rapport={apercu.qualite} />
         </Panel>
       )}
-
     </div>
   )
 }
@@ -359,8 +393,8 @@ function EtapeFichiers({
                     <strong style={{ color: 'var(--ink)' }}>{fichier.nomFichier}</strong>
                   </span>
                   <span>
-                    Feuille « {fichier.feuilleLue} » · {fmt(fichier.records.length)} lignes de données ·{' '}
-                    {reconnues} informations reconnues sur {fichier.mapping.matches.length}
+                    Feuille « {fichier.feuilleLue} » · {fmt(fichier.records.length)} lignes de données · {reconnues}{' '}
+                    informations reconnues sur {fichier.mapping.matches.length}
                   </span>
                 </div>
               )}
@@ -393,7 +427,11 @@ function EtapeFichiers({
 
       <div className="topbar-actions">
         <button type="button" className="btn btn-primary" disabled={!complet || enCours} onClick={onSuivant}>
-          {enCours ? <RefreshCw size={15} className="spin" aria-hidden="true" /> : <Play size={15} aria-hidden="true" />}
+          {enCours ? (
+            <RefreshCw size={15} className="spin" aria-hidden="true" />
+          ) : (
+            <Play size={15} aria-hidden="true" />
+          )}
           {enCours ? 'Analyse en cours…' : 'Lancer l’analyse complète'}
           <span className="btn-count">{[fichiers.etablissements, fichiers.enseignants].filter(Boolean).length}/2</span>
         </button>
@@ -407,9 +445,9 @@ function EtapeFichiers({
       </Notice>
 
       <p className="hint" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <ShieldCheck size={15} aria-hidden="true" /> La première feuille de chaque classeur est lue, sa première ligne servant
-        d’en-têtes. Un seul clic suffit ensuite : contrôle qualité, reconnaissance des colonnes, diagnostic et simulations
-        s’enchaînent, et la vue d’ensemble s’ouvre à la fin.
+        <ShieldCheck size={15} aria-hidden="true" /> La première feuille de chaque classeur est lue, sa première ligne
+        servant d’en-têtes. Un seul clic suffit ensuite : contrôle qualité, reconnaissance des colonnes, diagnostic et
+        simulations s’enchaînent, et la vue d’ensemble s’ouvre à la fin.
       </p>
     </div>
   )
@@ -449,16 +487,22 @@ function ColonnesAttendues({ kind }: { kind: DatasetKind }) {
         <h4>Facultatives</h4>
         {liste(facultatives)}
         <p className="hint">
-          Le nom en gris est un exemple d’intitulé. Les accents, les majuscules et les variantes courantes (« Nom de l’école »,
-          « nb_classes »…) sont reconnus ; ce qui ne l’est pas sera à indiquer à l’étape « Correspondance des colonnes ».
-          L’ordre des colonnes n’a pas d’importance.
+          Le nom en gris est un exemple d’intitulé. Les accents, les majuscules et les variantes courantes (« Nom de
+          l’école », « nb_classes »…) sont reconnus ; ce qui ne l’est pas sera à indiquer à l’étape « Correspondance des
+          colonnes ». L’ordre des colonnes n’a pas d’importance.
         </p>
       </div>
     </details>
   )
 }
 
-function TableCorrespondance({ fichier, onChange }: { fichier: FichierLu; onChange: (champ: string, enTete: string | null) => void }) {
+function TableCorrespondance({
+  fichier,
+  onChange,
+}: {
+  fichier: FichierLu
+  onChange: (champ: string, enTete: string | null) => void
+}) {
   const [toutAfficher, setToutAfficher] = useState(false)
   const aConfirmer = fichier.mapping.matches.filter(m => m.enTete !== null && m.confiance < SEUIL_CONFIRMATION)
   const manquants = fichier.mapping.matches.filter(m => m.enTete === null)

@@ -103,7 +103,7 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
       ['Postes officiellement déclarés', t.postesDeclares ?? 'Non renseigné'],
       ['Enseignants potentiellement redéployables', t.excedentMobilisable],
       ['Élèves', t.effectifTotalEleves ?? 'Non renseigné'],
-      ["Élèves par enseignant État", t.elevesParEnseignantEtat ?? 'Non renseigné'],
+      ['Élèves par enseignant État', t.elevesParEnseignantEtat ?? 'Non renseigné'],
       ['Postes couverts par la simulation', resultat?.postesCouverts ?? 'Aucune simulation'],
       ['Besoin résiduel', resultat?.besoinResiduel ?? 'Aucune simulation'],
       ['Statut', "Simulation d'aide à la décision — ne constitue pas une décision administrative"],
@@ -113,28 +113,93 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
   ajouter(
     'Diagnostic_Ecoles',
     [
-      'Code', 'Établissement', 'Région', 'Département', 'Commune', 'Zone', 'Zone de sécurité', 'Type',
-      'Sous-système', 'Classes', 'Élèves N', 'Maîtres en poste', 'Départs connus', 'Maîtres retenus E',
-      'Norme P', 'Minimum pédagogique m', 'Dotation D', 'BMAX', 'Cible K',
-      'Besoin b', 'Excédent x', 'Surnombre a', 'Salles manquantes s', 'Classement',
-      'Postes déclarés', 'Écart déclaré/calculé', 'REM actuel',
-      'Accessibilité α', 'Sécurité σ', 'Poids w', 'Niveau de difficulté', 'Points de besoin β', 'Indice u',
-      'Méthode', 'Situation',
+      'Code',
+      'Établissement',
+      'Région',
+      'Département',
+      'Commune',
+      'Zone',
+      'Zone de sécurité',
+      'Type',
+      'Sous-système',
+      'Classes',
+      'Élèves N',
+      'Maîtres en poste',
+      'Départs connus',
+      'Maîtres retenus E',
+      'Norme P',
+      'Minimum pédagogique m',
+      'Dotation D',
+      'BMAX',
+      'Cible K',
+      'Besoin b',
+      'Excédent x',
+      'Surnombre a',
+      'Salles manquantes s',
+      'Classement',
+      'Postes déclarés',
+      'Écart déclaré/calculé',
+      'REM actuel',
+      'Accessibilité α',
+      'Sécurité σ',
+      'Poids w',
+      'Niveau de difficulté',
+      'Points de besoin β',
+      'Indice u',
+      'Méthode',
+      'Situation',
     ],
     diagnostic.schools.map(d => [
-      d.school.id, d.school.nom, d.school.region, d.school.departement, d.school.commune, d.school.zoneBrute, libelleZoneSecurite(d.school.zoneSecurite), d.school.typeEtab,
-      d.school.sousSysteme ?? '', d.nbClasses, d.calcul.eleves ?? '', d.calcul.enseignantsEnPoste, d.calcul.departsConnus, d.calcul.enseignantsRetenus,
-      d.calcul.norme, d.calcul.minimumPedagogique, d.calcul.dotation, d.calcul.bmax ?? '', d.calcul.cible,
-      d.calcul.besoin, d.calcul.excedent, d.calcul.surnombre, d.calcul.sallesManquantes, LIBELLE_CLASSEMENT[d.classement],
-      d.postesDeclares ?? '', d.ecartBesoinDeclare ?? '', d.calcul.remActuel ?? '',
-      d.priorite.pointsAccessibilite, d.priorite.pointsSecurite, d.priorite.poids, d.priorite.niveauDifficulte, d.priorite.pointsBesoin, d.priorite.indice,
-      d.calcul.methode === 'norme_eleves' ? 'Norme élèves' : 'Repli : une classe = un maître', SEVERITE_LABEL[d.severite],
+      d.school.id,
+      d.school.nom,
+      d.school.region,
+      d.school.departement,
+      d.school.commune,
+      d.school.zoneBrute,
+      libelleZoneSecurite(d.school.zoneSecurite),
+      d.school.typeEtab,
+      d.school.sousSysteme ?? '',
+      d.nbClasses,
+      d.calcul.eleves ?? '',
+      d.calcul.enseignantsEnPoste,
+      d.calcul.departsConnus,
+      d.calcul.enseignantsRetenus,
+      d.calcul.norme,
+      d.calcul.minimumPedagogique,
+      d.calcul.dotation,
+      d.calcul.bmax ?? '',
+      d.calcul.cible,
+      d.calcul.besoin,
+      d.calcul.excedent,
+      d.calcul.surnombre,
+      d.calcul.sallesManquantes,
+      LIBELLE_CLASSEMENT[d.classement],
+      d.postesDeclares ?? '',
+      d.ecartBesoinDeclare ?? '',
+      d.calcul.remActuel ?? '',
+      d.priorite.pointsAccessibilite,
+      d.priorite.pointsSecurite,
+      d.priorite.poids,
+      d.priorite.niveauDifficulte,
+      d.priorite.pointsBesoin,
+      d.priorite.indice,
+      d.calcul.methode === 'norme_eleves' ? 'Norme élèves' : 'Repli : une classe = un maître',
+      SEVERITE_LABEL[d.severite],
     ]),
   )
 
   ajouter(
     'Zones_Securite',
-    ['Zone de sécurité', 'Écoles', 'Dont zone non renseignée', 'En déficit', 'Postes manquants', 'Points de sécurité σ', 'Restant après simulation', 'Règle appliquée'],
+    [
+      'Zone de sécurité',
+      'Écoles',
+      'Dont zone non renseignée',
+      'En déficit',
+      'Postes manquants',
+      'Points de sécurité σ',
+      'Restant après simulation',
+      'Règle appliquée',
+    ],
     ZONES_SECURITE.map(z => {
       const ecoles = diagnostic.schools.filter(d => (d.school.zoneSecurite ?? 'verte') === z)
       return [
@@ -144,7 +209,9 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
         ecoles.filter(d => d.besoinTheorique > 0).length,
         ecoles.reduce((s, d) => s + d.besoinTheorique, 0),
         diagnostic.settings.priorite.pointsSecurite[z],
-        resultat ? resultat.uncoveredPosts.filter(p => (p.priorite.zoneSecurite ?? 'verte') === z).length : 'Aucune simulation',
+        resultat
+          ? resultat.uncoveredPosts.filter(p => (p.priorite.zoneSecurite ?? 'verte') === z).length
+          : 'Aucune simulation',
         z === 'rouge' && diagnostic.settings.mobilite.regleZoneRouge
           ? 'Aucun poste imposé ni proposé hors vœux : volontaires, primes ou recrutement'
           : 'Affectations ordinaires',
@@ -154,7 +221,22 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
 
   ajouter(
     'Territoires',
-    ['Niveau', 'Région', 'Département', 'Commune', 'Écoles', 'En déficit', 'Avec excédent', 'Classes', "Enseignants État", 'Postes nécessaires', 'Postes déclarés', 'Excédent mobilisable', 'Élèves', "Élèves/enseignant État"],
+    [
+      'Niveau',
+      'Région',
+      'Département',
+      'Commune',
+      'Écoles',
+      'En déficit',
+      'Avec excédent',
+      'Classes',
+      'Enseignants État',
+      'Postes nécessaires',
+      'Postes déclarés',
+      'Excédent mobilisable',
+      'Élèves',
+      'Élèves/enseignant État',
+    ],
     lignesTerritoriales(arbre),
   )
 
@@ -163,9 +245,23 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
       'Qualite_Donnees',
       ['Type', 'Problème', 'Nombre', 'Conséquence', 'Exemples', 'Points retirés'],
       [
-        ...qualite.errors.map(e => ['Erreur', e.label, e.count, e.consequence, e.exemples.join(', '), -e.penalite] as CellValue[]),
-        ...qualite.warnings.map(w => ['Avertissement', w.label, w.count, w.consequence, w.exemples.join(', '), -w.penalite] as CellValue[]),
-        ...qualite.missingFields.map(f => [f.bloquant ? 'Colonne requise absente' : 'Colonne absente', f.label, '', f.consequence, '', f.bloquant ? -12 : 0] as CellValue[]),
+        ...qualite.errors.map(
+          e => ['Erreur', e.label, e.count, e.consequence, e.exemples.join(', '), -e.penalite] as CellValue[],
+        ),
+        ...qualite.warnings.map(
+          w => ['Avertissement', w.label, w.count, w.consequence, w.exemples.join(', '), -w.penalite] as CellValue[],
+        ),
+        ...qualite.missingFields.map(
+          f =>
+            [
+              f.bloquant ? 'Colonne requise absente' : 'Colonne absente',
+              f.label,
+              '',
+              f.consequence,
+              '',
+              f.bloquant ? -12 : 0,
+            ] as CellValue[],
+        ),
         ['Score', `${qualite.score} / 100 (${qualite.appreciation})`, '', '', '', ''],
       ],
     )
@@ -174,50 +270,174 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
   if (resultat) {
     ajouter(
       'Plan_Individualise',
-      ['Matricule', 'Nom', 'Prénom', 'Sous-système', "École d'origine", 'Commune origine', 'Affectation proposée', 'Commune', 'Département', 'Région', 'Nature du mouvement', 'Vœu satisfait', 'Statut', 'Année prévue', 'Étape', 'Périmètre', 'Score'],
+      [
+        'Matricule',
+        'Nom',
+        'Prénom',
+        'Sous-système',
+        "École d'origine",
+        'Commune origine',
+        'Affectation proposée',
+        'Commune',
+        'Département',
+        'Région',
+        'Nature du mouvement',
+        'Vœu satisfait',
+        'Statut',
+        'Année prévue',
+        'Étape',
+        'Périmètre',
+        'Score',
+      ],
       resultat.assignments.map(a => [
-        a.teacherId, a.nomEns, a.prenomEns, a.sousSysteme ?? '',
-        a.nomEtabOrigine, a.communeOrigine, a.nomEtabDestination, a.communeDestination, a.departementDestination, a.regionDestination,
-        LIBELLE_NATURE[a.nature], a.rangVoeu ?? '', LIBELLE_STATUT_PROPOSITION[a.statut], a.annee, a.phase,
-        LIBELLE_PROXIMITE[a.niveauProximite], a.score,
+        a.teacherId,
+        a.nomEns,
+        a.prenomEns,
+        a.sousSysteme ?? '',
+        a.nomEtabOrigine,
+        a.communeOrigine,
+        a.nomEtabDestination,
+        a.communeDestination,
+        a.departementDestination,
+        a.regionDestination,
+        LIBELLE_NATURE[a.nature],
+        a.rangVoeu ?? '',
+        LIBELLE_STATUT_PROPOSITION[a.statut],
+        a.annee,
+        a.phase,
+        LIBELLE_PROXIMITE[a.niveauProximite],
+        a.score,
       ]),
     )
 
     ajouter(
       'Synthese_Voeux',
-      ['Rang', 'Matricule', 'Nom', 'Prénom', "École d'attache", 'Excédent', 'Ancienneté poste', 'Recevable', 'Motifs', 'A', 'Z', 'Vœu 1', 'S vœu 1', 'Vœu 2', 'S vœu 2', 'Vœu 3', 'S vœu 3', 'Issue', 'Détail'],
+      [
+        'Rang',
+        'Matricule',
+        'Nom',
+        'Prénom',
+        "École d'attache",
+        'Excédent',
+        'Ancienneté poste',
+        'Recevable',
+        'Motifs',
+        'A',
+        'Z',
+        'Vœu 1',
+        'S vœu 1',
+        'Vœu 2',
+        'S vœu 2',
+        'Vœu 3',
+        'S vœu 3',
+        'Issue',
+        'Détail',
+      ],
       [...resultat.candidatures]
         .sort((a, b) => a.rangClassement - b.rangClassement)
         .map(c => [
-          c.rangClassement, c.teacher.id, c.teacher.nom, c.teacher.prenom, c.ecoleOrigine.nom, c.ecoleOrigine.excedent,
-          c.teacher.anciennetePosteAns, c.recevable ? 'Oui' : 'Non', c.motifsIrrecevabilite.join(' ; '),
-          c.pointsAnciennete, c.pointsZoneDifficile,
+          c.rangClassement,
+          c.teacher.id,
+          c.teacher.nom,
+          c.teacher.prenom,
+          c.ecoleOrigine.nom,
+          c.ecoleOrigine.excedent,
+          c.teacher.anciennetePosteAns,
+          c.recevable ? 'Oui' : 'Non',
+          c.motifsIrrecevabilite.join(' ; '),
+          c.pointsAnciennete,
+          c.pointsZoneDifficile,
           ...[0, 1, 2].flatMap(i => {
             const v = c.voeux[i]
-            return v ? [`${v.nomEtab} (${LIBELLE_STATUT_VOEU[v.statut]})`, v.statut === 'examine' ? v.score : ''] : ['', '']
+            return v
+              ? [`${v.nomEtab} (${LIBELLE_STATUT_VOEU[v.statut]})`, v.statut === 'examine' ? v.score : '']
+              : ['', '']
           }),
-          LIBELLE_ISSUE[c.issue], c.detailIssue,
+          LIBELLE_ISSUE[c.issue],
+          c.detailIssue,
         ]),
     )
 
     ajouter(
       'Postes_Classes',
-      ['Rang', 'Poste', 'Code', 'Établissement ou structure', 'Commune', 'Département', 'Région', 'Sous-système', 'Poids w', 'Niveau', 'β', 'Indice u', 'Zone de sécurité', 'Pourvu'],
+      [
+        'Rang',
+        'Poste',
+        'Code',
+        'Établissement ou structure',
+        'Commune',
+        'Département',
+        'Région',
+        'Sous-système',
+        'Poids w',
+        'Niveau',
+        'β',
+        'Indice u',
+        'Zone de sécurité',
+        'Pourvu',
+      ],
       resultat.postes.map(p => [
-        p.rang, p.id, p.schoolId, p.nomEtab, p.commune, p.departement, p.region, p.sousSysteme ?? '',
-        p.priorite.poids, p.priorite.niveauDifficulte, p.priorite.pointsBesoin, p.priorite.indice, libelleZoneSecurite(p.priorite.zoneSecurite),
+        p.rang,
+        p.id,
+        p.schoolId,
+        p.nomEtab,
+        p.commune,
+        p.departement,
+        p.region,
+        p.sousSysteme ?? '',
+        p.priorite.poids,
+        p.priorite.niveauDifficulte,
+        p.priorite.pointsBesoin,
+        p.priorite.indice,
+        libelleZoneSecurite(p.priorite.zoneSecurite),
         p.pourvu ? 'Oui' : 'Non',
       ]),
     )
 
     ajouter(
       'Synthese_Sous_Systemes',
-      ['Moment', 'Sous-système', 'Besoin B', 'Excédent X', 'Couvrable C', 'Restant R', 'Salles manquantes', 'Effectif E', 'Recrutement à prévoir', "Degré d'aléa"],
+      [
+        'Moment',
+        'Sous-système',
+        'Besoin B',
+        'Excédent X',
+        'Couvrable C',
+        'Restant R',
+        'Salles manquantes',
+        'Effectif E',
+        'Recrutement à prévoir',
+        "Degré d'aléa",
+      ],
       (['avant', 'apres'] as const).flatMap(moment => {
         const s = moment === 'avant' ? resultat.syntheseAvant : resultat.syntheseApres
         return [
-          ...s.parSousSysteme.map(g => [moment === 'avant' ? 'Avant le plan' : 'Après le plan', LIBELLE_SOUS_SYSTEME[g.sousSysteme], g.besoin, g.excedent, g.couvrable, g.restant, g.sallesManquantes, g.effectif, g.recrutementAPrevoir, ''] as CellValue[]),
-          [moment === 'avant' ? 'Avant le plan' : 'Après le plan', 'Total', s.besoin, s.excedent, s.couvrable, s.restant, s.sallesManquantes, '', s.recrutementAPrevoir, s.degreAlea ?? ''] as CellValue[],
+          ...s.parSousSysteme.map(
+            g =>
+              [
+                moment === 'avant' ? 'Avant le plan' : 'Après le plan',
+                LIBELLE_SOUS_SYSTEME[g.sousSysteme],
+                g.besoin,
+                g.excedent,
+                g.couvrable,
+                g.restant,
+                g.sallesManquantes,
+                g.effectif,
+                g.recrutementAPrevoir,
+                '',
+              ] as CellValue[],
+          ),
+          [
+            moment === 'avant' ? 'Avant le plan' : 'Après le plan',
+            'Total',
+            s.besoin,
+            s.excedent,
+            s.couvrable,
+            s.restant,
+            s.sallesManquantes,
+            '',
+            s.recrutementAPrevoir,
+            s.degreAlea ?? '',
+          ] as CellValue[],
         ]
       }),
     )
@@ -225,22 +445,69 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
     ajouter(
       'Projections_N1_a_N3',
       [
-        'Code', 'École', 'Sous-système', 'Région', 'Département', 'Commune', 'Indice u', 'BMAX', 'Dotation D', 'Cible K',
-        'Besoin avant plan', 'Excédent avant plan', 'Arrivants', 'Sortants', 'Salles manquantes',
-        ...['N+1', 'N+2', 'N+3'].flatMap(a => [`Départs retraite ${a}`, `Effectif ${a}`, `Besoin ${a}`, `Excédent ${a}`]),
+        'Code',
+        'École',
+        'Sous-système',
+        'Région',
+        'Département',
+        'Commune',
+        'Indice u',
+        'BMAX',
+        'Dotation D',
+        'Cible K',
+        'Besoin avant plan',
+        'Excédent avant plan',
+        'Arrivants',
+        'Sortants',
+        'Salles manquantes',
+        ...['N+1', 'N+2', 'N+3'].flatMap(a => [
+          `Départs retraite ${a}`,
+          `Effectif ${a}`,
+          `Besoin ${a}`,
+          `Excédent ${a}`,
+        ]),
       ],
       resultat.projectionPluriannuelle.ecoles.map(e => [
-        e.schoolId, e.nomEtab, e.sousSysteme ?? '', e.region, e.departement, e.commune, e.indicePriorite, e.bmax ?? '', e.dotation, e.cible,
-        e.besoinAvantPlan, e.excedentAvantPlan, e.arrivants.join(', '), e.sortants.join(', '), e.sallesManquantes,
+        e.schoolId,
+        e.nomEtab,
+        e.sousSysteme ?? '',
+        e.region,
+        e.departement,
+        e.commune,
+        e.indicePriorite,
+        e.bmax ?? '',
+        e.dotation,
+        e.cible,
+        e.besoinAvantPlan,
+        e.excedentAvantPlan,
+        e.arrivants.join(', '),
+        e.sortants.join(', '),
+        e.sallesManquantes,
         ...e.annees.flatMap(a => [a.departsRetraite, a.effectif, a.besoin, a.excedent]),
       ]),
     )
 
     ajouter(
       'Projection_Territoire',
-      ['Rentrée', 'Sous-système', 'Effectif', 'Départs retraite', 'Attrition attendue', 'Besoin B', 'Excédent X', 'Recrutement à prévoir'],
+      [
+        'Rentrée',
+        'Sous-système',
+        'Effectif',
+        'Départs retraite',
+        'Attrition attendue',
+        'Besoin B',
+        'Excédent X',
+        'Recrutement à prévoir',
+      ],
       resultat.projectionPluriannuelle.territoire.map(t => [
-        t.annee, LIBELLE_SOUS_SYSTEME[t.sousSysteme], t.effectif, t.departsRetraite, t.attrition, t.besoin, t.excedent, t.recrutementAPrevoir,
+        t.annee,
+        LIBELLE_SOUS_SYSTEME[t.sousSysteme],
+        t.effectif,
+        t.departsRetraite,
+        t.attrition,
+        t.besoin,
+        t.excedent,
+        t.recrutementAPrevoir,
       ]),
     )
 
@@ -248,26 +515,86 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
     if (rouges.length > 0) {
       ajouter(
         'Postes_Zone_Rouge',
-        ['Poste', 'Code', 'Établissement', 'Commune', 'Département', 'Région', 'Sous-système', 'Indice u', 'Traitement'],
-        rouges.map(p => [p.id, p.schoolId, p.nomEtab, p.commune, p.departement, p.region, p.sousSysteme ?? '', p.priorite.indice, 'Volontariat, primes de zone difficile ou recrutement']),
+        [
+          'Poste',
+          'Code',
+          'Établissement',
+          'Commune',
+          'Département',
+          'Région',
+          'Sous-système',
+          'Indice u',
+          'Traitement',
+        ],
+        rouges.map(p => [
+          p.id,
+          p.schoolId,
+          p.nomEtab,
+          p.commune,
+          p.departement,
+          p.region,
+          p.sousSysteme ?? '',
+          p.priorite.indice,
+          'Volontariat, primes de zone difficile ou recrutement',
+        ]),
       )
     }
 
     // Journal d'audit : chaque décision et chaque proposition, horodatées, avec leur statut.
     const journal: CellValue[][] = []
     for (const { fait } of resultat.faitsPrince.filter(e => e.statut === 'applique')) {
-      journal.push([fait.decideLe, 'Fait de Prince', fait.teacherId, fait.enseignant, fait.origine.nom, fait.destination.nom, 'Décision de la DRH', fait.reference || '—'])
+      journal.push([
+        fait.decideLe,
+        'Fait de Prince',
+        fait.teacherId,
+        fait.enseignant,
+        fait.origine.nom,
+        fait.destination.nom,
+        'Décision de la DRH',
+        fait.reference || '—',
+      ])
     }
     for (const { decision: d, appliquee, motif } of resultat.arbitrages) {
-      journal.push([d.decideLe, `Commission ${d.instance === 'centrale' ? 'centrale' : 'régionale'}`, d.teacherId, d.nomEnseignant, d.propositionInitiale?.nomEtab ?? '', d.nomEtabDestination ?? d.propositionInitiale?.nomEtab ?? '', `${d.decision}${appliquee ? '' : ` (non appliquée : ${motif})`}`, d.motif])
+      journal.push([
+        d.decideLe,
+        `Commission ${d.instance === 'centrale' ? 'centrale' : 'régionale'}`,
+        d.teacherId,
+        d.nomEnseignant,
+        d.propositionInitiale?.nomEtab ?? '',
+        d.nomEtabDestination ?? d.propositionInitiale?.nomEtab ?? '',
+        `${d.decision}${appliquee ? '' : ` (non appliquée : ${motif})`}`,
+        d.motif,
+      ])
     }
     for (const a of resultat.assignments) {
-      journal.push([resultat.computedAt, a.phase, a.teacherId, `${a.nomEns} ${a.prenomEns}`.trim(), a.nomEtabOrigine, a.nomEtabDestination, LIBELLE_STATUT_PROPOSITION[a.statut], `${LIBELLE_NATURE[a.nature]}${a.rangVoeu ? ` (vœu ${a.rangVoeu})` : ''}`])
+      journal.push([
+        resultat.computedAt,
+        a.phase,
+        a.teacherId,
+        `${a.nomEns} ${a.prenomEns}`.trim(),
+        a.nomEtabOrigine,
+        a.nomEtabDestination,
+        LIBELLE_STATUT_PROPOSITION[a.statut],
+        `${LIBELLE_NATURE[a.nature]}${a.rangVoeu ? ` (vœu ${a.rangVoeu})` : ''}`,
+      ])
     }
     for (const c of resultat.candidatures.filter(x => x.issue === 'irrecevable' || x.issue === 'depart_non_valide')) {
-      journal.push([resultat.computedAt, 'Recevabilité', c.teacher.id, `${c.teacher.nom} ${c.teacher.prenom}`.trim(), c.ecoleOrigine.nom, '', 'Rejeté', c.detailIssue])
+      journal.push([
+        resultat.computedAt,
+        'Recevabilité',
+        c.teacher.id,
+        `${c.teacher.nom} ${c.teacher.prenom}`.trim(),
+        c.ecoleOrigine.nom,
+        '',
+        'Rejeté',
+        c.detailIssue,
+      ])
     }
-    ajouter('Journal_Audit', ['Horodatage', 'Étape', 'Matricule', 'Enseignant', 'Origine', 'Destination', 'Statut', 'Motif'], journal)
+    ajouter(
+      'Journal_Audit',
+      ['Horodatage', 'Étape', 'Matricule', 'Enseignant', 'Origine', 'Destination', 'Statut', 'Motif'],
+      journal,
+    )
 
     if (resultat.combinaisons.length > 0) {
       ajouter(
@@ -281,7 +608,13 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
       ajouter(
         'Projection_N2',
         ['Matricule', 'Enseignant', "École d'attache", 'Poste projeté en N+2', 'Vœu'],
-        resultat.projectionsN2.map(p => [p.teacherId, p.nom, p.nomEtabOrigine, p.nomEtab ?? 'Aucune solution prévisible', p.rangVoeu ?? '']),
+        resultat.projectionsN2.map(p => [
+          p.teacherId,
+          p.nom,
+          p.nomEtabOrigine,
+          p.nomEtab ?? 'Aucune solution prévisible',
+          p.rangVoeu ?? '',
+        ]),
       )
     }
 
@@ -290,8 +623,24 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
         'Nouveaux_Recrutes',
         ['Candidat', 'Nom', 'Note', 'Poste', 'Commune', 'Issue'],
         [
-          ...resultat.recrutes.affectations.map(a => [a.recrueId, a.nom, a.note, a.nomEtab, a.commune, a.issue === 'choix' ? `Choix ${a.rangChoix}` : a.issue === 'departement' ? 'Extension au département' : 'Extension à la région'] as CellValue[]),
-          ...resultat.recrutes.vivierNational.map(v => [v.recrueId, v.nom, v.note, '', '', `Vivier national — ${v.motif}`] as CellValue[]),
+          ...resultat.recrutes.affectations.map(
+            a =>
+              [
+                a.recrueId,
+                a.nom,
+                a.note,
+                a.nomEtab,
+                a.commune,
+                a.issue === 'choix'
+                  ? `Choix ${a.rangChoix}`
+                  : a.issue === 'departement'
+                    ? 'Extension au département'
+                    : 'Extension à la région',
+              ] as CellValue[],
+          ),
+          ...resultat.recrutes.vivierNational.map(
+            v => [v.recrueId, v.nom, v.note, '', '', `Vivier national — ${v.motif}`] as CellValue[],
+          ),
         ],
       )
     }
@@ -299,11 +648,29 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
     if (resultat.arbitrages.length > 0) {
       ajouter(
         'Arbitrages',
-        ['Enseignant', 'Matricule', 'Proposition initiale', 'Décision', 'École retenue', 'Changement de sous-système', 'Instance', 'Motif', 'Date', 'Appliquée'],
+        [
+          'Enseignant',
+          'Matricule',
+          'Proposition initiale',
+          'Décision',
+          'École retenue',
+          'Changement de sous-système',
+          'Instance',
+          'Motif',
+          'Date',
+          'Appliquée',
+        ],
         resultat.arbitrages.map(({ decision: d, appliquee, motif }) => [
-          d.nomEnseignant, d.teacherId, d.propositionInitiale?.nomEtab ?? '', d.decision, d.nomEtabDestination ?? '',
-          d.changementSousSysteme ? 'Oui' : 'Non', d.instance === 'centrale' ? 'Centrale' : 'Régionale', d.motif,
-          new Date(d.decideLe).toLocaleDateString('fr-FR'), appliquee ? 'Oui' : `Non — ${motif}`,
+          d.nomEnseignant,
+          d.teacherId,
+          d.propositionInitiale?.nomEtab ?? '',
+          d.decision,
+          d.nomEtabDestination ?? '',
+          d.changementSousSysteme ? 'Oui' : 'Non',
+          d.instance === 'centrale' ? 'Centrale' : 'Régionale',
+          d.motif,
+          new Date(d.decideLe).toLocaleDateString('fr-FR'),
+          appliquee ? 'Oui' : `Non — ${motif}`,
         ]),
       )
     }
@@ -312,51 +679,126 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
       'Justification_Affectations',
       ['Poste', 'Matricule', 'Composante du score', 'Valeur', 'Poids', 'Contribution'],
       resultat.assignments.flatMap(a =>
-        a.breakdown.components.map(c => [a.postId, a.teacherId, c.label, c.valeur, c.poids, c.contribution] as CellValue[]),
+        a.breakdown.components.map(
+          c => [a.postId, a.teacherId, c.label, c.valeur, c.poids, c.contribution] as CellValue[],
+        ),
       ),
     )
 
     ajouter(
       'Vivier_Mobilisable',
-      ['Matricule', 'Nom', 'Prénom', 'École origine', 'Commune', 'Département', 'Excédent de l’école', 'Rang dans l’école', 'Ancienneté poste', 'Âge', 'Barème', 'Affecté'],
+      [
+        'Matricule',
+        'Nom',
+        'Prénom',
+        'École origine',
+        'Commune',
+        'Département',
+        'Excédent de l’école',
+        'Rang dans l’école',
+        'Ancienneté poste',
+        'Âge',
+        'Barème',
+        'Affecté',
+      ],
       resultat.pool.teachers.map(p => [
-        p.teacher.id, p.teacher.nom, p.teacher.prenom, p.ecoleOrigine.nom,
-        p.teacher.communeAttache, p.teacher.departementAttache,
-        p.ecoleOrigine.excedentMobilisable, p.rangDansEcole,
-        p.teacher.anciennetePosteAns, p.teacher.age == null ? '' : Math.floor(p.teacher.age),
-        p.bareme, p.affecte ? 'Oui' : 'Non',
+        p.teacher.id,
+        p.teacher.nom,
+        p.teacher.prenom,
+        p.ecoleOrigine.nom,
+        p.teacher.communeAttache,
+        p.teacher.departementAttache,
+        p.ecoleOrigine.excedentMobilisable,
+        p.rangDansEcole,
+        p.teacher.anciennetePosteAns,
+        p.teacher.age == null ? '' : Math.floor(p.teacher.age),
+        p.bareme,
+        p.affecte ? 'Oui' : 'Non',
       ]),
     )
 
     ajouter(
       'Ecoles_Sources',
       ['Code', 'Établissement', 'Région', 'Département', 'Commune', 'Excédent mobilisable', 'Candidats retenus'],
-      resultat.pool.ecolesSources.map(e => [e.schoolId, e.nomEtab, e.region, e.departement, e.commune, e.excedentMobilisable, e.candidatsRetenus]),
+      resultat.pool.ecolesSources.map(e => [
+        e.schoolId,
+        e.nomEtab,
+        e.region,
+        e.departement,
+        e.commune,
+        e.excedentMobilisable,
+        e.candidatsRetenus,
+      ]),
     )
 
     ajouter(
       'Non_Affectes',
       ['Matricule', 'Nom', 'Prénom', 'École origine', 'Commune', 'Département', 'Barème'],
       resultat.unmatchedTeachers.map(p => [
-        p.teacher.id, p.teacher.nom, p.teacher.prenom, p.ecoleOrigine.nom,
-        p.teacher.communeAttache, p.teacher.departementAttache, p.bareme,
+        p.teacher.id,
+        p.teacher.nom,
+        p.teacher.prenom,
+        p.ecoleOrigine.nom,
+        p.teacher.communeAttache,
+        p.teacher.departementAttache,
+        p.bareme,
       ]),
     )
 
     ajouter(
       'Postes_Non_Pourvus',
-      ['Poste', 'Code établissement', 'Établissement', 'Commune', 'Département', 'Région', 'Zone', 'Zone de sécurité', 'Classes multigrades'],
-      resultat.uncoveredPosts.map(p => [p.id, p.schoolId, p.nomEtab, p.commune, p.departement, p.region, p.zone, libelleZoneSecurite(p.priorite.zoneSecurite), p.classesMultigrades]),
+      [
+        'Poste',
+        'Code établissement',
+        'Établissement',
+        'Commune',
+        'Département',
+        'Région',
+        'Zone',
+        'Zone de sécurité',
+        'Classes multigrades',
+      ],
+      resultat.uncoveredPosts.map(p => [
+        p.id,
+        p.schoolId,
+        p.nomEtab,
+        p.commune,
+        p.departement,
+        p.region,
+        p.zone,
+        libelleZoneSecurite(p.priorite.zoneSecurite),
+        p.classesMultigrades,
+      ]),
     )
 
     ajouter(
       'Avant_Apres',
       ['Indicateur', 'Avant', 'Après', 'Variation'],
       [
-        ['Établissements en déficit', resultat.before.ecolesEnDeficit, resultat.after.ecolesEnDeficit, resultat.after.ecolesEnDeficit - resultat.before.ecolesEnDeficit],
-        ['Postes vacants', resultat.before.postesVacants, resultat.after.postesVacants, resultat.after.postesVacants - resultat.before.postesVacants],
-        ['Déficit total', resultat.before.deficitTotal, resultat.after.deficitTotal, resultat.after.deficitTotal - resultat.before.deficitTotal],
-        ['Pression moyenne élèves/enseignant État', resultat.before.pressionMoyenne ?? 'Non renseigné', resultat.after.pressionMoyenne ?? 'Non renseigné', ''],
+        [
+          'Établissements en déficit',
+          resultat.before.ecolesEnDeficit,
+          resultat.after.ecolesEnDeficit,
+          resultat.after.ecolesEnDeficit - resultat.before.ecolesEnDeficit,
+        ],
+        [
+          'Postes vacants',
+          resultat.before.postesVacants,
+          resultat.after.postesVacants,
+          resultat.after.postesVacants - resultat.before.postesVacants,
+        ],
+        [
+          'Déficit total',
+          resultat.before.deficitTotal,
+          resultat.after.deficitTotal,
+          resultat.after.deficitTotal - resultat.before.deficitTotal,
+        ],
+        [
+          'Pression moyenne élèves/enseignant État',
+          resultat.before.pressionMoyenne ?? 'Non renseigné',
+          resultat.after.pressionMoyenne ?? 'Non renseigné',
+          '',
+        ],
       ],
     )
 
@@ -377,7 +819,16 @@ export async function exporterClasseurComplet(input: ExcelExportInput): Promise<
   if (decisionsPrince.length > 0) {
     ajouter(
       'Fait_De_Prince',
-      ['Matricule', 'Enseignant', 'École origine', 'Commune origine', 'École destination', 'Commune destination', 'Décidé le', 'Référence'],
+      [
+        'Matricule',
+        'Enseignant',
+        'École origine',
+        'Commune origine',
+        'École destination',
+        'Commune destination',
+        'Décidé le',
+        'Référence',
+      ],
       decisionsPrince.map(({ fait }) => [
         fait.teacherId,
         fait.enseignant,

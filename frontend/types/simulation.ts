@@ -265,12 +265,7 @@ export type ProximityLevel = 'meme_commune' | 'meme_iaeb' | 'meme_departement' |
 
 /** Sort d'un vœu au moment de l'examen. */
 export type StatutVoeu =
-  | 'examine'
-  | 'autre_sous_systeme'
-  | 'hors_referentiel'
-  | 'hors_perimetre'
-  | 'au_dela_du_maximum'
-  | 'meme_ecole'
+  'examine' | 'autre_sous_systeme' | 'hors_referentiel' | 'hors_perimetre' | 'au_dela_du_maximum' | 'meme_ecole'
 
 export interface VoeuExamine {
   rang: number
@@ -290,13 +285,7 @@ export interface VoeuExamine {
 
 /** Issue d'une candidature après traitement. */
 export type IssueCandidature =
-  | 'affecte_voeu'
-  | 'hors_voeux'
-  | 'projete_n2'
-  | 'sans_solution'
-  | 'irrecevable'
-  | 'depart_non_valide'
-  | 'arbitrage'
+  'affecte_voeu' | 'hors_voeux' | 'projete_n2' | 'sans_solution' | 'irrecevable' | 'depart_non_valide' | 'arbitrage'
 
 /** Un enseignant qui demande une mutation, avec ses vœux et son score (§3.2 et §3.3). */
 export interface Candidature {

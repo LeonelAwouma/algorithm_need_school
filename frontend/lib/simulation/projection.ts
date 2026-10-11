@@ -90,7 +90,7 @@ export function projeterPluriannuel(
       sallesManquantes: d.calcul.sallesManquantes,
       annees: ANNEES.map((annee, k) => ({
         annee,
-        departsRetraite: k === 0 ? d.calcul.departsConnus : retraites[k - 1].get(id) ?? 0,
+        departsRetraite: k === 0 ? d.calcul.departsConnus : (retraites[k - 1].get(id) ?? 0),
         effectif: effectifs[k],
         besoin: Math.max(0, d.calcul.cible - effectifs[k]),
         excedent: Math.max(0, effectifs[k] - d.calcul.dotation),
@@ -109,7 +109,8 @@ export function projeterPluriannuel(
   for (const [sousSysteme, liste] of groupes) {
     let attritionCumulee = 0
     ANNEES.forEach((annee, k) => {
-      const somme = (f: (a: ProjectionEcole['annees'][number]) => number) => liste.reduce((s, e) => s + f(e.annees[k]), 0)
+      const somme = (f: (a: ProjectionEcole['annees'][number]) => number) =>
+        liste.reduce((s, e) => s + f(e.annees[k]), 0)
       const effectif = somme(a => a.effectif)
       const besoin = somme(a => a.besoin)
       const excedent = somme(a => a.excedent)

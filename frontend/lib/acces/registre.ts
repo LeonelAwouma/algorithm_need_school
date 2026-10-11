@@ -42,7 +42,11 @@ export function normaliserCode(code: string): string {
 
 async function deriver(secret: string, sel: Uint8Array): Promise<string> {
   const cle = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), 'PBKDF2', false, ['deriveBits'])
-  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: sel, iterations: ITERATIONS }, cle, 256)
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: sel, iterations: ITERATIONS },
+    cle,
+    256,
+  )
   return enHexa(new Uint8Array(bits))
 }
 
@@ -132,14 +136,22 @@ function retirerCodesDeRegion(registre: RegistreAcces, region: RegionCameroun, m
 }
 
 /** Le DRH retire l'accès d'une région : le code et l'entrée validée cessent de valoir. */
-export function retirerAcces(registre: RegistreAcces, region: RegionCameroun, maintenant: Date = new Date()): RegistreAcces {
+export function retirerAcces(
+  registre: RegistreAcces,
+  region: RegionCameroun,
+  maintenant: Date = new Date(),
+): RegistreAcces {
   return retirerCodesDeRegion(registre, region, maintenant)
 }
 
 // --- Entrée d'un délégué -------------------------------------------------------------
 
 /** Temps restant avant de pouvoir réessayer, 0 si la région n'est pas bloquée. */
-export function blocageRestantMs(registre: RegistreAcces, region: RegionCameroun, maintenant: Date = new Date()): number {
+export function blocageRestantMs(
+  registre: RegistreAcces,
+  region: RegionCameroun,
+  maintenant: Date = new Date(),
+): number {
   const e = registre.echecs[region]
   if (!e || e.nombre < ESSAIS_AVANT_BLOCAGE) return 0
   return Math.max(0, new Date(e.dernierLe).getTime() + DUREE_BLOCAGE_MS - maintenant.getTime())
@@ -162,7 +174,10 @@ export async function demanderEntree(
     const minutes = Math.ceil(restant / 60_000)
     return {
       registre,
-      resultat: { type: 'refus', motif: `Trop d'essais infructueux pour cette région. Réessayez dans ${minutes} minute${minutes > 1 ? 's' : ''}.` },
+      resultat: {
+        type: 'refus',
+        motif: `Trop d'essais infructueux pour cette région. Réessayez dans ${minutes} minute${minutes > 1 ? 's' : ''}.`,
+      },
     }
   }
 
@@ -175,7 +190,10 @@ export async function demanderEntree(
     const expire = precedent && maintenant.getTime() - new Date(precedent.dernierLe).getTime() > DUREE_BLOCAGE_MS
     const nombre = (precedent && !expire ? precedent.nombre : 0) + 1
     return {
-      registre: { ...registre, echecs: { ...registre.echecs, [region]: { nombre, dernierLe: maintenant.toISOString() } } },
+      registre: {
+        ...registre,
+        echecs: { ...registre.echecs, [region]: { nombre, dernierLe: maintenant.toISOString() } },
+      },
       resultat: { type: 'refus', motif: 'Région ou code d’accès incorrect.' },
     }
   }
@@ -193,7 +211,10 @@ export async function demanderEntree(
     demandeLe: maintenant.toISOString(),
     decideLe: null,
   }
-  return { registre: { ...registre, echecs, demandes: [...registre.demandes, demande] }, resultat: { type: 'attente', demande } }
+  return {
+    registre: { ...registre, echecs, demandes: [...registre.demandes, demande] },
+    resultat: { type: 'attente', demande },
+  }
 }
 
 /** Le DRH valide ou refuse une entrée. Une décision peut être revue à tout moment. */
@@ -206,7 +227,9 @@ export function deciderEntree(
   if (!registre.demandes.some(d => d.id === demandeId)) throw new Error('Demande introuvable.')
   return {
     ...registre,
-    demandes: registre.demandes.map(d => (d.id === demandeId ? { ...d, statut, decideLe: maintenant.toISOString() } : d)),
+    demandes: registre.demandes.map(d =>
+      d.id === demandeId ? { ...d, statut, decideLe: maintenant.toISOString() } : d,
+    ),
   }
 }
 
@@ -219,5 +242,11 @@ export function demandesEnAttente(registre: RegistreAcces): DemandeEntree[] {
 export function estRegistre(valeur: unknown): valeur is RegistreAcces {
   if (typeof valeur !== 'object' || valeur === null) return false
   const r = valeur as Partial<RegistreAcces>
-  return r.version === 1 && Array.isArray(r.codes) && Array.isArray(r.demandes) && typeof r.echecs === 'object' && r.echecs !== null
+  return (
+    r.version === 1 &&
+    Array.isArray(r.codes) &&
+    Array.isArray(r.demandes) &&
+    typeof r.echecs === 'object' &&
+    r.echecs !== null
+  )
 }

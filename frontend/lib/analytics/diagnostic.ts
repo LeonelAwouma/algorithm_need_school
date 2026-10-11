@@ -72,7 +72,8 @@ export function retraitesParEcole(teachers: Teacher[], settings: EngineSettings,
   for (const t of teachers) {
     if (!compteDansEffectif(t) || !t.idEtabAttache) continue
     const age = ageA(t, date)
-    if (age != null && age >= settings.besoin.ageRetraite) parEcole.set(t.idEtabAttache, (parEcole.get(t.idEtabAttache) ?? 0) + 1)
+    if (age != null && age >= settings.besoin.ageRetraite)
+      parEcole.set(t.idEtabAttache, (parEcole.get(t.idEtabAttache) ?? 0) + 1)
   }
   return parEcole
 }
@@ -126,7 +127,9 @@ export function normeEleves(eleves: number, settings: EngineSettings): number {
 export function bmax(school: School, settings: EngineSettings): number | null {
   if (school.nbSallesClasse == null) return null
   const salles = Math.max(0, school.nbSallesClasse)
-  const doubleFlux = settings.besoin.doubleFluxAutorise ? Math.min(salles, Math.max(0, school.sallesDoubleFlux ?? 0)) : 0
+  const doubleFlux = settings.besoin.doubleFluxAutorise
+    ? Math.min(salles, Math.max(0, school.sallesDoubleFlux ?? 0))
+    : 0
   return salles + doubleFlux
 }
 
@@ -141,7 +144,8 @@ export function calculerBesoin(school: School, settings: EngineSettings, departs
     ? Math.min(enPoste, Math.max(0, departs ?? school.departsConnusDeclares ?? 0))
     : 0
   const E = enPoste - departsConnus
-  const eleves = school.effectifTotalEleves != null && school.effectifTotalEleves >= 0 ? school.effectifTotalEleves : null
+  const eleves =
+    school.effectifTotalEleves != null && school.effectifTotalEleves >= 0 ? school.effectifTotalEleves : null
 
   const methode: CalculBesoin['methode'] = eleves != null ? 'norme_eleves' : 'repli_classes'
   const P =
@@ -206,7 +210,12 @@ export function niveauDifficulte(poids: number, regles: ReglesPriorite): 1 | 2 |
 }
 
 /** β : 0 jusqu'à un REM de 80, 5 jusqu'à 100, 10 jusqu'à 150, 15 au-delà ou pour une école sans maître. */
-export function pointsBesoin(remActuel: number | null, enseignantsEnPoste: number, eleves: number | null, regles: ReglesPriorite): number {
+export function pointsBesoin(
+  remActuel: number | null,
+  enseignantsEnPoste: number,
+  eleves: number | null,
+  regles: ReglesPriorite,
+): number {
   if (enseignantsEnPoste === 0 && (eleves ?? 0) > 0) return regles.pointsBesoinAuDela
   if (remActuel == null) return 0
   for (const tranche of [...regles.tranchesBesoin].sort((a, b) => a.remMax - b.remMax)) {
@@ -222,7 +231,10 @@ export function calculerPriorite(school: School, settings: EngineSettings, calcu
   // w = α + σ avec les coefficients par défaut (1 et 1) ; des coefficients différents
   // doivent rester cohérents avec les seuils des niveaux de difficulté.
   const poids = Math.round((regles.coefAccessibilite * alpha + regles.coefSecurite * sigma) * 100) / 100
-  const beta = school.estStructure || !calcul ? 0 : pointsBesoin(calcul.remActuel, calcul.enseignantsEnPoste, calcul.eleves, regles)
+  const beta =
+    school.estStructure || !calcul
+      ? 0
+      : pointsBesoin(calcul.remActuel, calcul.enseignantsEnPoste, calcul.eleves, regles)
   return {
     pointsAccessibilite: alpha,
     pointsSecurite: sigma,
@@ -398,13 +410,15 @@ export function agregerTotaux(diagnostics: SchoolDiagnostic[]): TerritorialTotal
   for (const d of diagnostics) {
     classes += d.nbClasses
     enseignantsEtat += d.enseignantsEtat
-    if (d.school.nbAutresEnseignants != null) autresEnseignants = (autresEnseignants ?? 0) + d.school.nbAutresEnseignants
+    if (d.school.nbAutresEnseignants != null)
+      autresEnseignants = (autresEnseignants ?? 0) + d.school.nbAutresEnseignants
     postesNecessaires += d.besoinTheorique
     if (d.postesDeclares != null) postesDeclares = (postesDeclares ?? 0) + d.postesDeclares
     excedentMobilisable += d.excedentTheorique
     sallesManquantes += d.calcul.sallesManquantes
     surnombre += d.calcul.surnombre
-    if (d.school.effectifTotalEleves != null) effectifTotalEleves = (effectifTotalEleves ?? 0) + d.school.effectifTotalEleves
+    if (d.school.effectifTotalEleves != null)
+      effectifTotalEleves = (effectifTotalEleves ?? 0) + d.school.effectifTotalEleves
     classesMultigrades += d.school.classesMultigrades
     if (d.besoinTheorique > 0) ecolesEnDeficit++
     if (d.excedentTheorique > 0) ecolesAvecExcedent++
@@ -453,7 +467,11 @@ export function runDiagnostic(schools: School[], settings: EngineSettings, teach
   }
 
   const exploitables = schools.filter(
-    s => !s.estStructure && s.id !== '' && (s.nbClasses > 0 || (s.effectifTotalEleves ?? 0) > 0) && s.nbEnseignantsEtat >= 0,
+    s =>
+      !s.estStructure &&
+      s.id !== '' &&
+      (s.nbClasses > 0 || (s.effectifTotalEleves ?? 0) > 0) &&
+      s.nbEnseignantsEtat >= 0,
   )
 
   // Une unité de calcul n'apparaît qu'une fois : en cas de doublon d'identifiant,

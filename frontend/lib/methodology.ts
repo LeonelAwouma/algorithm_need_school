@@ -25,14 +25,16 @@ export const NOTIONS: NotionMethodologique[] = [
     explication:
       "On part des enseignants de l'État qui tiennent une classe et on retire les départs déjà connus, notamment les retraites. Sans cette déduction, une école dont un maître part à la retraite paraîtrait équilibrée et son poste ne serait ouvert qu'après la rentrée.",
     formule: 'E = enseignants de l’État en poste − départs connus',
-    parametrable: "Les départs sont lus dans le fichier des établissements quand il les déclare ; sinon, ils sont repérés dans le fichier des enseignants à partir de l'âge de la retraite (60 ans par défaut).",
+    parametrable:
+      "Les départs sont lus dans le fichier des établissements quand il les déclare ; sinon, ils sont repérés dans le fichier des enseignants à partir de l'âge de la retraite (60 ans par défaut).",
   },
   {
     titre: 'Norme — de combien de maîtres les élèves ont besoin',
     explication:
       "La note de cadrage retient un maître pour 60 élèves, arrondi à l'entier supérieur : 250 élèves demandent 5 maîtres. Une école ne descend cependant jamais sous un minimum pédagogique, qui dépend de ses niveaux ouverts : une école complète de 6 niveaux, regroupés deux à deux en classes multigrades, a besoin d'au moins 3 maîtres.",
     formule: 'P = ⌈N ÷ 60⌉ ; m = max(⌈niveaux ÷ 2⌉ ; niveaux − classes multigrades) ; dotation D = max(P ; m)',
-    parametrable: "Quand le fichier renseigne les classes multigrades, le minimum pédagogique se calcule école par école : sans multigrade, un maître par niveau ouvert (6 pour une école complète) ; avec multigrades, chaque classe multigrade économise un maître, jusqu'au regroupement deux à deux (3 maîtres). La norme, la tolérance d'arrondi et le regroupement sont des paramètres à valider par la DRH. Sans effectif d'élèves, l'application se replie sur « une classe, un maître » et le signale.",
+    parametrable:
+      "Quand le fichier renseigne les classes multigrades, le minimum pédagogique se calcule école par école : sans multigrade, un maître par niveau ouvert (6 pour une école complète) ; avec multigrades, chaque classe multigrade économise un maître, jusqu'au regroupement deux à deux (3 maîtres). La norme, la tolérance d'arrondi et le regroupement sont des paramètres à valider par la DRH. Sans effectif d'élèves, l'application se replie sur « une classe, un maître » et le signale.",
   },
   {
     titre: 'BMAX — combien de maîtres les salles permettent d’affecter',
@@ -50,7 +52,7 @@ export const NOTIONS: NotionMethodologique[] = [
   {
     titre: 'Classement des écoles',
     explication:
-      "Une école est nécessiteuse si elle a un besoin (b > 0) : ses postes sont ouverts au redéploiement, puis au recrutement. Elle est excédentaire si elle a un excédent (x > 0) : ses maîtres au-delà de la dotation forment le vivier. Elle est à examiner si elle a un surnombre lié aux salles (a > 0), et équilibrée dans les autres cas. Un manque de salles (s > 0) est signalé à part, comme besoin en infrastructures, quel que soit le classement.",
+      'Une école est nécessiteuse si elle a un besoin (b > 0) : ses postes sont ouverts au redéploiement, puis au recrutement. Elle est excédentaire si elle a un excédent (x > 0) : ses maîtres au-delà de la dotation forment le vivier. Elle est à examiner si elle a un surnombre lié aux salles (a > 0), et équilibrée dans les autres cas. Un manque de salles (s > 0) est signalé à part, comme besoin en infrastructures, quel que soit le classement.',
   },
   {
     titre: 'Sous-systèmes francophone et anglophone',
@@ -61,7 +63,8 @@ export const NOTIONS: NotionMethodologique[] = [
     titre: 'Priorité des écoles — poids de vulnérabilité et indice',
     explication:
       "Le poids de vulnérabilité additionne des points d'accessibilité (urbain 5, rural 10, rural enclavé 20) et de sécurité (zone verte 0, jaune 10, rouge 25). Il fixe le niveau de difficulté de l'école. Comme il ne mesure pas l'ampleur du besoin, on lui ajoute des points de besoin selon le REM actuel. Les postes sont servis par indice décroissant ; à indice égal, les écoles passent avant les structures, puis l'école au REM le plus élevé.",
-    formule: 'w = α + σ ; niveau 1 si w ≥ 30, 2 si w ≥ 15, sinon 3 ; β = 0 (REM ≤ 80), 5 (≤ 100), 10 (≤ 150), 15 au-delà ou sans maître ; u = w + β',
+    formule:
+      'w = α + σ ; niveau 1 si w ≥ 30, 2 si w ≥ 15, sinon 3 ; β = 0 (REM ≤ 80), 5 (≤ 100), 10 (≤ 150), 15 au-delà ou sans maître ; u = w + β',
     parametrable: 'Points, seuils et tranches sont à valider par la hiérarchie et modifiables dans le Référentiel.',
   },
   {
@@ -74,13 +77,15 @@ export const NOTIONS: NotionMethodologique[] = [
     titre: 'Score de priorité — comment les candidats sont départagés',
     explication:
       "Pour chaque école demandée, le score additionne des points d'ancienneté au poste, des points de service en zone difficile et, le cas échéant, une bonification pour un motif justifié (santé, regroupement familial) visant cette école. Le poids de l'école n'entre pas dans le score : il est identique pour tous les candidats à une même école. À score égal, passe d'abord la plus grande ancienneté générale, puis le plus âgé, puis le meilleur rang de tirage au sort.",
-    formule: 'S = A + Z + B ; A = min(20 ; 10 + (années au poste − 6)) − 5 à moins de 5 ans de la retraite (0 avant 6 ans) ; Z = min(10 ; 2 × années en niveau 1 + années en niveau 2) ; B = 10',
+    formule:
+      'S = A + Z + B ; A = min(20 ; 10 + (années au poste − 6)) − 5 à moins de 5 ans de la retraite (0 avant 6 ans) ; Z = min(10 ; 2 × années en niveau 1 + années en niveau 2) ; B = 10',
   },
   {
     titre: 'Barème individuel (étage 1) — qui part en premier d’une école excédentaire',
     explication:
       "Le barème additionne cinq critères pondérés : la carrière et le service en zone difficile, l'ancienneté au poste, les charges familiales (chaque enfant à charge retire des points, pour protéger les familles), la formation continue et la cohorte d'âge (les plus jeunes sont les plus mobiles). Dans une école excédentaire, le maître au barème le plus élevé est proposé le premier pour un redéploiement obligatoire.",
-    formule: 'barème = 0,30 × (ancienneté générale + Z) + 0,25 × A + 0,20 × (points de situation − 2 × enfants) + 0,15 × min(10 ; 2 × formations) + 0,10 × cohorte (10 jeune, 8 médiane, 5 senior)',
+    formule:
+      'barème = 0,30 × (ancienneté générale + Z) + 0,25 × A + 0,20 × (points de situation − 2 × enfants) + 0,15 × min(10 ; 2 × formations) + 0,10 × cohorte (10 jeune, 8 médiane, 5 senior)',
     parametrable: 'Poids et points se règlent dans la configuration du moteur.',
   },
   {
@@ -88,13 +93,15 @@ export const NOTIONS: NotionMethodologique[] = [
     explication:
       "Pour un poste donné, le score d'appariement combine le barème du maître, le poids du poste, la proximité (même commune, même IAEB, même département) et des ajustements : jeune enseignant vers une école à classes multigrades, senior vers une structure d'encadrement ou une école sans multigrade, transition du rural vers l'urbain après 5 ans au poste, bonification sur l'école visée par un motif justifié. Il désigne, à proximité égale, le maître proposé en redéploiement obligatoire.",
     formule: 'score = 0,25 × barème + 0,25 × u + 0,25 × points de proximité + 0,25 × ajustements',
-    parametrable: "En variante, ce score peut aussi classer les candidats qui demandent une même école, à la place du score de priorité S du référentiel.",
+    parametrable:
+      'En variante, ce score peut aussi classer les candidats qui demandent une même école, à la place du score de priorité S du référentiel.',
   },
   {
     titre: 'Appariement — l’acceptation différée',
     explication:
       "Chaque candidat demande l'école placée en tête de sa liste ; chaque école garde provisoirement les mieux classés dans la limite de ses postes et refuse les autres ; chaque candidat refusé demande l'école suivante. Une acceptation reste provisoire jusqu'à la fin : c'est ce qui donne son nom à l'algorithme. Le résultat ne dépend pas de l'ordre de saisie, chaque refus s'explique par un candidat mieux classé, et ajouter une école à sa liste ne peut jamais nuire à l'enseignant.",
-    parametrable: "Variante : examiner les vœux de l'école la plus lourde à la plus légère. Elle fait perdre la propriété de sincérité.",
+    parametrable:
+      "Variante : examiner les vœux de l'école la plus lourde à la plus légère. Elle fait perdre la propriété de sincérité.",
   },
   {
     titre: 'Solutions proches, combinaisons et redéploiement obligatoire',
@@ -109,7 +116,7 @@ export const NOTIONS: NotionMethodologique[] = [
   {
     titre: 'Nouveaux recrutés',
     explication:
-      "Les nouveaux recrutés ne sont déployés que sur les postes restés vacants après le redéploiement. Le mieux classé au concours choisit le premier parmi ses trois choix ; à défaut, un poste lui est proposé dans le département, puis dans la région, puis il entre dans un vivier national pour arbitrage. Seuls les postes du sous-système de son concours lui sont proposés.",
+      'Les nouveaux recrutés ne sont déployés que sur les postes restés vacants après le redéploiement. Le mieux classé au concours choisit le premier parmi ses trois choix ; à défaut, un poste lui est proposé dans le département, puis dans la région, puis il entre dans un vivier national pour arbitrage. Seuls les postes du sous-système de son concours lui sont proposés.',
   },
   {
     titre: 'Projection sur l’année N+2',
@@ -121,7 +128,8 @@ export const NOTIONS: NotionMethodologique[] = [
     titre: 'Projection de N+1 à N+3',
     explication:
       "Pour chaque école, l'effectif part de la situation après le plan (mouvements et nouveaux recrutés compris), puis perd les enseignants qui atteignent l'âge de la retraite au cours de chaque année. Le besoin projeté suit la même règle que le besoin de la rentrée. L'attrition hors retraite est appliquée au territoire, par sous-système, et cumulée d'une année sur l'autre en l'absence de recrutement intermédiaire.",
-    formule: 'E(N+k) = E(N+k−1) − retraites ; besoin = max(0 ; K − E) ; recrutement à prévoir = Σ max(0 ; B − X) + attrition cumulée',
+    formule:
+      'E(N+k) = E(N+k−1) − retraites ; besoin = max(0 ; K − E) ; recrutement à prévoir = Σ max(0 ; B − X) + attrition cumulée',
   },
   {
     titre: 'Agrégation, recrutement à prévoir et degré d’aléa',
@@ -147,7 +155,7 @@ export const REGLES_MOTEUR: RegleMoteur[] = [
   {
     titre: 'Ordre des étapes',
     texte:
-      "1. décisions de commission déjà prises ; 2. postes ouverts classés par indice de priorité ; 3. synthèse des vœux et scores ; 4. acceptation différée sur les vœux intrarégionaux ; 5. dans le scénario étendu, acceptation différée sur les vœux interrégionaux ; 6. solution la plus proche ; 7. combinaisons pour la commission ; 8. redéploiement obligatoire ; 9. recalcul des besoins, nouveaux recrutés et projection N+2.",
+      '1. décisions de commission déjà prises ; 2. postes ouverts classés par indice de priorité ; 3. synthèse des vœux et scores ; 4. acceptation différée sur les vœux intrarégionaux ; 5. dans le scénario étendu, acceptation différée sur les vœux interrégionaux ; 6. solution la plus proche ; 7. combinaisons pour la commission ; 8. redéploiement obligatoire ; 9. recalcul des besoins, nouveaux recrutés et projection N+2.',
   },
   {
     titre: 'Limite des départs',
@@ -167,7 +175,7 @@ export const REGLES_MOTEUR: RegleMoteur[] = [
   {
     titre: 'Libellés de situation matrimoniale',
     texte:
-      "Les graphies sont rapprochées localement, en ignorant les accents, la casse, le genre et la ponctuation : « Marié », « Mariée » et « MARIE(E) » comptent pour la même situation. Une valeur non reconnue vaut zéro point et est listée dans la configuration du moteur.",
+      'Les graphies sont rapprochées localement, en ignorant les accents, la casse, le genre et la ponctuation : « Marié », « Mariée » et « MARIE(E) » comptent pour la même situation. Une valeur non reconnue vaut zéro point et est listée dans la configuration du moteur.',
   },
   {
     titre: 'Vérifications systématiques',

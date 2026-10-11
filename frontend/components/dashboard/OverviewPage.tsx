@@ -12,11 +12,28 @@
 import { useMemo } from 'react'
 import { ArrowRight, BarChart3, FileText, FlaskConical, Lightbulb, RefreshCw, Upload } from 'lucide-react'
 import { trierParPriorite } from '@/lib/analytics/diagnostic'
-import { MENTION_SIMULATION, pointsAttention, reductionDuDeficit, syntheseTableauDeBord } from '@/lib/analytics/narrative'
+import {
+  MENTION_SIMULATION,
+  pointsAttention,
+  reductionDuDeficit,
+  syntheseTableauDeBord,
+} from '@/lib/analytics/narrative'
 import { libelleNiveauEnfants } from '@/lib/analytics/territory'
 import { AVERTISSEMENT_SCENARIO_ETENDU, LIBELLE_SCOPE } from '@/lib/simulation/scenarios'
 import { AvantApres, Combo, CouvertureParScenario, Nuage, Repartition, type PointNuage } from '../charts'
-import { DataTable, EmptyState, KpiCard, Notice, Panel, Pill, ZoneSecuritePill, fmt, fmtDec, fmtPct, type Colonne } from '../common'
+import {
+  DataTable,
+  EmptyState,
+  KpiCard,
+  Notice,
+  Panel,
+  Pill,
+  ZoneSecuritePill,
+  fmt,
+  fmtDec,
+  fmtPct,
+  type Colonne,
+} from '../common'
 import { LIBELLE_ZONE_SECURITE, ZONES_SECURITE } from '@/lib/simulation/libelles'
 import { LIBELLE_SEVERITE } from '../layout'
 import type { PlanningStore } from '../usePlanningState'
@@ -68,7 +85,12 @@ function ZonesSecuritePanel({ store }: { store: PlanningStore }) {
     >
       <div className="zones-securite-grille">
         {parZone.map(z => (
-          <section key={z.zone} className="zone-securite-carte" data-zone={z.zone} aria-label={LIBELLE_ZONE_SECURITE[z.zone]}>
+          <section
+            key={z.zone}
+            className="zone-securite-carte"
+            data-zone={z.zone}
+            aria-label={LIBELLE_ZONE_SECURITE[z.zone]}
+          >
             <ZoneSecuritePill zone={z.zone} />
             <p className="zone-securite-chiffre">{fmt(z.ecoles)}</p>
             <p className="hint" style={{ margin: 0 }}>
@@ -209,7 +231,8 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
   }, [enfantsTerritoriaux, resultatAffiche, explorerTerritoire])
 
   const repartition = useMemo(() => {
-    const compte = (severite: SchoolDiagnostic['severite']) => diagnosticsFiltres.filter(d => d.severite === severite).length
+    const compte = (severite: SchoolDiagnostic['severite']) =>
+      diagnosticsFiltres.filter(d => d.severite === severite).length
     const seuilFaible = fmtPct(settings.seuilsSeverite.faible)
     const seuilImportant = fmtPct(settings.seuilsSeverite.important)
     return [
@@ -265,7 +288,10 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
 
   if (!diagnostic || !dataset) {
     return (
-      <EmptyState titre="Aucune donnée chargée" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucune donnée chargée"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         Importez le fichier des établissements et celui des enseignants pour obtenir le diagnostic, ou explorez
         l’application avec le jeu de démonstration.
       </EmptyState>
@@ -286,8 +312,13 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
       ),
     },
     { cle: 'classes', entete: 'Classes', numerique: true, rendu: d => fmt(d.nbClasses) },
-    { cle: 'ens', entete: "Enseignants État", numerique: true, rendu: d => fmt(d.enseignantsEtat) },
-    { cle: 'deficit', entete: 'Postes manquants', numerique: true, rendu: d => <strong>{fmt(d.besoinTheorique)}</strong> },
+    { cle: 'ens', entete: 'Enseignants État', numerique: true, rendu: d => fmt(d.enseignantsEtat) },
+    {
+      cle: 'deficit',
+      entete: 'Postes manquants',
+      numerique: true,
+      rendu: d => <strong>{fmt(d.besoinTheorique)}</strong>,
+    },
     {
       cle: 'pression',
       entete: 'Élèves / enseignant',
@@ -401,7 +432,11 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
         <KpiCard
           label="Postes couverts par simulation"
           value={resultatAffiche ? fmt(resultatAffiche.postesCouverts) : '—'}
-          hint={resultatAffiche ? `Scénario : ${LIBELLE_SCOPE[resultatAffiche.scope].toLowerCase()}.` : "Aucun scénario n’est encore sélectionné."}
+          hint={
+            resultatAffiche
+              ? `Scénario : ${LIBELLE_SCOPE[resultatAffiche.scope].toLowerCase()}.`
+              : 'Aucun scénario n’est encore sélectionné.'
+          }
           lien={resultatAffiche ? 'Voir les propositions' : undefined}
           tone="ok"
           onClick={resultatAffiche ? () => setPage('simulations') : undefined}
@@ -452,13 +487,23 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
               { cle: 'couverts', label: 'Couverts par redéploiement', couleur: 'var(--serie-1)' },
               { cle: 'restant', label: 'Restant à pourvoir', couleur: 'var(--serie-4)', motif: 'hachures' },
             ]}
-            courbe={{ cle: 'taux', label: 'Taux de couverture', couleur: '#5b3f8c', format: v => `${Math.round(v)} %`, max: 100 }}
+            courbe={{
+              cle: 'taux',
+              label: 'Taux de couverture',
+              couleur: '#5b3f8c',
+              format: v => `${Math.round(v)} %`,
+              max: 100,
+            }}
             donnees={besoinsParRegion}
             vide="Aucun poste nécessaire à détailler sur ce périmètre."
           />
         </Panel>
 
-        <Panel kicker="Diagnostic" title="Situation des écoles" hint="Répartition des établissements selon l’ampleur de leur déficit.">
+        <Panel
+          kicker="Diagnostic"
+          title="Situation des écoles"
+          hint="Répartition des établissements selon l’ampleur de leur déficit."
+        >
           <Repartition titre="Répartition des établissements par situation" segments={repartition} />
         </Panel>
       </div>
@@ -514,7 +559,9 @@ export function OverviewPage({ store }: { store: PlanningStore }) {
               )}
             </>
           ) : (
-            <p className="hint">Sélectionnez un scénario dans la barre de filtres pour comparer la situation avant et après.</p>
+            <p className="hint">
+              Sélectionnez un scénario dans la barre de filtres pour comparer la situation avant et après.
+            </p>
           )}
         </Panel>
       </div>
@@ -589,7 +636,15 @@ export function SeveritePill({ severite }: { severite: SchoolDiagnostic['severit
             ? 'info'
             : 'ok'
   const symbole =
-    severite === 'deficit_critique' ? '▲▲' : severite === 'deficit_important' ? '▲' : severite === 'deficit_faible' ? '△' : severite === 'excedent' ? '▼' : '●'
+    severite === 'deficit_critique'
+      ? '▲▲'
+      : severite === 'deficit_important'
+        ? '▲'
+        : severite === 'deficit_faible'
+          ? '△'
+          : severite === 'excedent'
+            ? '▼'
+            : '●'
   return (
     <Pill tone={tone}>
       <span aria-hidden="true">{symbole}</span> {LIBELLE_SEVERITE[severite]}

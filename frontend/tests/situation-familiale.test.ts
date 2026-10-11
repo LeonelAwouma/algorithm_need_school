@@ -79,7 +79,10 @@ test('Les charges familiales pèsent réellement sur le barème : chaque enfant 
 })
 
 test('Un poids à zéro neutralise le critère', () => {
-  const neutre = { ...settings, scoring: { ...cfg, poidsBaremeIndividuel: { ...cfg.poidsBaremeIndividuel, chargesFamiliales: 0 } } }
+  const neutre = {
+    ...settings,
+    scoring: { ...cfg, poidsBaremeIndividuel: { ...cfg.poidsBaremeIndividuel, chargesFamiliales: 0 } },
+  }
   const a = enseignant({ id: 'A', idEtabAttache: 'E1', situationFamiliale: 'Célibataire', nbEnfants: 0 })
   const b = enseignant({ id: 'B', idEtabAttache: 'E1', situationFamiliale: 'Marié(e)', nbEnfants: 6 })
   assert.equal(calculerBaremeIndividuel(a, neutre), calculerBaremeIndividuel(b, neutre))
@@ -88,7 +91,10 @@ test('Un poids à zéro neutralise le critère', () => {
 test('Le détail du barème expose les cinq critères, et sa somme vaut le total', () => {
   const t = enseignant({ id: 'T', idEtabAttache: 'E1', situationFamiliale: 'Veuve', nbEnfants: 3 })
   const detail = detaillerBareme(t, settings)
-  assert.deepEqual(detail.components.map(c => c.label.slice(0, 2)), ['C1', 'C2', 'C3', 'C4', 'C5'])
+  assert.deepEqual(
+    detail.components.map(c => c.label.slice(0, 2)),
+    ['C1', 'C2', 'C3', 'C4', 'C5'],
+  )
   assert.equal(detail.components[2].valeur, cfg.pointsSituationFamiliale.veuf - 3 * cfg.pointsParEnfant)
 
   const somme = Math.round(detail.components.reduce((a, c) => a + c.contribution, 0) * 10000) / 10000
@@ -97,7 +103,17 @@ test('Le détail du barème expose les cinq critères, et sa somme vaut le total
 })
 
 test('L’inventaire distingue reconnues, non reconnues et non renseignées', () => {
-  const inv = inventaireSituations(['Marié', 'mariée', 'MARIE(E)', 'Célibataire', 'Fiancé', 'Fiancé', '', '   ', 'Veuve'])
+  const inv = inventaireSituations([
+    'Marié',
+    'mariée',
+    'MARIE(E)',
+    'Célibataire',
+    'Fiancé',
+    'Fiancé',
+    '',
+    '   ',
+    'Veuve',
+  ])
 
   const marie = inv.reconnues.find(r => r.cle === 'marie')
   assert.equal(marie?.effectif, 3)

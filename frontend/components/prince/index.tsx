@@ -102,7 +102,9 @@ export function PrincePage({ store }: { store: PlanningStore }) {
   const suggestionsEns = useMemo(() => {
     const q = normalizeLabel(saisieEns)
     const liste = q
-      ? enseignantsDisponibles.filter(t => normalizeLabel(`${t.nom} ${t.prenom} ${t.id} ${t.communeAttache}`).includes(q))
+      ? enseignantsDisponibles.filter(t =>
+          normalizeLabel(`${t.nom} ${t.prenom} ${t.id} ${t.communeAttache}`).includes(q),
+        )
       : enseignantsDisponibles
     return liste.slice(0, MAX_SUGGESTIONS)
   }, [saisieEns, enseignantsDisponibles])
@@ -117,7 +119,8 @@ export function PrincePage({ store }: { store: PlanningStore }) {
   // L'origine est lue sur le diagnostic « sans fait de Prince » : c'est la situation
   // réelle de l'école avant cette décision-ci.
   const origine: SchoolDiagnostic | null = useMemo(
-    () => (enseignant && diagnosticSansPrince ? diagnosticSansPrince.bySchoolId[enseignant.idEtabAttache] ?? null : null),
+    () =>
+      enseignant && diagnosticSansPrince ? (diagnosticSansPrince.bySchoolId[enseignant.idEtabAttache] ?? null) : null,
     [enseignant, diagnosticSansPrince],
   )
 
@@ -128,7 +131,10 @@ export function PrincePage({ store }: { store: PlanningStore }) {
 
   if (!dataset || !diagnostic) {
     return (
-      <EmptyState titre="Aucune donnée chargée" action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}>
+      <EmptyState
+        titre="Aucune donnée chargée"
+        action={{ label: 'Ajouter les données', onClick: () => setPage('import') }}
+      >
         Les redéploiements décidés par la DRH s’appliquent aux enseignants et aux écoles du fichier importé.
       </EmptyState>
     )
@@ -217,10 +223,10 @@ export function PrincePage({ store }: { store: PlanningStore }) {
   return (
     <div className="stack">
       <Notice tone="warn" title="Décision, et non simulation.">
-        Un fait de Prince redéploie un enseignant à la seule volonté de la DRH : ni l’ancienneté, ni l’âge, ni le statut,
-        ni l’excédent de l’école d’origine, ni le besoin de l’école de destination ne sont contrôlés. Une fois enregistré, il
-        devient une donnée de départ : le diagnostic et toutes les simulations le prennent en compte, et l’algorithme ne remet
-        jamais cet enseignant en mouvement.
+        Un fait de Prince redéploie un enseignant à la seule volonté de la DRH : ni l’ancienneté, ni l’âge, ni le
+        statut, ni l’excédent de l’école d’origine, ni le besoin de l’école de destination ne sont contrôlés. Une fois
+        enregistré, il devient une donnée de départ : le diagnostic et toutes les simulations le prennent en compte, et
+        l’algorithme ne remet jamais cet enseignant en mouvement.
       </Notice>
 
       {confirmation && (
@@ -258,8 +264,8 @@ export function PrincePage({ store }: { store: PlanningStore }) {
             </datalist>
             {enseignant ? (
               <span className="prince-trouve">
-                <Check size={13} aria-hidden="true" /> {enseignant.nom} {enseignant.prenom} ({enseignant.id}) — actuellement à{' '}
-                {origine?.school.nom ?? enseignant.idEtabAttache}
+                <Check size={13} aria-hidden="true" /> {enseignant.nom} {enseignant.prenom} ({enseignant.id}) —
+                actuellement à {origine?.school.nom ?? enseignant.idEtabAttache}
               </span>
             ) : rapprochementEns.candidats.length > 0 ? (
               <div className="prince-homonymes">
@@ -277,7 +283,8 @@ export function PrincePage({ store }: { store: PlanningStore }) {
                 </ul>
                 {rapprochementEns.candidats.length > 8 && (
                   <span className="hint">
-                    {fmt(rapprochementEns.candidats.length - 8)} autres ne sont pas listés : saisissez le matricule pour trancher.
+                    {fmt(rapprochementEns.candidats.length - 8)} autres ne sont pas listés : saisissez le matricule pour
+                    trancher.
                   </span>
                 )}
               </div>
@@ -304,18 +311,23 @@ export function PrincePage({ store }: { store: PlanningStore }) {
             <datalist id="prince-ecole-liste">
               {suggestionsEcoles.map(d => (
                 <option key={d.school.id} value={d.school.nom}>
-                  {d.school.commune} · {d.besoinTheorique > 0 ? `${d.besoinTheorique} poste(s) manquant(s)` : 'aucun poste manquant'}
+                  {d.school.commune} ·{' '}
+                  {d.besoinTheorique > 0 ? `${d.besoinTheorique} poste(s) manquant(s)` : 'aucun poste manquant'}
                 </option>
               ))}
             </datalist>
             {destination ? (
               <span className="prince-trouve">
                 <Check size={13} aria-hidden="true" /> {destination.school.nom} ({destination.school.commune}) —{' '}
-                {destination.besoinTheorique > 0 ? `${destination.besoinTheorique} poste(s) manquant(s)` : 'aucun poste manquant'}
+                {destination.besoinTheorique > 0
+                  ? `${destination.besoinTheorique} poste(s) manquant(s)`
+                  : 'aucun poste manquant'}
               </span>
             ) : rapprochementEcole.candidats.length > 0 ? (
               <div className="prince-homonymes">
-                <span className="hint">{fmt(rapprochementEcole.candidats.length)} écoles correspondent. Laquelle ?</span>
+                <span className="hint">
+                  {fmt(rapprochementEcole.candidats.length)} écoles correspondent. Laquelle ?
+                </span>
                 <ul>
                   {rapprochementEcole.candidats.slice(0, 6).map(d => (
                     <li key={d.school.id}>
@@ -362,9 +374,7 @@ export function PrincePage({ store }: { store: PlanningStore }) {
               <tbody>
                 {impact.origine && (
                   <tr>
-                    <th scope="row">
-                      Origine — {impact.origine.nom}
-                    </th>
+                    <th scope="row">Origine — {impact.origine.nom}</th>
                     <td className="num">
                       {fmt(impact.origine.effectifAvant)} → <strong>{fmt(impact.origine.effectifApres)}</strong>
                     </td>
@@ -414,7 +424,12 @@ export function PrincePage({ store }: { store: PlanningStore }) {
         )}
 
         <div className="topbar-actions" style={{ marginTop: 14 }}>
-          <button type="button" className="btn btn-primary" disabled={!enseignant || !destination} onClick={enregistrer}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={!enseignant || !destination}
+            onClick={enregistrer}
+          >
             <Crown size={15} aria-hidden="true" /> Enregistrer ce redéploiement
           </button>
           {(saisieEns || saisieEcole || reference) && (
@@ -449,7 +464,17 @@ export function PrincePage({ store }: { store: PlanningStore }) {
               onClick={() =>
                 exporterCSV(
                   `faits-de-prince-${settings.anneeScolaire}.csv`,
-                  ['Matricule', 'Enseignant', 'École origine', 'Commune origine', 'École destination', 'Commune destination', 'Décidé le', 'Référence', 'État'],
+                  [
+                    'Matricule',
+                    'Enseignant',
+                    'École origine',
+                    'Commune origine',
+                    'École destination',
+                    'Commune destination',
+                    'Décidé le',
+                    'Référence',
+                    'État',
+                  ],
                   faitsPrinceAppliques.map(a => [
                     a.fait.teacherId,
                     a.fait.enseignant,
@@ -497,7 +522,11 @@ function ImportPrince({ store }: { store: PlanningStore }) {
     try {
       const XLSX = await import('xlsx')
       const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', dense: true })
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: null, raw: true }) as unknown[][]
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {
+        header: 1,
+        defval: null,
+        raw: true,
+      }) as unknown[][]
       const { lignes, manquantes } = analyserFichierPrince(rows, datasetImporte.teachers, diagnosticSansPrince.schools)
       if (manquantes.length > 0) {
         setErreur(`Colonnes introuvables : ${manquantes.join(', ')}.`)
@@ -517,7 +546,12 @@ function ImportPrince({ store }: { store: PlanningStore }) {
       title="Importer un lot de décisions"
       hint="Une ligne par décision : matricule de l’enseignant (« id_ens » ou « Matricule_Enseignant »), école de destination (« id_etab » ou « Identifiant_Ecole ») et, facultativement, le motif ou la référence de la décision."
       actions={
-        <button type="button" className="btn btn-sm" onClick={() => inputRef.current?.click()} disabled={!datasetImporte}>
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => inputRef.current?.click()}
+          disabled={!datasetImporte}
+        >
           <Upload size={13} aria-hidden="true" /> Importer un fichier
         </button>
       }
@@ -534,11 +568,21 @@ function ImportPrince({ store }: { store: PlanningStore }) {
       />
       {erreur && <Notice tone="alert">{erreur}</Notice>}
       {bilan && (
-        <Notice tone={bilan.refus.length ? 'warn' : 'info'} title={`${fmt(bilan.acceptees)} décision(s) enregistrée(s).`}>
-          {bilan.refus.length > 0 ? `${fmt(bilan.refus.length)} ligne(s) écartée(s) : ${bilan.refus.slice(0, 6).join(' ; ')}${bilan.refus.length > 6 ? '…' : ''}` : 'Toutes les lignes ont été appliquées.'}
+        <Notice
+          tone={bilan.refus.length ? 'warn' : 'info'}
+          title={`${fmt(bilan.acceptees)} décision(s) enregistrée(s).`}
+        >
+          {bilan.refus.length > 0
+            ? `${fmt(bilan.refus.length)} ligne(s) écartée(s) : ${bilan.refus.slice(0, 6).join(' ; ')}${bilan.refus.length > 6 ? '…' : ''}`
+            : 'Toutes les lignes ont été appliquées.'}
         </Notice>
       )}
-      {!bilan && !erreur && <p className="hint">Chaque décision est contrôlée comme une saisie manuelle : enseignant et école connus, pas de double redéploiement.</p>}
+      {!bilan && !erreur && (
+        <p className="hint">
+          Chaque décision est contrôlée comme une saisie manuelle : enseignant et école connus, pas de double
+          redéploiement.
+        </p>
+      )}
     </Panel>
   )
 }

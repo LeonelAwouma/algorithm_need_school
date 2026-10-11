@@ -33,7 +33,7 @@ test('Cas 3 — 6 classes, 6 enseignants : besoin = 0, excédent = 0', () => {
   assert.equal(d.severite, 'satisfaisant')
 })
 
-test("Exemple du cahier des charges — 8 classes, 11 enseignants : excédent mobilisable = 3", () => {
+test('Exemple du cahier des charges — 8 classes, 11 enseignants : excédent mobilisable = 3', () => {
   const d = computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 8, nbEnseignantsEtat: 11 }), settings)
   assert.equal(d.besoinTheorique, 0)
   assert.equal(d.enseignantsMinimumAConserver, 8)
@@ -61,13 +61,19 @@ test('Sans effectif, le repli sur les classes est signalé et reste paramétrabl
   assert.equal(d.calcul.methode, 'repli_classes')
   const renforce = cloneSettings(settings)
   renforce.besoin.enseignantsParClasseRepli = 1.5
-  assert.equal(computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 6 }), renforce).besoinTheorique, 3)
+  assert.equal(
+    computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 6 }), renforce).besoinTheorique,
+    3,
+  )
 })
 
 test("La norme d'élèves par maître est paramétrable et modifie le besoin", () => {
   const renforce = cloneSettings(settings)
   renforce.besoin.elevesParMaitre = 40
-  const d = computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 6, effectifTotalEleves: 320 }), renforce)
+  const d = computeSchoolDiagnostic(
+    ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 6, effectifTotalEleves: 320 }),
+    renforce,
+  )
   assert.equal(d.calcul.norme, 8)
   assert.equal(d.besoinTheorique, 2)
 })
@@ -90,7 +96,10 @@ test('Les indicateurs élèves sont calculés dès que les effectifs sont fourni
 })
 
 test('La pression pédagogique rapporte le REM à la norme de la note de cadrage', () => {
-  const d = computeSchoolDiagnostic(ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 4, effectifTotalEleves: 300 }), settings)
+  const d = computeSchoolDiagnostic(
+    ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 4, effectifTotalEleves: 300 }),
+    settings,
+  )
   assert.equal(d.pressionPedagogique, 1.25)
 })
 
@@ -112,10 +121,7 @@ test('Le diagnostic national additionne besoins et excédents école par école'
 
 test('Les doublons d’identifiant ne sont comptés qu’une fois dans le diagnostic', () => {
   const resultat = runDiagnostic(
-    [
-      ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 4 }),
-      ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 4 }),
-    ],
+    [ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 4 }), ecole({ id: 'A', nbClasses: 6, nbEnseignantsEtat: 4 })],
     settings,
   )
   assert.equal(resultat.totals.ecolesAnalysees, 1)

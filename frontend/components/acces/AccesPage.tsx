@@ -19,7 +19,13 @@ import type { Acces } from './useAcces'
 const messageDe = (err: unknown) => (err instanceof Error ? err.message : String(err))
 
 const dateHeure = (iso: string) =>
-  new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  new Date(iso).toLocaleString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 
 const ETAT_ENTREE: Record<DemandeEntree['statut'], { libelle: string; ton: Tone }> = {
   attente: { libelle: 'En attente de validation', ton: 'warn' },
@@ -113,10 +119,20 @@ export function AccesPage({ acces }: { acces: Acces }) {
                   </span>
                 </div>
                 <div className="acces-actions">
-                  <button type="button" className="btn btn-primary btn-sm" disabled={enCours} onClick={() => void executer(() => decider(d.id, 'validee'))}>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    disabled={enCours}
+                    onClick={() => void executer(() => decider(d.id, 'validee'))}
+                  >
                     <Check size={13} aria-hidden="true" /> Valider l’entrée
                   </button>
-                  <button type="button" className="btn btn-danger btn-sm" disabled={enCours} onClick={() => void executer(() => decider(d.id, 'refusee'))}>
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm"
+                    disabled={enCours}
+                    onClick={() => void executer(() => decider(d.id, 'refusee'))}
+                  >
                     <X size={13} aria-hidden="true" /> Refuser
                   </button>
                 </div>
@@ -145,7 +161,13 @@ export function AccesPage({ acces }: { acces: Acces }) {
           </div>
           <div className="field field-recherche">
             <label htmlFor="acces-titulaire">Nom du délégué régional</label>
-            <input id="acces-titulaire" type="text" autoComplete="off" value={titulaire} onChange={e => setTitulaire(e.target.value)} />
+            <input
+              id="acces-titulaire"
+              type="text"
+              autoComplete="off"
+              value={titulaire}
+              onChange={e => setTitulaire(e.target.value)}
+            />
           </div>
           <button type="submit" className="btn btn-primary" disabled={enCours || !region || !titulaire.trim()}>
             <KeyRound size={14} aria-hidden="true" /> Créer le code
@@ -166,7 +188,9 @@ export function AccesPage({ acces }: { acces: Acces }) {
                 J’ai noté le code
               </button>
             </div>
-            <p className="hint">Notez-le maintenant : il ne sera plus jamais affiché. En cas de perte, créez un nouveau code.</p>
+            <p className="hint">
+              Notez-le maintenant : il ne sera plus jamais affiché. En cas de perte, créez un nouveau code.
+            </p>
           </div>
         )}
 
@@ -203,7 +227,12 @@ export function AccesPage({ acces }: { acces: Acces }) {
                       {code && (
                         <div className="acces-actions">
                           {demande && demande.statut !== 'validee' && (
-                            <button type="button" className="row-action" disabled={enCours} onClick={() => void executer(() => decider(demande.id, 'validee'))}>
+                            <button
+                              type="button"
+                              className="row-action"
+                              disabled={enCours}
+                              onClick={() => void executer(() => decider(demande.id, 'validee'))}
+                            >
                               {demande.statut === 'refusee' ? (
                                 <>
                                   <RotateCcw size={12} aria-hidden="true" /> Rétablir
@@ -214,11 +243,21 @@ export function AccesPage({ acces }: { acces: Acces }) {
                             </button>
                           )}
                           {demande?.statut === 'validee' && (
-                            <button type="button" className="row-action" disabled={enCours} onClick={() => void executer(() => decider(demande.id, 'refusee'))}>
+                            <button
+                              type="button"
+                              className="row-action"
+                              disabled={enCours}
+                              onClick={() => void executer(() => decider(demande.id, 'refusee'))}
+                            >
                               Suspendre
                             </button>
                           )}
-                          <button type="button" className="row-action row-action-danger" disabled={enCours} onClick={() => retirerAcces(r, code.titulaire)}>
+                          <button
+                            type="button"
+                            className="row-action row-action-danger"
+                            disabled={enCours}
+                            onClick={() => retirerAcces(r, code.titulaire)}
+                          >
                             <Ban size={12} aria-hidden="true" /> Retirer l’accès
                           </button>
                         </div>
@@ -233,8 +272,8 @@ export function AccesPage({ acces }: { acces: Acces }) {
       </Panel>
 
       <Notice tone="neutral" title="Ce que voit un délégué.">
-        Uniquement les établissements et les enseignants de sa région, avec toutes les analyses, simulations et rapports.
-        Le Fait de Prince, le référentiel, la configuration du moteur et cette page vous sont réservés.
+        Uniquement les établissements et les enseignants de sa région, avec toutes les analyses, simulations et
+        rapports. Le Fait de Prince, le référentiel, la configuration du moteur et cette page vous sont réservés.
       </Notice>
     </>
   )

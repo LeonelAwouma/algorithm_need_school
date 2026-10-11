@@ -42,7 +42,9 @@ export function MethodologyPage({ store }: { store: PlanningStore }) {
           {NOTIONS.map(notion => (
             <article key={notion.titre} style={{ borderTop: '1px solid var(--line)', paddingTop: 14 }}>
               <h3 style={{ fontSize: 15, color: 'var(--ink)' }}>{notion.titre}</h3>
-              <p style={{ fontSize: 13.5, color: 'var(--ink-soft)', lineHeight: 1.65, maxWidth: '75ch' }}>{notion.explication}</p>
+              <p style={{ fontSize: 13.5, color: 'var(--ink-soft)', lineHeight: 1.65, maxWidth: '75ch' }}>
+                {notion.explication}
+              </p>
               {notion.parametrable && (
                 <p className="hint" style={{ maxWidth: '75ch' }}>
                   <strong>Paramétrable :</strong> {notion.parametrable}
@@ -91,7 +93,9 @@ export function MethodologyPage({ store }: { store: PlanningStore }) {
           </div>
           <div>
             <dt>Ordre d’examen des vœux</dt>
-            <dd style={{ fontSize: 13 }}>{settings.mobilite.ordreExamen === 'voeux' ? 'Ordre de l’enseignant' : 'Poids des écoles'}</dd>
+            <dd style={{ fontSize: 13 }}>
+              {settings.mobilite.ordreExamen === 'voeux' ? 'Ordre de l’enseignant' : 'Poids des écoles'}
+            </dd>
           </div>
           <div>
             <dt>Attrition hors retraite</dt>
@@ -115,11 +119,10 @@ export function MethodologyPage({ store }: { store: PlanningStore }) {
             <dt>Seuil déficit important</dt>
             <dd>{Math.round(settings.seuilsSeverite.important * 100)} %</dd>
           </div>
-
         </dl>
         <p className="hint" style={{ marginTop: 10 }}>
-          Valeurs par défaut du Référentiel technique de modélisation, désignées par lui comme paramètres à valider par la DRH.
-          Elles sont modifiables depuis le Référentiel ; chaque changement relance le calcul.
+          Valeurs par défaut du Référentiel technique de modélisation, désignées par lui comme paramètres à valider par
+          la DRH. Elles sont modifiables depuis le Référentiel ; chaque changement relance le calcul.
         </p>
       </Panel>
 
@@ -155,11 +158,11 @@ export function MethodologyPage({ store }: { store: PlanningStore }) {
 
       <Panel kicker="Fonctionnement" title="Traitement local et absence d’IA">
         <p style={{ fontSize: 13.5, color: 'var(--ink-soft)', lineHeight: 1.65, maxWidth: '75ch' }}>
-          <BookOpen size={15} aria-hidden="true" /> Les classeurs sont lus dans le navigateur, les calculs s’exécutent sur le
-          poste de l’utilisateur, la carte s’appuie sur un fichier géographique embarqué, et les exports sont générés
-          localement. Aucune donnée d’établissement, d’enseignant ou d’élève ne quitte la machine, et aucune intelligence
-          artificielle générative n’intervient dans l’analyse : les textes de diagnostic proviennent de modèles de phrases
-          déclenchés par des conditions sur les valeurs calculées.
+          <BookOpen size={15} aria-hidden="true" /> Les classeurs sont lus dans le navigateur, les calculs s’exécutent
+          sur le poste de l’utilisateur, la carte s’appuie sur un fichier géographique embarqué, et les exports sont
+          générés localement. Aucune donnée d’établissement, d’enseignant ou d’élève ne quitte la machine, et aucune
+          intelligence artificielle générative n’intervient dans l’analyse : les textes de diagnostic proviennent de
+          modèles de phrases déclenchés par des conditions sur les valeurs calculées.
         </p>
       </Panel>
     </div>

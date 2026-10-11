@@ -72,7 +72,14 @@ export function construirePostes(
   for (const s of structures) {
     const postes = Math.max(0, s.nbPostesOuvertsDeclares ?? 0)
     if (postes <= 0) continue
-    lignes.push({ school: s, postes, priorite: calculerPriorite(s, settings, null), rem: null, multigrades: 0, elevesParEnseignantEtat: null })
+    lignes.push({
+      school: s,
+      postes,
+      priorite: calculerPriorite(s, settings, null),
+      rem: null,
+      multigrades: 0,
+      elevesParEnseignantEtat: null,
+    })
   }
 
   lignes.sort((a, b) =>

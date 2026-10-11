@@ -36,20 +36,53 @@ export const LIBELLE_SITUATION: Record<string, string> = {
  */
 const ALIAS: Record<string, SituationFamiliale> = {
   // Célibataire
-  celibataire: 'celibataire', celibataires: 'celibataire', celib: 'celibataire', celibatairee: 'celibataire',
-  single: 'celibataire', c: 'celibataire', cel: 'celibataire',
+  celibataire: 'celibataire',
+  celibataires: 'celibataire',
+  celib: 'celibataire',
+  celibatairee: 'celibataire',
+  single: 'celibataire',
+  c: 'celibataire',
+  cel: 'celibataire',
   // Marié(e)
-  marie: 'marie', mariee: 'marie', maries: 'marie', mariees: 'marie', mariee1: 'marie',
-  epoux: 'marie', epouse: 'marie', married: 'marie', m: 'marie', mar: 'marie',
+  marie: 'marie',
+  mariee: 'marie',
+  maries: 'marie',
+  mariees: 'marie',
+  mariee1: 'marie',
+  epoux: 'marie',
+  epouse: 'marie',
+  married: 'marie',
+  m: 'marie',
+  mar: 'marie',
   // Divorcé(e)
-  divorce: 'divorce', divorcee: 'divorce', divorces: 'divorce', divorcees: 'divorce', divorced: 'divorce', div: 'divorce',
+  divorce: 'divorce',
+  divorcee: 'divorce',
+  divorces: 'divorce',
+  divorcees: 'divorce',
+  divorced: 'divorce',
+  div: 'divorce',
   // Veuf / veuve
-  veuf: 'veuf', veuve: 'veuf', veufs: 'veuf', veuves: 'veuf', widow: 'veuf', widowed: 'veuf', v: 'veuf',
+  veuf: 'veuf',
+  veuve: 'veuf',
+  veufs: 'veuf',
+  veuves: 'veuf',
+  widow: 'veuf',
+  widowed: 'veuf',
+  v: 'veuf',
   // Séparé(e)
-  separe: 'separe', separee: 'separe', separes: 'separe', separees: 'separe', separated: 'separe',
+  separe: 'separe',
+  separee: 'separe',
+  separes: 'separe',
+  separees: 'separe',
+  separated: 'separe',
   // Union libre
-  concubinage: 'concubinage', concubin: 'concubinage', concubine: 'concubinage',
-  unionlibre: 'concubinage', uniondefait: 'concubinage', pacse: 'concubinage', pacsee: 'concubinage',
+  concubinage: 'concubinage',
+  concubin: 'concubinage',
+  concubine: 'concubinage',
+  unionlibre: 'concubinage',
+  uniondefait: 'concubinage',
+  pacse: 'concubinage',
+  pacsee: 'concubinage',
 }
 
 /**
@@ -103,7 +136,12 @@ export function inventaireSituations(valeurs: string[]): {
 
   return {
     reconnues: [...parCle.entries()]
-      .map(([cle, v]) => ({ cle, libelle: LIBELLE_SITUATION[cle], effectif: v.effectif, graphies: [...v.graphies].sort() }))
+      .map(([cle, v]) => ({
+        cle,
+        libelle: LIBELLE_SITUATION[cle],
+        effectif: v.effectif,
+        graphies: [...v.graphies].sort(),
+      }))
       .sort((a, b) => b.effectif - a.effectif),
     nonReconnues: [...inconnues.entries()]
       .map(([valeur, effectif]) => ({ valeur, effectif }))

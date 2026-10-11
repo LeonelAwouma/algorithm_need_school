@@ -46,7 +46,7 @@ test('La comparaison de territoires tolère accents, casse et ponctuation', () =
 
 test('La tolérance ne confond pas deux territoires réellement différents', () => {
   assert.ok(!memeTerritoire('Nord', 'Sud'))
-  assert.ok(!memeTerritoire('Nord', 'Nord-Ouest'), "deux régions distinctes ne sont jamais fusionnées")
+  assert.ok(!memeTerritoire('Nord', 'Nord-Ouest'), 'deux régions distinctes ne sont jamais fusionnées')
   assert.ok(!memeTerritoire('Mfoundi', 'Mefou-et-Afamba'))
   assert.ok(!memeTerritoire('Mifi', 'Nifi'), 'les libellés courts exigent une égalité stricte')
 })
@@ -105,19 +105,28 @@ test('Un libellé encodé deux fois est réparé, un libellé sain est laissé i
   assert.equal(reparerEncodage('Ã'), 'Ã', "une séquence qui n'est pas de l'UTF-8 valide reste inchangée")
 })
 
-test("Le fond de carte des arrondissements, quand il est installé, est exploitable", () => {
+test('Le fond de carte des arrondissements, quand il est installé, est exploitable', () => {
   const chemin = 'public/geo/cameroun-arrondissements.geojson'
   if (!existsSync(chemin)) return
 
   const geo = JSON.parse(readFileSync(chemin, 'utf8')) as GeoFeatureCollection
   assert.ok(geo.features.length > 300, 'le fichier contient les arrondissements')
   const noms = geo.features.map(f => nomDeFeature(f))
-  assert.ok(noms.every(n => n !== null), 'chaque entité porte un libellé exploitable')
-  assert.ok(noms.every(n => !/[ÃÂ]/.test(n ?? '')), 'aucun libellé ne reste mal encodé')
+  assert.ok(
+    noms.every(n => n !== null),
+    'chaque entité porte un libellé exploitable',
+  )
+  assert.ok(
+    noms.every(n => !/[ÃÂ]/.test(n ?? '')),
+    'aucun libellé ne reste mal encodé',
+  )
   assert.ok(noms.includes('Mélong'), 'les accents sont rétablis')
 
   const boite = boiteEnglobante(geo.features)
-  assert.ok(boite && boite.minX > 8 && boite.maxX < 17 && boite.minY > 1 && boite.maxY < 14, 'coordonnées dans les limites du Cameroun')
+  assert.ok(
+    boite && boite.minX > 8 && boite.maxX < 17 && boite.minY > 1 && boite.maxY < 14,
+    'coordonnées dans les limites du Cameroun',
+  )
 })
 
 // --- Lectures territoriales d'un résultat ----------------------------------
@@ -127,11 +136,29 @@ test("Le fond de carte des arrondissements, quand il est installé, est exploita
  * scénario étendu, le Centre cède des enseignants à l'Est.
  */
 const schools = [
-  ecole({ id: 'CENTRE-1', region: 'Centre', departement: 'Mfoundi', commune: 'Yaoundé I', nbClasses: 4, nbEnseignantsEtat: 7 }),
-  ecole({ id: 'CENTRE-2', region: 'Centre', departement: 'Mfoundi', commune: 'Yaoundé I', nbClasses: 6, nbEnseignantsEtat: 4 }),
+  ecole({
+    id: 'CENTRE-1',
+    region: 'Centre',
+    departement: 'Mfoundi',
+    commune: 'Yaoundé I',
+    nbClasses: 4,
+    nbEnseignantsEtat: 7,
+  }),
+  ecole({
+    id: 'CENTRE-2',
+    region: 'Centre',
+    departement: 'Mfoundi',
+    commune: 'Yaoundé I',
+    nbClasses: 6,
+    nbEnseignantsEtat: 4,
+  }),
   ecole({ id: 'EST-1', region: 'Est', departement: 'Kadey', commune: 'Batouri', nbClasses: 8, nbEnseignantsEtat: 4 }),
 ]
-const teachers = enseignantsDe('CENTRE-1', 7, { regionAttache: 'Centre', departementAttache: 'Mfoundi', communeAttache: 'Yaoundé I' })
+const teachers = enseignantsDe('CENTRE-1', 7, {
+  regionAttache: 'Centre',
+  departementAttache: 'Mfoundi',
+  communeAttache: 'Yaoundé I',
+})
 
 const diagnostic = runDiagnostic(schools, DEFAULT_SETTINGS)
 const etendu = runSimulation({
@@ -146,7 +173,10 @@ const idsEst = new Set(['EST-1'])
 test('Le scénario étendu fait bien circuler des enseignants entre régions', () => {
   assert.equal(diagnostic.bySchoolId['CENTRE-1'].excedentTheorique, 3)
   assert.equal(etendu.postesCouverts, 3)
-  assert.ok(etendu.assignments.some(a => a.regionDestination === 'Est'), 'au moins un mouvement vers l’Est')
+  assert.ok(
+    etendu.assignments.some(a => a.regionDestination === 'Est'),
+    'au moins un mouvement vers l’Est',
+  )
   assert.ok(etendu.assignments.every(a => a.regionOrigine === 'Centre'))
 })
 

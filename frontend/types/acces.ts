@@ -56,9 +56,7 @@ export interface RegistreAcces {
 }
 
 /** Personne connectée pour la session en cours. La session ne survit pas à la fermeture. */
-export type SessionAcces =
-  | { role: 'drh' }
-  | { role: 'delegue'; region: RegionCameroun; titulaire: string }
+export type SessionAcces = { role: 'drh' } | { role: 'delegue'; region: RegionCameroun; titulaire: string }
 
 /** Issue d'une tentative d'entrée d'un délégué. */
 export type ResultatEntree =

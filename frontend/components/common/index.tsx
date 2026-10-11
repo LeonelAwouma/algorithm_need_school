@@ -103,7 +103,11 @@ export function Panel({
   id?: string
 }) {
   return (
-    <section className={flush ? 'panel panel-flush' : 'panel'} id={id} aria-labelledby={title && id ? `${id}-title` : undefined}>
+    <section
+      className={flush ? 'panel panel-flush' : 'panel'}
+      id={id}
+      aria-labelledby={title && id ? `${id}-title` : undefined}
+    >
       {(title || actions) && (
         <header className="panel-head">
           <div>
@@ -218,13 +222,7 @@ export function SearchField({
   return (
     <div className="field field-recherche">
       <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        type="search"
-        value={value}
-        placeholder={placeholder}
-        onChange={e => onChange(e.target.value)}
-      />
+      <input id={id} type="search" value={value} placeholder={placeholder} onChange={e => onChange(e.target.value)} />
     </div>
   )
 }
@@ -275,7 +273,8 @@ export function DataTable<T>({
     return [...lignes].sort((a, b) => {
       const va = extraire(a)
       const vb = extraire(b)
-      const ordre = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb), 'fr')
+      const ordre =
+        typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb), 'fr')
       return triSens === 'asc' ? ordre : -ordre
     })
   }, [lignes, colonnes, triCle, triSens])
@@ -305,7 +304,12 @@ export function DataTable<T>({
                 const actif = triCle === c.cle
                 const aria = !c.tri ? undefined : actif ? (triSens === 'asc' ? 'ascending' : 'descending') : 'none'
                 return (
-                  <th key={c.cle} className={c.numerique ? 'num' : undefined} aria-sort={aria} style={c.largeur ? { width: c.largeur } : undefined}>
+                  <th
+                    key={c.cle}
+                    className={c.numerique ? 'num' : undefined}
+                    aria-sort={aria}
+                    style={c.largeur ? { width: c.largeur } : undefined}
+                  >
                     {c.tri ? (
                       <button type="button" onClick={() => basculerTri(c)}>
                         {c.entete}
@@ -354,7 +358,12 @@ export function DataTable<T>({
         </span>
         {nbPages > 1 && (
           <div className="pager">
-            <button type="button" className="btn btn-sm" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={pageSure === 0}>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={pageSure === 0}
+            >
               <ChevronLeft size={13} aria-hidden="true" /> Précédent
             </button>
             <span>
@@ -376,7 +385,15 @@ export function DataTable<T>({
 }
 
 /** Variation chiffrée entre deux valeurs, avec sens explicite et pas seulement une couleur. */
-export function Delta({ avant, apres, sensFavorable = 'baisse' }: { avant: number; apres: number; sensFavorable?: 'baisse' | 'hausse' }) {
+export function Delta({
+  avant,
+  apres,
+  sensFavorable = 'baisse',
+}: {
+  avant: number
+  apres: number
+  sensFavorable?: 'baisse' | 'hausse'
+}) {
   const delta = apres - avant
   if (delta === 0) return <span className="delta delta-flat">= 0 (inchangé)</span>
   const favorable = sensFavorable === 'baisse' ? delta < 0 : delta > 0

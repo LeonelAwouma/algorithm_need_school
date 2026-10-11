@@ -20,7 +20,10 @@ function LigneGroupe({ libelle, nombre, total }: { libelle: string; nombre: numb
         {libelle}
       </span>
       <span className="bar-track">
-        <span className="bar-seg" style={{ width: `${total > 0 ? (nombre / total) * 100 : 0}%`, background: 'var(--serie-2)' }} />
+        <span
+          className="bar-seg"
+          style={{ width: `${total > 0 ? (nombre / total) * 100 : 0}%`, background: 'var(--serie-2)' }}
+        />
       </span>
       <span className="bar-values">
         <b>{fmt(nombre)}</b>

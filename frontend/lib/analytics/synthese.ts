@@ -31,9 +31,17 @@ export function syntheseTerritoriale(
 
   for (const d of diagnostics) {
     const cle = d.school.sousSysteme ?? 'non_renseigne'
-    const g =
-      groupes.get(cle) ??
-      { sousSysteme: cle, besoin: 0, excedent: 0, sallesManquantes: 0, couvrable: 0, restant: 0, effectif: 0, recrutementAPrevoir: 0, sommeCibles: 0 }
+    const g = groupes.get(cle) ?? {
+      sousSysteme: cle,
+      besoin: 0,
+      excedent: 0,
+      sallesManquantes: 0,
+      couvrable: 0,
+      restant: 0,
+      effectif: 0,
+      recrutementAPrevoir: 0,
+      sommeCibles: 0,
+    }
     const E = effectifs?.get(d.school.id) ?? d.calcul.enseignantsRetenus
     g.besoin += Math.max(0, d.calcul.cible - E)
     g.excedent += Math.max(0, E - d.calcul.dotation)

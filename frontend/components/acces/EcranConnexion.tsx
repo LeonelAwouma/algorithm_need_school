@@ -40,7 +40,12 @@ export function EcranConnexion({ acces }: { acces: Acces }) {
         ) : (
           <>
             <div className="login-tabs" role="tablist" aria-label="Qui se connecte ?">
-              <button type="button" role="tab" aria-selected={onglet === 'delegue'} onClick={() => setOnglet('delegue')}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={onglet === 'delegue'}
+                onClick={() => setOnglet('delegue')}
+              >
                 Délégué régional
               </button>
               <button type="button" role="tab" aria-selected={onglet === 'drh'} onClick={() => setOnglet('drh')}>
@@ -90,11 +95,24 @@ function PremiereUtilisation({ acces }: { acces: Acces }) {
       </p>
       <div className="field">
         <label htmlFor="drh-nouveau">Mot de passe du DRH ({LONGUEUR_MIN_MOT_DE_PASSE} caractères au moins)</label>
-        <input id="drh-nouveau" type="password" autoComplete="new-password" autoFocus value={motDePasse} onChange={e => setMotDePasse(e.target.value)} />
+        <input
+          id="drh-nouveau"
+          type="password"
+          autoComplete="new-password"
+          autoFocus
+          value={motDePasse}
+          onChange={e => setMotDePasse(e.target.value)}
+        />
       </div>
       <div className="field">
         <label htmlFor="drh-confirmation">Saisissez-le une seconde fois</label>
-        <input id="drh-confirmation" type="password" autoComplete="new-password" value={confirmation} onChange={e => setConfirmation(e.target.value)} />
+        <input
+          id="drh-confirmation"
+          type="password"
+          autoComplete="new-password"
+          value={confirmation}
+          onChange={e => setConfirmation(e.target.value)}
+        />
       </div>
       {erreur && <Notice tone="alert">{erreur}</Notice>}
       <button type="submit" className="btn btn-primary" disabled={enCours || !motDePasse || !confirmation}>
@@ -130,7 +148,14 @@ function EntreeDrh({ acces }: { acces: Acces }) {
     <form className="login-form" onSubmit={valider}>
       <div className="field">
         <label htmlFor="drh-mdp">Mot de passe du DRH</label>
-        <input id="drh-mdp" type="password" autoComplete="current-password" autoFocus value={motDePasse} onChange={e => setMotDePasse(e.target.value)} />
+        <input
+          id="drh-mdp"
+          type="password"
+          autoComplete="current-password"
+          autoFocus
+          value={motDePasse}
+          onChange={e => setMotDePasse(e.target.value)}
+        />
       </div>
       {erreur && <Notice tone="alert">{erreur}</Notice>}
       <button type="submit" className="btn btn-primary" disabled={enCours || !motDePasse}>

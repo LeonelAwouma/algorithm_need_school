@@ -73,8 +73,22 @@ test('Cas 6 — communes différentes du même département : local sans corresp
 
 test('Le scénario étendu franchit les frontières régionales, contrairement aux autres', () => {
   const schools = [
-    ecole({ id: 'SOURCE', nbClasses: 4, nbEnseignantsEtat: 6, region: 'Centre', departement: 'Mfoundi', commune: 'Yaoundé I' }),
-    ecole({ id: 'CIBLE', nbClasses: 6, nbEnseignantsEtat: 4, region: 'Littoral', departement: 'Wouri', commune: 'Douala III' }),
+    ecole({
+      id: 'SOURCE',
+      nbClasses: 4,
+      nbEnseignantsEtat: 6,
+      region: 'Centre',
+      departement: 'Mfoundi',
+      commune: 'Yaoundé I',
+    }),
+    ecole({
+      id: 'CIBLE',
+      nbClasses: 6,
+      nbEnseignantsEtat: 4,
+      region: 'Littoral',
+      departement: 'Wouri',
+      commune: 'Douala III',
+    }),
   ]
   const teachers = enseignantsDe('SOURCE', 6)
 
@@ -139,7 +153,7 @@ test("Cas 10 — la simulation ne crée jamais de déficit dans l'école source"
   const teachers = enseignantsDe('SOURCE', 11, { communeAttache: 'Obala' })
 
   const resultat = simuler(schools, teachers, 'commune')
-  assert.equal(resultat.postesCouverts, 3, "seuls les 3 enseignants en excédent peuvent partir")
+  assert.equal(resultat.postesCouverts, 3, 'seuls les 3 enseignants en excédent peuvent partir')
 
   const departs = resultat.assignments.filter(a => a.schoolOrigineId === 'SOURCE').length
   assert.equal(departs, 3)
@@ -148,7 +162,7 @@ test("Cas 10 — la simulation ne crée jamais de déficit dans l'école source"
   assert.ok(tousInvariantsOk(resultat.invariants))
 })
 
-test("Une école sans excédent ne fournit aucun candidat, même avec des enseignants actifs", () => {
+test('Une école sans excédent ne fournit aucun candidat, même avec des enseignants actifs', () => {
   const schools = [
     ecole({ id: 'EQUILIBRE', nbClasses: 6, nbEnseignantsEtat: 6, commune: 'Obala' }),
     ecole({ id: 'CIBLE', nbClasses: 6, nbEnseignantsEtat: 2, commune: 'Obala' }),
@@ -176,7 +190,10 @@ test("Les enseignants non éligibles n'entrent pas dans le vivier", () => {
   ]
 
   const vivier = construireVivier(teachers, diagnostic.schools, DEFAULT_SETTINGS)
-  assert.deepEqual(vivier.teachers.map(p => p.teacher.id), ['T1'])
+  assert.deepEqual(
+    vivier.teachers.map(p => p.teacher.id),
+    ['T1'],
+  )
   const codes = vivier.exclusions.map(e => e.code).sort()
   assert.deepEqual(codes, ['doublon', 'ecole_inconnue', 'non_paye_etat', 'statut_exclu'])
 })
@@ -187,7 +204,11 @@ test("Un vœu portant sur sa propre école n'est jamais examiné", () => {
     ecole({ id: 'SOURCE', nbClasses: 6, nbEnseignantsEtat: 9, commune: 'Obala' }),
     ecole({ id: 'CIBLE', nbClasses: 6, nbEnseignantsEtat: 4, commune: 'Obala' }),
   ]
-  const teachers = enseignantsDe('SOURCE', 9, { communeAttache: 'Obala', anciennetePosteAns: 8, voeux: ['SOURCE', 'CIBLE'] })
+  const teachers = enseignantsDe('SOURCE', 9, {
+    communeAttache: 'Obala',
+    anciennetePosteAns: 8,
+    voeux: ['SOURCE', 'CIBLE'],
+  })
 
   const resultat = simuler(schools, teachers, 'commune', settings)
   assert.ok(resultat.candidatures.every(c => c.voeux[0].statut === 'meme_ecole'))
@@ -202,18 +223,56 @@ test('Le barème ordonne les départs au sein de la même école', () => {
     ecole({ id: 'CIBLE', nbClasses: 6, nbEnseignantsEtat: 5, commune: 'Obala' }),
   ]
   const teachers = [
-    enseignant({ id: 'FAIBLE', idEtabAttache: 'SOURCE', communeAttache: 'Obala', ancienneteCarriereAns: 1, anciennetePosteAns: 0, nbEnfants: 0, formationContinue: 0 }),
-    enseignant({ id: 'FORT', idEtabAttache: 'SOURCE', communeAttache: 'Obala', ancienneteCarriereAns: 30, anciennetePosteAns: 12, nbEnfants: 4, formationContinue: 3 }),
-    enseignant({ id: 'MOYEN', idEtabAttache: 'SOURCE', communeAttache: 'Obala', ancienneteCarriereAns: 12, anciennetePosteAns: 6, nbEnfants: 2, formationContinue: 1 }),
-    enseignant({ id: 'AUTRE', idEtabAttache: 'SOURCE', communeAttache: 'Obala', ancienneteCarriereAns: 5, anciennetePosteAns: 2, nbEnfants: 1, formationContinue: 0 }),
+    enseignant({
+      id: 'FAIBLE',
+      idEtabAttache: 'SOURCE',
+      communeAttache: 'Obala',
+      ancienneteCarriereAns: 1,
+      anciennetePosteAns: 0,
+      nbEnfants: 0,
+      formationContinue: 0,
+    }),
+    enseignant({
+      id: 'FORT',
+      idEtabAttache: 'SOURCE',
+      communeAttache: 'Obala',
+      ancienneteCarriereAns: 30,
+      anciennetePosteAns: 12,
+      nbEnfants: 4,
+      formationContinue: 3,
+    }),
+    enseignant({
+      id: 'MOYEN',
+      idEtabAttache: 'SOURCE',
+      communeAttache: 'Obala',
+      ancienneteCarriereAns: 12,
+      anciennetePosteAns: 6,
+      nbEnfants: 2,
+      formationContinue: 1,
+    }),
+    enseignant({
+      id: 'AUTRE',
+      idEtabAttache: 'SOURCE',
+      communeAttache: 'Obala',
+      ancienneteCarriereAns: 5,
+      anciennetePosteAns: 2,
+      nbEnfants: 1,
+      formationContinue: 0,
+    }),
   ]
 
   const diagnostic = runDiagnostic(schools, DEFAULT_SETTINGS)
   assert.equal(diagnostic.bySchoolId.SOURCE.excedentTheorique, 2)
 
   const vivier = construireVivier(teachers, diagnostic.schools, DEFAULT_SETTINGS)
-  assert.deepEqual(vivier.teachers.map(p => p.teacher.id), ['FORT', 'MOYEN'])
-  assert.deepEqual(vivier.teachers.map(p => p.rangDansEcole), [1, 2])
+  assert.deepEqual(
+    vivier.teachers.map(p => p.teacher.id),
+    ['FORT', 'MOYEN'],
+  )
+  assert.deepEqual(
+    vivier.teachers.map(p => p.rangDansEcole),
+    [1, 2],
+  )
 })
 
 test('Deux exécutions du même scénario produisent exactement le même résultat', () => {
@@ -222,7 +281,10 @@ test('Deux exécutions du même scénario produisent exactement le même résult
     ecole({ id: 'S2', nbClasses: 4, nbEnseignantsEtat: 6, commune: 'Obala' }),
     ecole({ id: 'C1', nbClasses: 8, nbEnseignantsEtat: 3, commune: 'Obala' }),
   ]
-  const teachers = [...enseignantsDe('S1', 7, { communeAttache: 'Obala' }), ...enseignantsDe('S2', 6, { communeAttache: 'Obala' })]
+  const teachers = [
+    ...enseignantsDe('S1', 7, { communeAttache: 'Obala' }),
+    ...enseignantsDe('S2', 6, { communeAttache: 'Obala' }),
+  ]
 
   const a = simuler(schools, teachers, 'commune')
   const b = simuler(schools, teachers, 'commune')

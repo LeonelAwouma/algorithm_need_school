@@ -43,12 +43,7 @@ export type NiveauPrimaire = (typeof NIVEAUX_PRIMAIRE)[number]
  * « faible », « important » et « critique » sont configurables
  * (voir EngineSettings.seuilsSeverite) et documentés dans la Méthodologie.
  */
-export type SchoolSeverity =
-  | 'excedent'
-  | 'satisfaisant'
-  | 'deficit_faible'
-  | 'deficit_important'
-  | 'deficit_critique'
+export type SchoolSeverity = 'excedent' | 'satisfaisant' | 'deficit_faible' | 'deficit_important' | 'deficit_critique'
 
 /** Un nœud de la hiérarchie géographique, identifié par son chemin complet. */
 export interface EducationTerritory {

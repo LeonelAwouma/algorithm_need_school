@@ -98,7 +98,13 @@ export const NAVIGATION: NavGroup[] = [
   {
     titre: 'Analyser',
     items: [
-      { id: 'overview', label: "Vue d'ensemble", sousTitre: 'Indicateurs et synthèse', icon: LayoutDashboard, exigeDonnees: true },
+      {
+        id: 'overview',
+        label: "Vue d'ensemble",
+        sousTitre: 'Indicateurs et synthèse',
+        icon: LayoutDashboard,
+        exigeDonnees: true,
+      },
       { id: 'diagnostic', label: 'Situation nationale', icon: BarChart3, exigeDonnees: true },
       { id: 'territoires', label: 'Territoires', sousTitre: 'Carte et exploration', icon: Map, exigeDonnees: true },
       { id: 'priorites', label: 'Écoles prioritaires', icon: ListChecks, exigeDonnees: true },
@@ -109,13 +115,50 @@ export const NAVIGATION: NavGroup[] = [
   {
     titre: 'Simuler',
     items: [
-      { id: 'prince', label: 'Fait de Prince', sousTitre: 'Redéploiements décidés par la DRH', icon: Crown, exigeDonnees: true, drhSeulement: true },
+      {
+        id: 'prince',
+        label: 'Fait de Prince',
+        sousTitre: 'Redéploiements décidés par la DRH',
+        icon: Crown,
+        exigeDonnees: true,
+        drhSeulement: true,
+      },
       { id: 'simulations', label: 'Scénarios', sousTitre: 'Créer et exécuter', icon: FlaskConical, exigeDonnees: true },
-      { id: 'voeux', label: 'Vœux des enseignants', sousTitre: 'Demandes, recevabilité, scores et issue', icon: ListOrdered, exigeSimulation: true },
-      { id: 'arbitrage', label: 'Commission d’arbitrage', sousTitre: 'Valider, rejeter ou corriger les propositions', icon: Gavel, exigeSimulation: true },
-      { id: 'recrutes', label: 'Nouveaux recrutés', sousTitre: 'Déploiement sur les postes restés vacants', icon: UserPlus, exigeDonnees: true },
-      { id: 'projections', label: 'Projections N+1 → N+3', sousTitre: 'Retraites, besoins et recrutement à prévoir', icon: TrendingUp, exigeSimulation: true },
-      { id: 'comparison', label: 'Comparaison', sousTitre: 'Avant / après et scénarios', icon: ArrowRightLeft, exigeDonnees: true },
+      {
+        id: 'voeux',
+        label: 'Vœux des enseignants',
+        sousTitre: 'Demandes, recevabilité, scores et issue',
+        icon: ListOrdered,
+        exigeSimulation: true,
+      },
+      {
+        id: 'arbitrage',
+        label: 'Commission d’arbitrage',
+        sousTitre: 'Valider, rejeter ou corriger les propositions',
+        icon: Gavel,
+        exigeSimulation: true,
+      },
+      {
+        id: 'recrutes',
+        label: 'Nouveaux recrutés',
+        sousTitre: 'Déploiement sur les postes restés vacants',
+        icon: UserPlus,
+        exigeDonnees: true,
+      },
+      {
+        id: 'projections',
+        label: 'Projections N+1 → N+3',
+        sousTitre: 'Retraites, besoins et recrutement à prévoir',
+        icon: TrendingUp,
+        exigeSimulation: true,
+      },
+      {
+        id: 'comparison',
+        label: 'Comparaison',
+        sousTitre: 'Avant / après et scénarios',
+        icon: ArrowRightLeft,
+        exigeDonnees: true,
+      },
     ],
   },
   {
@@ -128,8 +171,22 @@ export const NAVIGATION: NavGroup[] = [
   {
     titre: 'Vue analyste',
     items: [
-      { id: 'engine', label: 'Configuration du moteur', sousTitre: 'Barème, poids et phases', icon: SlidersHorizontal, analysteSeulement: true, drhSeulement: true },
-      { id: 'data', label: 'Qualité des données', sousTitre: 'Colonnes reconnues et contrôles', icon: Database, analysteSeulement: true, exigeDonnees: true },
+      {
+        id: 'engine',
+        label: 'Configuration du moteur',
+        sousTitre: 'Barème, poids et phases',
+        icon: SlidersHorizontal,
+        analysteSeulement: true,
+        drhSeulement: true,
+      },
+      {
+        id: 'data',
+        label: 'Qualité des données',
+        sousTitre: 'Colonnes reconnues et contrôles',
+        icon: Database,
+        analysteSeulement: true,
+        exigeDonnees: true,
+      },
       { id: 'pool', label: 'Vivier', icon: GraduationCap, analysteSeulement: true, exigeSimulation: true },
       { id: 'posts', label: 'Postes', icon: ClipboardList, analysteSeulement: true, exigeSimulation: true },
       { id: 'assignments', label: 'Affectations', icon: Sigma, analysteSeulement: true, exigeSimulation: true },

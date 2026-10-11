@@ -83,7 +83,7 @@ export function BarresHorizontales({
   }
 
   return (
-    <div className="chart">
+    <div className="chart" role="group" aria-label={titre}>
       <LegendeSeries series={series} />
       <div className="bar-rows" onPointerLeave={info.masquer}>
         {donnees.map(d => {
@@ -200,7 +200,9 @@ export function Repartition({ titre, segments }: { titre: string; segments: Segm
               <span className="legend-swatch" style={{ background: remplissageCss(s) }} aria-hidden="true" />
               <span>
                 <b>{fmt(s.valeur)}</b>
-                <span style={{ display: 'block', color: 'var(--ink)', fontSize: 12.5, fontWeight: 650 }}>{s.label}</span>
+                <span style={{ display: 'block', color: 'var(--ink)', fontSize: 12.5, fontWeight: 650 }}>
+                  {s.label}
+                </span>
                 <span>
                   {fmtPct(s.valeur / total)} des établissements
                   {s.definition ? ` · ${s.definition}` : ''}
@@ -211,7 +213,12 @@ export function Repartition({ titre, segments }: { titre: string; segments: Segm
           return (
             <li key={s.cle}>
               {s.onSelect ? (
-                <button type="button" className="distribution-item" onClick={s.onSelect} style={{ width: '100%', textAlign: 'left' }}>
+                <button
+                  type="button"
+                  className="distribution-item"
+                  onClick={s.onSelect}
+                  style={{ width: '100%', textAlign: 'left' }}
+                >
                   {contenu}
                 </button>
               ) : (

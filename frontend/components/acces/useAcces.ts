@@ -89,7 +89,8 @@ export function useAcces() {
   const retirer = useCallback((region: RegionCameroun) => appliquer(retirerAcces(courant.current, region)), [appliquer])
 
   const decider = useCallback(
-    (demandeId: string, statut: Exclude<StatutEntree, 'attente'>) => appliquer(deciderEntree(courant.current, demandeId, statut)),
+    (demandeId: string, statut: Exclude<StatutEntree, 'attente'>) =>
+      appliquer(deciderEntree(courant.current, demandeId, statut)),
     [appliquer],
   )
 

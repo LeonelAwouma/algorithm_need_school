@@ -11,7 +11,12 @@ import { test } from 'node:test'
 
 import { runDiagnostic } from '../lib/analytics/diagnostic'
 import { construireArbreTerritorial, filtrerParTerritoire, selectionLabel } from '../lib/analytics/territory'
-import { diagnosticTerritorial, pointsAttention, reductionDuDeficit, syntheseTableauDeBord } from '../lib/analytics/narrative'
+import {
+  diagnosticTerritorial,
+  pointsAttention,
+  reductionDuDeficit,
+  syntheseTableauDeBord,
+} from '../lib/analytics/narrative'
 import { DEFAULT_SETTINGS } from '../lib/config/settings'
 import { construireJeuDemonstration } from '../lib/data/demo-dataset'
 import { runSimulation } from '../lib/simulation/engine'
@@ -43,7 +48,8 @@ test('Le diagnostic couvre tout le jeu de données sans perte', () => {
   )
   assert.equal(
     diagnostic.totals.enseignantsEtat,
-    ecoles.reduce((a, s) => a + s.nbEnseignantsEtat, 0) - diagnostic.schools.reduce((a, d) => a + d.calcul.departsConnus, 0),
+    ecoles.reduce((a, s) => a + s.nbEnseignantsEtat, 0) -
+      diagnostic.schools.reduce((a, d) => a + d.calcul.departsConnus, 0),
   )
   assert.ok(diagnostic.totals.postesNecessaires > 0, 'le jeu de démonstration comporte des écoles en déficit')
   assert.ok(diagnostic.totals.excedentMobilisable > 0, 'il comporte aussi des écoles en excédent')
@@ -85,7 +91,11 @@ test('Élargir le périmètre ne peut jamais réduire la couverture', () => {
 test('Chaque scénario respecte son propre périmètre géographique', () => {
   const [local, departemental] = resultats
   assert.ok(local.assignments.every(a => a.niveauProximite === 'meme_commune'))
-  assert.ok(departemental.assignments.every(a => a.niveauProximite === 'meme_commune' || a.niveauProximite === 'meme_departement'))
+  assert.ok(
+    departemental.assignments.every(
+      a => a.niveauProximite === 'meme_commune' || a.niveauProximite === 'meme_departement',
+    ),
+  )
 })
 
 test('Aucune école ne perd plus d’enseignants que son excédent, sur tout le jeu', () => {
@@ -178,7 +188,7 @@ test('Le rapport décisionnel contient toutes ses sections et la mention obligat
   }
 
   const texte = rapport.sections.flatMap(s => [...s.paragraphes, ...(s.points ?? [])]).join(' ')
-  assert.ok(texte.includes("ne constituent pas des décisions administratives"))
+  assert.ok(texte.includes('ne constituent pas des décisions administratives'))
   assert.ok(texte.includes('démonstration'), 'le rapport signale les données de démonstration')
   assert.ok(!texte.toLowerCase().includes('meilleur scénario'))
 })

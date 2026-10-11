@@ -38,7 +38,20 @@ import { pageReserveeAuDrh } from '@/components/layout/navigation'
 import type { SessionAcces } from '@/types/acces'
 
 /** Pages sur lesquelles la barre de filtres territoriaux n'a pas de sens. */
-const SANS_FILTRES = new Set(['import', 'methodology', 'settings', 'engine', 'data', 'logs', 'prince', 'acces', 'voeux', 'arbitrage', 'recrutes', 'projections'])
+const SANS_FILTRES = new Set([
+  'import',
+  'methodology',
+  'settings',
+  'engine',
+  'data',
+  'logs',
+  'prince',
+  'acces',
+  'voeux',
+  'arbitrage',
+  'recrutes',
+  'projections',
+])
 
 /**
  * ACCÈS DÉSACTIVÉ (AlgoPlanR 1.0.0) : la plateforme s'ouvre directement, sans
@@ -131,7 +144,7 @@ function Application({ session }: { session: SessionAcces }) {
     const confirme =
       typeof window === 'undefined' ||
       window.confirm(
-        "Effacer les données de cette session ?\n\nLes fichiers importés, les résultats calculés et les préférences enregistrées seront supprimés de cette session. Cette action est immédiate et irréversible.",
+        'Effacer les données de cette session ?\n\nLes fichiers importés, les résultats calculés et les préférences enregistrées seront supprimés de cette session. Cette action est immédiate et irréversible.',
       )
     if (confirme) effacerSession()
   }
@@ -154,7 +167,9 @@ function Application({ session }: { session: SessionAcces }) {
         // utilisateur={session.role === 'drh' ? 'DRH' : `Délégué · ${session.region}`}
         // onDeconnexion={deconnecter}
         anneeScolaire={settings.anneeScolaire}
-        scenario={resultatAffiche ? `${nomScenario} (${LIBELLE_SCOPE[resultatAffiche.scope].toLowerCase()})` : nomScenario}
+        scenario={
+          resultatAffiche ? `${nomScenario} (${LIBELLE_SCOPE[resultatAffiche.scope].toLowerCase()})` : nomScenario
+        }
         onEffacer={confirmerEffacement}
       />
 
@@ -216,7 +231,10 @@ function Application({ session }: { session: SessionAcces }) {
 
               {donneesChargees && !SANS_FILTRES.has(page) && (
                 <>
-                  <TerritoryBreadcrumb selection={filtres.territoire} onSelect={t => setFiltres({ ...filtres, territoire: t })} />
+                  <TerritoryBreadcrumb
+                    selection={filtres.territoire}
+                    onSelect={t => setFiltres({ ...filtres, territoire: t })}
+                  />
                   <FilterBar
                     filtres={filtres}
                     options={optionsFiltres}
